@@ -1,0 +1,227 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Pretendard JP";
+  src: url("/fonts/PretendardJP-Thin.ttf") format("truetype");
+  font-weight: 100;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Pretendard JP";
+  src: url("/fonts/PretendardJP-ExtraLight.ttf") format("truetype");
+  font-weight: 200;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Pretendard JP";
+  src: url("/fonts/PretendardJP-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Pretendard JP";
+  src: url("/fonts/PretendardJP-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Pretendard JP";
+  src: url("/fonts/PretendardJP-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Pretendard JP";
+  src: url("/fonts/PretendardJP-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Pretendard JP";
+  src: url("/fonts/PretendardJP-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Pretendard JP";
+  src: url("/fonts/PretendardJP-ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Pretendard JP";
+  src: url("/fonts/PretendardJP-Black.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* 커스텀 브랜드 색상 */
+  --color-primary: #4682b4;
+  --color-primaryLight: #ABDDF1;
+  --color-primaryDark: #2c5f7a;
+  --color-limeOlive: #b7c774;
+  --color-secondary: #5f7a8a;
+  --color-highlight: #E74C3C;
+  --color-success: #27AE60;
+
+  /* 경고 */
+  --color-warning: #D4524A;      /* 메인 경고색 */
+  --color-warningLight: #E0776F; /* 호버/비활성 */
+  --color-warningDark: #B73D35;  /* 액티브 */
+
+  /* 중립 계열 (Gray Scale) - 웜 그레이 */
+  --color-grayDark: #5a5d5b;
+  --color-gray: #7a7e7b;
+  --color-grayLight: #c5c9c6;
+  --color-grayLighter: #f0f2f1;
+  --color-grayBackground: #fafbfa;
+  --color-hintText: #9ba09d;
+  --color-hoverBackground: #f0f2f1;
+
+  /* 상태 색상 */
+  --color-error: #e07b7b;
+  --color-red: #e07b7b;
+
+  /* Divider, Border */
+  --color-divider: #c5c9c6;
+  --color-dividerGray: #7a7e7b;
+
+  /* 텍스트 컬러 */
+  --color-textDefault: #7a7e7b;
+  --color-textMuted: #c5c9c6;
+  --color-textHeading: #2d3d39;
+
+  /* === 뱃지 색상 (투명도 적용) === */
+  
+  /* Soft Mint */
+  --badge-mint-light: rgba(141, 180, 160, 0.2);
+  --badge-mint-text: #5a7968;
+  --badge-mint-border: rgba(141, 180, 160, 0.4);
+
+  /* Dusty Rose */
+  --badge-rose-light: rgba(208, 153, 153, 0.15);
+  --badge-rose-text: #8b6b6b;
+  --badge-rose-border: rgba(208, 153, 153, 0.4);
+
+  /* Warm Taupe */
+  --badge-taupe-light: rgba(171, 151, 139, 0.2);
+  --badge-taupe-text: #7a6a60;
+  --badge-taupe-border: rgba(171, 151, 139, 0.4);
+
+  /* Soft Blue */
+  --badge-blue-light: rgba(131, 156, 171, 0.2);
+  --badge-blue-text: #5a6b73;
+  --badge-blue-border: rgba(131, 156, 171, 0.4);
+
+  /* Muted Purple */
+  --badge-purple-light: rgba(158, 143, 171, 0.2);
+  --badge-purple-text: #706373;
+  --badge-purple-border: rgba(158, 143, 171, 0.4);
+
+  /* Soft Peach */
+  --badge-peach-light: rgba(218, 173, 151, 0.2);
+  --badge-peach-text: #8b7360;
+  --badge-peach-border: rgba(218, 173, 151, 0.4);
+
+  /* Sage */
+  --badge-sage-light: rgba(149, 171, 156, 0.2);
+  --badge-sage-text: #5f7363;
+  --badge-sage-border: rgba(149, 171, 156, 0.4);
+
+  /* Stone */
+  --badge-stone-light: rgba(155, 151, 143, 0.2);
+  --badge-stone-text: #6b6760;
+  --badge-stone-border: rgba(155, 151, 143, 0.4);
+}
+
+html, body {
+  background: #ffffff !important;
+  color: #2d3d39;
+  font-family: "Pretendard JP", Arial, sans-serif;
+}
+
+/* 스크롤바 스타일 개선 */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c5c9c6;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ba09d;
+}
+
+/* Firefox 스크롤바 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c5c9c6 transparent;
+}
+
+/* === 뱃지 색상 클래스 (투명도 적용) === */
+
+.badge-mint {
+  background: var(--badge-mint-light);
+  color: var(--badge-mint-text);
+  border-color: var(--badge-mint-border);
+}
+
+.badge-rose {
+  background: var(--badge-rose-light);
+  color: var(--badge-rose-text);
+  border-color: var(--badge-rose-border);
+}
+
+.badge-taupe {
+  background: var(--badge-taupe-light);
+  color: var(--badge-taupe-text);
+  border-color: var(--badge-taupe-border);
+}
+
+.badge-blue {
+  background: var(--badge-blue-light);
+  color: var(--badge-blue-text);
+  border-color: var(--badge-blue-border);
+}
+
+.badge-purple {
+  background: var(--badge-purple-light);
+  color: var(--badge-purple-text);
+  border-color: var(--badge-purple-border);
+}
+
+.badge-peach {
+  background: var(--badge-peach-light);
+  color: var(--badge-peach-text);
+  border-color: var(--badge-peach-border);
+}
+
+.badge-sage {
+  background: var(--badge-sage-light);
+  color: var(--badge-sage-text);
+  border-color: var(--badge-sage-border);
+}
+
+.badge-stone {
+  background: var(--badge-stone-light);
+  color: var(--badge-stone-text);
+  border-color: var(--badge-stone-border);
+}
