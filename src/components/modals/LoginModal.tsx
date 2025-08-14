@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, X } from "lucide-react";
-import { Button } from "../common/button";
-import { ConfirmDialog } from "../common/confirmDialog";
+import { Button } from "../common/Button";
+import { ConfirmDialog } from "../common/ConfirmDialog";
 import { LoginFormData, SocialProvider } from "@/types/auth";
 import { useAuth } from "@/features/login/hooks/useAuth";
 import { validateEmail, validatePassword } from "@/utils/validation";
@@ -15,7 +15,7 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  const { login, loginWithSocialProvider, error: authError, isLoading: authLoading } = useAuth();
+  const { login, loginWithSocialProvider, isLoading: authLoading } = useAuth();
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
@@ -86,7 +86,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     try {
       await login(formData);
       onClose(); // 로그인 성공 시 모달 닫기
-    } catch (err) {
+    } catch {
       // "Failed to fetch" 또는 기타 에러를 일관된 메시지로 변경
       setShowErrorDialog(true);
     }
@@ -99,7 +99,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     try {
       await loginWithSocialProvider(provider);
       onClose(); // 로그인 성공 시 모달 닫기
-    } catch (err) {
+    } catch {
       setShowErrorDialog(true);
     }
   };

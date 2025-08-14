@@ -158,6 +158,7 @@ export interface Product {
   capacity: string;
   totalViews: number;
   totalFavorites: number;
+  weeklyViews: number; // 1주일전 조회수 필드 추가
   brand?: string;
   isAvailable?: boolean;
 }

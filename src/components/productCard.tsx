@@ -28,7 +28,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
           aria-label="찜하기"
           onClick={(e) => {
             e.stopPropagation(); // 상위 div의 onClick 이벤트 방지
-            // TODO: 찜하기 기능 구현
+            // 찜하기 기능 구현 예정
           }}
         >
           <Heart className="w-4 h-4 text-gray" />

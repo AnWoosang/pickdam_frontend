@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Heart, Info, Droplets, Wind, Zap, Star, Share2 } from 'lucide-react';
 import { ProductDetail } from '@/types/product';
-import { Button } from '@/components/common/button';
+import { Button } from '@/components/common/Button';
 
 interface ProductImageSectionProps {
   product: ProductDetail;

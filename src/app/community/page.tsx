@@ -1,12 +1,14 @@
-import { MainLayout } from '@/components/layout/mainLayout';
-import { CommunityPage as CommunityPageComponent } from '@/features/community/components/communityPage';
+import { Suspense } from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { CommunityPage as CommunityPageComponent } from '@/features/community/components/list/CommunityPage';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 export default function CommunityPage() {
   return (
-    <MainLayout showHeader={true} showFooter={true} showCategoryBar={false} showSearchBar={false}>
-      <div className="py-3">
+    <MainLayout showHeader={true} showFooter={false} showCategoryBar={true} showSearchBar={false}>
+      <Suspense fallback={<LoadingSpinner />}>
         <CommunityPageComponent />
-      </div>
+      </Suspense>
     </MainLayout>
   );
 }

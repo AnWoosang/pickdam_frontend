@@ -1,11 +1,13 @@
 // 회원가입 관련 타입 정의
+import { Gender } from '@/constants/common';
 
 export interface SignupFormData {
   email: string;
   password: string;
   confirmPassword: string;
   name: string;
-  birthDate?: string;
+  birthDate: string;
+  gender: Gender;
   termsAccepted: boolean;
   privacyAccepted: boolean;
   marketingAccepted: boolean;

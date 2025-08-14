@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { Header } from "./header/header";
-import { Footer } from "./footer";
-import { Container } from "./container";
+import { Header } from "./header/Header";
+import { Footer } from "./Footer";
+import { Container } from "./Container";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -25,19 +25,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   disableContainer = false,
 }) => {
 
-  // 오버스크롤 완전 비활성화
-  React.useEffect(() => {
-    document.body.style.overscrollBehavior = 'none';
-    document.documentElement.style.overscrollBehavior = 'none';
-    
-    return () => {
-      document.body.style.overscrollBehavior = '';
-      document.documentElement.style.overscrollBehavior = '';
-    };
-  }, []);
-
   return (
-    <div className="min-h-screen flex flex-col bg-white overflow-y-auto" style={{ overscrollBehavior: 'none' }}>
+    <div className="min-h-screen flex flex-col bg-white overflow-y-auto">
       {showHeader && (
         <>
           <Header containerVariant={containerVariant} showCategoryBar={showCategoryBar} showSearchBar={showSearchBar} />

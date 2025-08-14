@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Product } from '@/types/product';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { ProductCard } from '@/components/productCard';
+import { ProductCard } from '@/components/ProductCard';
 import { RoutePaths } from '@/constants/routes';
 
 interface ProductSliderProps {

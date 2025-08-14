@@ -299,7 +299,7 @@ export function WishlistPage({ className = '' }: WishlistPageProps) {
                   <button
                     className="px-4 py-2 text-sm text-white bg-primary rounded-md transition-colors"
                     onClick={() => {
-                      // TODO: 선택된 상품들을 장바구니에 추가
+                      // 구현 예정: 선택된 상품들을 장바구니에 추가
                       console.log('장바구니에 추가:', selectedItems);
                     }}
                   >

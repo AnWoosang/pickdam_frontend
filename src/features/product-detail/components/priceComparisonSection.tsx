@@ -3,7 +3,7 @@
 import React from 'react';
 import { TrendingDown, TrendingUp, ExternalLink, Truck, Package } from 'lucide-react';
 import { SellerInfo } from '@/types/product';
-import { Button } from '@/components/common/button';
+import { Button } from '@/components/common/Button';
 
 interface PriceComparisonSectionProps {
   sellers: SellerInfo[];

@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Menu, ChevronRight } from 'lucide-react';
 import { allCategories, mainNavItems } from '@/constants/categories';
-import { MainCategory, CATEGORY_CONFIG } from '@/types/product';
+import { CATEGORY_CONFIG } from '@/types/product';
 import { cn } from '@/utils/format';
-import { Container } from '../container';
+import { Container } from '../Container';
 
 interface CategoryBarProps {
   onSelected?: (category: string) => void;

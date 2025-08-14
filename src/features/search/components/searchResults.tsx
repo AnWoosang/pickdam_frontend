@@ -108,7 +108,7 @@ function ProductCard({ product }: ProductCardProps) {
             className="absolute top-2 right-2 p-2 bg-white bg-opacity-80 rounded-full shadow-sm"
             onClick={(e) => {
               e.preventDefault();
-              // TODO: 찜하기 기능 구현
+              // 구현 예정: 찜하기 기능 구현
             }}
           >
             <Heart className="w-4 h-4 text-gray-600" />

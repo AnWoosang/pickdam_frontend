@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/features/login/hooks/useAuth';
 import { MypageMenuItem } from '@/types/user';
+import { LoginModal } from '@/components/modals/LoginModal';
 
 interface MypageProps {
   className?: string;
@@ -94,6 +95,7 @@ export function Mypage({ className = '' }: MypageProps) {
   const { user, logout, isLoading } = useAuth();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const handleLogout = async () => {
     const confirmed = window.confirm('로그아웃 하시겠습니까?');
@@ -124,19 +126,26 @@ export function Mypage({ className = '' }: MypageProps) {
 
   if (!user) {
     return (
-      <div className="text-center py-12">
-        <div className="mb-4">
-          <User className="w-16 h-16 mx-auto text-gray-400" />
+      <>
+        <div className="text-center py-12">
+          <div className="mb-4">
+            <User className="w-16 h-16 mx-auto text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">로그인이 필요합니다</h3>
+          <p className="text-gray-600 mb-6">마이페이지를 이용하시려면 로그인해주세요.</p>
+          <button
+            onClick={() => setIsLoginModalOpen(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary transition-colors hover:bg-primary/90"
+          >
+            로그인하기
+          </button>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">로그인이 필요합니다</h3>
-        <p className="text-gray-600 mb-6">마이페이지를 이용하시려면 로그인해주세요.</p>
-        <Link
-          href="/login"
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary transition-colors"
-        >
-          로그인하기
-        </Link>
-      </div>
+        
+        <LoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+        />
+      </>
     );
   }
 

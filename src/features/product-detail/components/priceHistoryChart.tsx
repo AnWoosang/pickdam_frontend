@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Calendar, TrendingDown, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductDetail } from '@/types/product';
-import { Button } from '@/components/common/button';
+import { Button } from '@/components/common/Button';
 
 interface PriceHistoryChartProps {
   product: ProductDetail;
@@ -157,14 +157,14 @@ export function PriceHistoryChart({ product, className = '' }: PriceHistoryChart
   }, [chartData]);
 
   // 커스텀 툴팁
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { date: string; price: number } }>; label?: string }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="text-sm text-gray-600">{data.fullDate}</p>
+          <p className="text-sm text-gray-600">{data.date}</p>
           <p className="text-lg font-bold text-primary">
-            {formatPrice(payload[0].value)}원
+            {formatPrice(data.price)}원
           </p>
         </div>
       );

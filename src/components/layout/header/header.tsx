@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import { LogoSearchSection } from './logoSearchSection';
-import { CategoryBar } from './categoryBar';
-import { Container } from '../container';
+import { LogoSearchSection } from './LogoSearchSection';
+import { CategoryBar } from './CategoryBar';
+import { Container } from '../Container';
 
 interface HeaderProps {
   showCategoryBar?: boolean;

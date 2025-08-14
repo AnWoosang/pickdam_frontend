@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { ProductDetailPage } from '@/features/product-detail/components/productDetailPage';
 import { getProductDetail } from '@/constants/products-mockdata';
-import { MainLayout } from '@/components/layout/mainLayout';
+import { MainLayout } from '@/components/layout/MainLayout';
 
 interface ProductPageProps {
   params: Promise<{

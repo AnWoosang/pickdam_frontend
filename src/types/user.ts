@@ -1,4 +1,5 @@
 // 사용자 프로필 관련 타입 정의
+import { Gender, LoginProvider } from '@/constants/common';
 
 // 사용자 기본 정보
 export interface UserProfile {
@@ -6,12 +7,12 @@ export interface UserProfile {
   email: string;
   name: string;
   profileImage?: string;
-  birthDate?: string;
-  gender?: 'male' | 'female' | 'other';
-  provider?: 'email' | 'kakao' | 'naver' | 'google';
+  birthDate: string;
+  gender: Gender;
+  provider: LoginProvider;
   isEmailVerified: boolean;
   createdAt: string;
-  updatedAt?: string;
+  updatedAt: string;
 }
 
 // 사용자 설정
@@ -119,7 +120,7 @@ export interface MypageMenuItem {
 export interface ProfileUpdateData {
   name?: string;
   birthDate?: string;
-  gender?: 'male' | 'female' | 'other';
+  gender?: Gender;
   profileImage?: string;
 }
 

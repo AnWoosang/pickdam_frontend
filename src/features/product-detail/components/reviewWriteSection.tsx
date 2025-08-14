@@ -78,7 +78,7 @@ export function ReviewWriteSection({ productId, className = '' }: ReviewWriteSec
     setIsSubmitting(true);
     
     try {
-      // TODO: API 호출
+      // 구현 예정: API 호출
       await new Promise(resolve => setTimeout(resolve, 1000)); // 임시 딜레이
       
       alert('리뷰가 등록되었습니다!');

@@ -1,4 +1,4 @@
-import { MainLayout } from '@/components/layout/mainLayout';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { OrdersPage as OrdersPageComponent } from '@/features/mypage/components/ordersPage';
 import { ProtectedRoute } from '@/features/login/hooks/useAuth';
 

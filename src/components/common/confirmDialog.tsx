@@ -11,6 +11,7 @@ interface ConfirmDialogProps {
   cancelText?: string;
   confirmButtonColor?: 'red' | 'primary';
   width?: string;
+  icon?: string;
 }
 
 export function ConfirmDialog({
@@ -21,7 +22,8 @@ export function ConfirmDialog({
   confirmText = '확인',
   cancelText = '취소',
   confirmButtonColor = 'red',
-  width = 'w-90'
+  width = 'w-90',
+  icon = '⚠️'
 }: ConfirmDialogProps) {
   if (!isOpen) return null;
 
@@ -44,7 +46,7 @@ export function ConfirmDialog({
       <div className={`bg-white rounded-lg p-6 ${width} mx-4`}>
         <div className="text-center">
           <div className="mb-4">
-            <span className="text-4xl">⚠️</span>
+            <span className="text-4xl">{icon}</span>
           </div>
           <div className="text-[16px] font-medium text-black mb-6">
             {message.split('\n').map((line, index) => (

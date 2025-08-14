@@ -1,5 +1,5 @@
-import { CenteredLayout } from '@/components/layout/centeredLayout';
-import { SignupPage } from '@/features/signup/components/signupPage';
+import { CenteredLayout } from '@/components/layout/CenteredLayout';
+import { SignupPage } from '@/features/signup/components/SignupPage';
 
 export default function SignupPageRoute() {
   return (

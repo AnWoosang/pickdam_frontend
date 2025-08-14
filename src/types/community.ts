@@ -12,8 +12,6 @@ export interface Post {
   commentCount?: number;
   category?: PostCategory;
   tags?: string[];
-  isPopular?: boolean;
-  isPinned?: boolean;
 }
 
 // 게시글 카테고리
@@ -51,6 +49,7 @@ export interface PostsResponse {
 // 게시글 검색/필터 파라미터
 export interface PostSearchParams {
   query?: string;
+  searchFilter?: 'title' | 'titleContent' | 'author';
   category?: string;
   author?: string;
   sortBy?: 'latest' | 'popular' | 'oldest' | 'most_liked' | 'most_viewed';
@@ -63,7 +62,7 @@ export interface PostSearchParams {
 export interface CreatePostData {
   title: string;
   content: string;
-  categoryId?: string;
+  categoryId: string | undefined;
   tags?: string[];
 }
 

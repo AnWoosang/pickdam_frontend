@@ -15,6 +15,7 @@ interface ButtonProps {
   icon?: React.ReactNode;
   type?: 'button' | 'submit' | 'reset';
   noFocus?: boolean;
+  style?: React.CSSProperties;
 }
 
 export function Button({
@@ -26,7 +27,8 @@ export function Button({
   children,
   icon,
   type = 'button',
-  noFocus = false
+  noFocus = false,
+  style
 }: ButtonProps) {
   const isIconOnly = icon && !children;
   const focusClasses = noFocus 
@@ -58,6 +60,7 @@ export function Button({
       onClick={onClick}
       disabled={disabled}
       className={combinedClasses}
+      style={style}
     >
       {icon && <span className="flex-shrink-0">{icon}</span>}
       {children}

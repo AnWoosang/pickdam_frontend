@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { ChevronDown, Clock, Heart } from 'lucide-react';
 import { RouteNames } from '@/constants/routes';
 import { useAuth } from '@/features/login/hooks/useAuth';
-import { LoginModal } from '@/components/modals/loginModal';
-import { SearchBar } from '@/components/common/searchBar';
+import { LoginModal } from '@/components/modals/LoginModal';
+import { SearchBar } from '@/components/common/SearchBar';
 
 interface LogoSearchSectionProps {
   showSearchBar?: boolean;
@@ -45,10 +45,15 @@ export function LogoSearchSection({ showSearchBar = true }: LogoSearchSectionPro
       {/* 검색창 / 빈 공간 */}
       <div className="flex-1 flex justify-center mx-8">
         {showSearchBar ? (
-          <SearchBar className="w-full max-w-2xl" />
+          <SearchBar 
+            className="w-full max-w-lg" 
+            onSearch={(query) => router.push(`/products?q=${encodeURIComponent(query)}`)}
+            placeholder="상품을 검색하세요..."
+            showRecentSearches={true}
+          />
         ) : (
           // 검색바가 없을 때 빈 공간 유지
-          <div className="w-full max-w-2xl h-10"></div>
+          <div className="w-full max-w-lg h-10"></div>
         )}
       </div>
 

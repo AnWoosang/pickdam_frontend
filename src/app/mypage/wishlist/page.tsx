@@ -1,4 +1,4 @@
-import { MainLayout } from '@/components/layout/mainLayout';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { WishlistPage as WishlistPageComponent } from '@/features/mypage/components/wishlistPage';
 import { ProtectedRoute } from '@/features/login/hooks/useAuth';
 

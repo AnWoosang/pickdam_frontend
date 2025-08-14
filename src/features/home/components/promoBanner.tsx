@@ -37,32 +37,6 @@ export function PromoBanner({ className = '' }: PromoBannerProps) {
               시중의 모든 전자담배 관련 상품을 한 번에 비교하고 <br className="hidden lg:block" />
               가장 저렴한 가격을 안내해드리는 스마트한 쇼핑 서비스입니다
             </p>
-
-            {/* 주요 기능 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="flex items-center bg-white/10 rounded-lg p-3">
-                <TrendingDown className="w-5 h-5 text-yellow-300 mr-2" />
-                <span className="text-sm font-medium">최저가 보장</span>
-              </div>
-              <div className="flex items-center bg-white/10 rounded-lg p-3">
-                <Award className="w-5 h-5 text-yellow-300 mr-2" />
-                <span className="text-sm font-medium">실시간 가격 비교</span>
-              </div>
-              <div className="flex items-center bg-white/10 rounded-lg p-3">
-                <Zap className="w-5 h-5 text-yellow-300 mr-2" />
-                <span className="text-sm font-medium">빠른 검색</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 액션 버튼 */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button className="bg-white text-primary font-bold py-3 px-6 rounded-full hover:bg-gray-100 transition-colors duration-200 shadow-lg">
-              상품 검색하기
-            </button>
-            <button className="border-2 border-white text-white font-bold py-3 px-6 rounded-full hover:bg-white hover:text-primary transition-all duration-200">
-              서비스 소개
-            </button>
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { ProductDetail } from '@/types/product';
-import { Button } from '@/components/common/button';
+import { Button } from '@/components/common/Button';
 
 // 컴포넌트 import
 import { ProductImageSection } from './productImageSection';
@@ -30,7 +30,7 @@ export function ProductDetailPage({ product, className = '' }: ProductDetailPage
 
   const handleWishlist = () => {
     setIsWishlisted(!isWishlisted);
-    // TODO: API 호출
+    // 구현 예정: API 호출
   };
 
   const handleShare = async () => {

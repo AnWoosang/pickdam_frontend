@@ -5,7 +5,6 @@ export const RouteNames = {
   productDetail: '/product/[id]',
   productSearch: '/search/products',
   signup: '/signup',
-  login: '/login',
   mypage: '/mypage',
   community: '/community',
   communityPost: '/community/[id]',
