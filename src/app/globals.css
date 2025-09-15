@@ -1,5 +1,180 @@
 @import "tailwindcss";
 
+/* Quill Editor 커스텀 스타일 */
+.ql-snow .ql-toolbar {
+  border: 1px solid #e5e7eb;
+  border-bottom: none;
+  border-radius: 0.5rem 0.5rem 0 0;
+  background: #f9fafb;
+}
+
+/* 이미지 리사이즈 기본 스타일 (quill-resize-image 플러그인용) */
+.ql-editor img {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Quill Image Resize Module v2 스타일 */
+.ql-image-resize-overlay {
+  position: absolute !important;
+  border: 2px dashed #4682b4 !important;
+  box-sizing: border-box !important;
+  z-index: 1000 !important;
+}
+
+.ql-image-resize-handle {
+  position: absolute !important;
+  width: 12px !important;
+  height: 12px !important;
+  background: #4682b4 !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 50% !important;
+  cursor: grab !important;
+  user-select: none !important;
+  box-sizing: border-box !important;
+}
+
+.ql-image-resize-handle:hover {
+  background: #2c5f7a !important;
+  transform: scale(1.1) !important;
+  transition: all 0.2s ease !important;
+}
+
+.ql-image-resize-handle:active {
+  cursor: grabbing !important;
+}
+
+/* 각 코너별 핸들 위치 */
+.ql-image-resize-handle-nw {
+  top: -6px !important;
+  left: -6px !important;
+  cursor: nw-resize !important;
+}
+
+.ql-image-resize-handle-ne {
+  top: -6px !important;
+  right: -6px !important;
+  cursor: ne-resize !important;
+}
+
+.ql-image-resize-handle-sw {
+  bottom: -6px !important;
+  left: -6px !important;
+  cursor: sw-resize !important;
+}
+
+.ql-image-resize-handle-se {
+  bottom: -6px !important;
+  right: -6px !important;
+  cursor: se-resize !important;
+}
+
+.ql-image-resize-display {
+  position: absolute !important;
+  bottom: -25px !important;
+  right: 0 !important;
+  background: white !important;
+  border: 1px solid #4682b4 !important;
+  color: #4682b4 !important;
+  padding: 2px 6px !important;
+  font-size: 11px !important;
+  border-radius: 3px !important;
+  z-index: 1001 !important;
+}
+
+.ql-image-resize-toolbar {
+  position: absolute !important;
+  top: -35px !important;
+  left: 0 !important;
+  background: white !important;
+  border: 1px solid #4682b4 !important;
+  border-radius: 3px !important;
+  padding: 2px !important;
+  z-index: 1001 !important;
+}
+
+.ql-image-resize-toolbar button {
+  background: transparent !important;
+  border: none !important;
+  color: #4682b4 !important;
+  font-size: 11px !important;
+  padding: 2px 6px !important;
+  margin: 0 1px !important;
+  cursor: pointer !important;
+  border-radius: 2px !important;
+}
+
+.ql-image-resize-toolbar button:hover {
+  background: #f0f2f1 !important;
+}
+
+.ql-snow .ql-container {
+  border: 1px solid #e5e7eb;
+  border-top: none;
+  border-radius: 0 0 0.5rem 0.5rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  min-height: 300px;
+}
+
+.ql-snow .ql-editor {
+  min-height: 300px;
+  max-height: 500px;
+  height: 400px;
+  overflow-y: auto;
+  padding: 1rem;
+  line-height: 1.6;
+}
+
+.ql-snow .ql-editor.ql-blank::before {
+  font-style: normal;
+  color: #9ca3af;
+}
+
+.ql-snow .ql-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  display: block;
+  margin: 0.5rem 0;
+  min-width: 50px;
+  min-height: 50px;
+}
+
+/* 이미지 로딩 중 스타일 */
+.ql-snow .ql-editor img:not([src]) {
+  background: #f3f4f6;
+  border: 2px dashed #d1d5db;
+  position: relative;
+}
+
+.ql-snow .ql-editor img:not([src]):before {
+  content: "🖼️ 이미지 로딩 중...";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* 불필요한 버튼들 숨기기 */
+.ql-snow .ql-toolbar .ql-script,
+.ql-snow .ql-toolbar .ql-formula,
+.ql-snow .ql-toolbar button[data-value="super"],
+.ql-snow .ql-toolbar button[data-value="sub"],
+.ql-snow .ql-toolbar .ql-clean,
+.ql-snow .ql-toolbar button.ql-clean,
+.ql-snow .ql-toolbar .ql-video,
+.ql-snow .ql-toolbar button.ql-video,
+.ql-snow .ql-toolbar .ql-file,
+.ql-snow .ql-toolbar button.ql-file,
+.ql-snow .ql-toolbar button[title*="file"],
+.ql-snow .ql-toolbar button[title*="Video"] {
+  display: none !important;
+}
+
 @font-face {
   font-family: "Pretendard JP";
   src: url("/fonts/PretendardJP-Thin.ttf") format("truetype");
@@ -63,8 +238,6 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 
   /* 커스텀 브랜드 색상 */
   --color-primary: #4682b4;
@@ -224,4 +397,80 @@ html, body {
   background: var(--badge-stone-light);
   color: var(--badge-stone-text);
   border-color: var(--badge-stone-border);
+}
+
+/* 멘션 스타일링 */
+.mention {
+  color: #1d9bf0;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.mention:hover {
+  text-decoration: underline;
+}
+
+/* 게시글 내용 스타일링 */
+.prose-content {
+  line-height: 1.6;
+}
+
+.prose-content p {
+  margin: 0.5rem 0;
+}
+
+.prose-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  margin: 0.5rem 0;
+}
+
+.prose-content h1, 
+.prose-content h2, 
+.prose-content h3 {
+  margin: 1rem 0 0.5rem 0;
+  font-weight: bold;
+}
+
+.prose-content h1 { font-size: 1.5rem; }
+.prose-content h2 { font-size: 1.25rem; }
+.prose-content h3 { font-size: 1.1rem; }
+
+.prose-content strong {
+  font-weight: bold;
+}
+
+.prose-content em {
+  font-style: italic;
+}
+
+.prose-content ul, 
+.prose-content ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.prose-content blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: #6b7280;
+}
+
+.prose-content pre {
+  background: #f3f4f6;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.prose-content code {
+  background: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
 }

@@ -1,0 +1,33 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createSuccessResponse, createErrorResponse, mapApiError, getStatusFromErrorCode } from '@/infrastructure/api/supabaseResponseUtils'
+import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {const { id } = await params
+    
+    // 간소화된 RPC 함수 사용하여 조회수 증가 (상품과 동일한 방식)
+    const { data, error } = await supabaseServer.rpc('increment_post_view_simple', {
+      p_post_id: id
+    })
+    
+    if (error) {
+      console.error('RPC call failed:', error)
+      const mappedError = mapApiError(error)
+      const errorResponse = createErrorResponse(mappedError)
+      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    }
+    
+    return NextResponse.json(createSuccessResponse({
+      success: data.success,
+      newViewCount: data.view_count
+    }))
+    
+  } catch (error) {
+    const mappedError = mapApiError(error)
+    const errorResponse = createErrorResponse(mappedError)
+    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+  }
+}

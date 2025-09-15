@@ -1,14 +1,20 @@
 import { Suspense } from 'react';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { CommunityPage as CommunityPageComponent } from '@/features/community/components/list/CommunityPage';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { MainLayout } from '@/shared/layout/MainLayout';
+import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
+import { CommunityPage as CommunityPageComponent } from '@/domains/community/components/CommunityPage';
+
+function CommunityContent() {
+  return (
+    <MainLayout showHeader={true} showFooter={false} showCategoryBar={true} showSearchBar={false}>
+      <CommunityPageComponent />
+    </MainLayout>
+  );
+}
 
 export default function CommunityPage() {
   return (
-    <MainLayout showHeader={true} showFooter={false} showCategoryBar={true} showSearchBar={false}>
-      <Suspense fallback={<LoadingSpinner />}>
-        <CommunityPageComponent />
-      </Suspense>
-    </MainLayout>
+    <Suspense fallback={<LoadingSpinner />}>
+      <CommunityContent />
+    </Suspense>
   );
 }
