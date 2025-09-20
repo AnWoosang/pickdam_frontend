@@ -23,18 +23,18 @@ export const useChartData = ({
   
   const chartData = useMemo((): ChartData[] => {
     return filteredHistory.map(item => ({
-      date: item.date,
-      displayDate: new Date(item.date).toLocaleDateString('ko-KR', { 
-        month: 'short', 
-        day: 'numeric' 
+      date: item.date.toISOString(),
+      displayDate: item.date.toLocaleDateString('ko-KR', {
+        month: 'short',
+        day: 'numeric'
       }),
-      fullDate: new Date(item.date).toLocaleDateString('ko-KR', { 
+      fullDate: item.date.toLocaleDateString('ko-KR', {
         year: 'numeric',
-        month: 'long', 
-        day: 'numeric' 
+        month: 'long',
+        day: 'numeric'
       }),
       price: item.price,
-      originalDate: item.date
+      originalDate: item.date.toISOString()
     }));
   }, [filteredHistory]);
 

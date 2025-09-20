@@ -2,7 +2,8 @@
 
 import Image from 'next/image';
 import { ImageIcon } from 'lucide-react';
-import { Product, getInhaleTypeName } from '@/domains/product/types/product';
+import { Product } from '@/domains/product/types/product';
+import { getInhaleTypeDisplayName, getProductCategoryDisplayName } from '@/domains/product/types/category';
 import { formatKRW } from '@/shared/utils/Format';
 
 interface ProductCardProps {
@@ -37,11 +38,11 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         )}
       </div>
       <div className="p-4 h-32 flex flex-col">
-        <h3 className="font-medium text-textHeading line-clamp-2 mb-2 h-12 flex items-start">
+        <h3 className="font-medium text-textHeading line-clamp-2 h-10 flex items-start">
           {product.name}
         </h3>
-        <div className="text-sm text-textDefault mb-1 flex-shrink-0">
-          {getInhaleTypeName(product.inhaleType)} • {product.flavor !== '무향' ? `${product.flavor} • ` : ''}{product.capacity}
+        <div className="text-xs text-textDefault mb-1 flex-shrink-0">
+          {getProductCategoryDisplayName(product.productCategory)} • {getInhaleTypeDisplayName(product.inhaleType)} • {product.capacity}ml
         </div>
         <div className="text-lg font-bold text-primary flex-shrink-0">
           최저가 {formatKRW(product.price)}

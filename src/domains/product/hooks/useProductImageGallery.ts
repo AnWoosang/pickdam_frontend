@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 import { Product } from '@/domains/product/types/product';
-import { useAuthStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 import { useWishlistMutation, useWishlistStatusQuery } from '@/domains/user/hooks/wishlist/useWishlistQuery';
 import { useProductShare } from '@/domains/product/hooks/useProductShare';
 import { toast } from 'react-hot-toast';
@@ -13,10 +13,11 @@ interface UseProductImageGalleryOptions {
 
 export const useProductImageGallery = ({ product }: UseProductImageGalleryOptions) => {
   const { handleShare } = useProductShare(product);
-  const { user } = useAuthStore();
+  const { user } = useAuthUtils();
   
   // 개별 찜 상태 조회
-  const { data: isWishlisted } = useWishlistStatusQuery(user?.id, product.id);
+  const { data: wishlistData } = useWishlistStatusQuery(user?.id, product.id);
+  const isWishlisted = wishlistData?.isWishlisted;
   
   // 찜하기 뮤테이션
   const wishlistMutation = useWishlistMutation();

@@ -52,11 +52,8 @@ export interface Post {
   likeCount: number;
   commentCount: number;
   category?: PostCategory;
-  isPinned?: boolean;
-  isDeleted?: boolean;
   isLiked?: boolean; // 현재 사용자가 좋아요했는지
   profileImageUrl?: string;
-  images?: string[];
 }
 
 // 게시글 상세 정보 (확장된 게시글 타입)
@@ -71,43 +68,52 @@ export interface PostCategory {
 }
 
 // 게시글 생성 폼 타입
-export interface CreatePostForm {
+export interface PostForm {
   title: string;
   content: string;
   categoryId: string;
   authorId: string;
 }
 
-// 게시글 수정 폼 타입
-export interface UpdatePostForm {
-  title: string;
+// 댓글 작성 폼 타입
+export interface CommentForm {
   content: string;
-  categoryId: string;
+  postId?: string; // 수정 시에는 필요없음
   authorId: string;
+  parentId?: string;
 }
 
-// 댓글 도메인 타입 (지연 로딩 방식)
 export interface Comment {
   id: string;
   postId: string;
   parentId?: string; // 구조상 부모 (최대 2레벨용) - DB의 parent_comment_id와 매핑
-  replyToCommentId?: string; // 실제 답글 대상 댓글 ID
-  replyToUserId?: string; // 멘션할 사용자 ID
-  replyToUsername?: string; // 멘션할 사용자명
   content: string;
-  author: { nickname: string; profile_image_url?: string }; // 작성자 정보
+  author: { nickname: string; profileImageUrl?: string }; // 작성자 정보
   authorId: string;
   createdAt: string;
   updatedAt: string;
   likeCount: number;
-  isDeleted: boolean;
-  
-  // 통합 쿼리에서 제공되는 필드들
-  isLiked?: boolean; // 현재 사용자가 좋아요했는지
-  replyCount?: number; // 답글 개수 (지연 로딩용)
-  
-  // 호환성 유지용 (deprecated)
-  profileImageUrl?: string;
+  isLiked?: boolean;
+  replyCount?: number;
   replies?: Comment[]; // 지연 로딩으로 채워짐
-  depth?: number;
+}
+
+// 댓글 좋아요 정보 도메인 타입
+export interface CommentLikeInfo {
+  commentId: string;
+  isLiked: boolean;
+  likeCount: number;
+}
+
+// 게시글 좋아요 정보 도메인 타입
+export interface PostLikeInfo {
+  postId: string;
+  isLiked: boolean;
+  likeCount: number;
+}
+
+// 게시글 조회수 정보 도메인 타입
+export interface PostViewInfo {
+  postId: string;
+  viewCount: number;
 }

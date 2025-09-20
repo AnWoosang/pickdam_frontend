@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Button } from '@/shared/components/Button';
-
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 import { PostCategoryId } from '@/domains/community/types/community';
 import { POST_CATEGORIES } from '@/domains/community/types/community';
 interface CategorySelectorProps {
@@ -10,16 +10,24 @@ interface CategorySelectorProps {
   error?: string;
 }
 
-export const CategorySelector = React.memo(function CategorySelector({ 
-  value, 
-  onChange, 
+export const CategorySelector = React.memo(function CategorySelector({
+  value,
+  onChange,
   onErrorChange,
-  error 
+  error
 }: CategorySelectorProps) {
-  const categoryEntries = useMemo(() => 
-    Object.entries(POST_CATEGORIES) as [PostCategoryId, string][], 
-    []
-  );
+  const { canWriteNotice } = useAuthUtils();
+
+  const categoryEntries = useMemo(() => {
+    const allCategories = Object.entries(POST_CATEGORIES) as [PostCategoryId, string][];
+
+    // 관리자가 아니면 공지사항 카테고리 제외
+    if (!canWriteNotice) {
+      return allCategories.filter(([categoryId]) => categoryId !== 'NOTICE');
+    }
+
+    return allCategories;
+  }, [canWriteNotice]);
 
   const handleCategoryChange = (categoryId: PostCategoryId) => {
     onChange({ categoryId });

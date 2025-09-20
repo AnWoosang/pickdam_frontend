@@ -33,12 +33,21 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [shouldShowExpandButton, setShouldShowExpandButton] = useState(false);
+  const contentRef = React.useRef<HTMLParagraphElement>(null);
   const imageViewer = useImageViewer();
 
-  const shouldShowExpandButton = review.content.length > CONTENT_PREVIEW_LENGTH;
-  const displayContent = shouldShowExpandButton && !isExpanded 
-    ? review.content.slice(0, CONTENT_PREVIEW_LENGTH) + '...' 
-    : review.content;
+  // 컨텐츠가 4줄을 넘는지 확인
+  React.useEffect(() => {
+    if (contentRef.current && !isExpanded) {
+      const lineHeight = parseInt(window.getComputedStyle(contentRef.current).lineHeight);
+      const maxHeight = lineHeight * 4; // 4줄 높이
+      const isOverflowing = contentRef.current.scrollHeight > maxHeight;
+      setShouldShowExpandButton(isOverflowing);
+    }
+  }, [review.content, isExpanded]);
+
+  const displayContent = review.content;
 
   const defaultFormatDate = React.useCallback((dateString: string) => {
     const date = new Date(dateString);
@@ -81,7 +90,7 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
   // 이미지 관련
   const imageUrls = React.useMemo(() => {
     const hasImages = review.images && review.images.length > 0;
-    return hasImages ? review.images!.map((img) => img.url) : [];
+    return hasImages ? review.images!.map((img) => img.imageUrl) : [];
   }, [review.images]);
 
   const handleImageClick = React.useCallback((index: number) => {
@@ -91,7 +100,7 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
   }, [imageUrls, imageViewer]);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 mb-4">
+    <div className="bg-white rounded-lg p-4 min-h-[150px]">
       {/* 사용자 정보 및 평점 */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
@@ -149,33 +158,15 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
         )}
       </div>
 
-      {/* 세부 평점 */}
-      <div className="grid grid-cols-5 gap-4 mb-4 text-sm">
-        <div className="text-center">
-          <div className="text-gray-500">달콤함</div>
-          <div className="font-medium">{review.sweetness}/5</div>
-        </div>
-        <div className="text-center">
-          <div className="text-gray-500">멘솔</div>
-          <div className="font-medium">{review.menthol}/5</div>
-        </div>
-        <div className="text-center">
-          <div className="text-gray-500">목넘김</div>
-          <div className="font-medium">{review.throatHit}/5</div>
-        </div>
-        <div className="text-center">
-          <div className="text-gray-500">바디감</div>
-          <div className="font-medium">{review.body}/5</div>
-        </div>
-        <div className="text-center">
-          <div className="text-gray-500">신선함</div>
-          <div className="font-medium">{review.freshness}/5</div>
-        </div>
-      </div>
 
       {/* 리뷰 내용 */}
       <div className="mb-4">
-        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+        <p
+          ref={contentRef}
+          className={`text-gray-700 leading-relaxed whitespace-pre-wrap ${
+            !isExpanded ? 'line-clamp-4' : ''
+          }`}
+        >
           {displayContent}
         </p>
         {shouldShowExpandButton && (
@@ -202,17 +193,18 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
 
       {/* 이미지 */}
       {imageUrls.length > 0 && (
-        <div className="grid grid-cols-4 gap-2">
+        <div className="flex gap-2 flex-wrap">
           {review.images!.slice(0, 4).map((image, index) => (
             <div
               key={index}
-              className="relative aspect-square rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+              className="relative w-20 h-20 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-gray-200"
               onClick={() => handleImageClick(index)}
             >
               <Image
-                src={image.url}
+                src={image.imageUrl}
                 alt={`리뷰 이미지 ${index + 1}`}
                 fill
+                sizes="80px"
                 className="object-cover"
               />
               {review.images!.length > 4 && index === 3 && (

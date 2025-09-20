@@ -1,6 +1,7 @@
 "use client";
 
 import { useCommentsQuery } from '@/domains/community/hooks/comment/useCommentQueries';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 
 import { useState, useCallback, useMemo } from 'react';
 
@@ -16,15 +17,20 @@ export const useCommentSection = ({ postId, currentUserId }: UseCommentSectionPr
   // 페이지네이션 상태
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Query options 메모이제이션
+  // 인증 상태 확인
+  const { isLoading: isAuthLoading } = useAuthUtils();
+
+  // Query options 메모이제이션 (인증 상태 확정 후에만 호출)
   const queryOptions = useMemo(() => ({
     page: currentPage,
     limit: COMMENTS_PER_PAGE,
-    currentUserId
+    currentUserId: currentUserId || undefined
   }), [currentPage, currentUserId]);
 
-  // 댓글 데이터 조회
-  const { data: commentsData, isLoading } = useCommentsQuery(postId, queryOptions);
+  // 댓글 데이터 조회 (인증 상태 로딩 완료 후에만 호출)
+  const { data: commentsData, isLoading } = useCommentsQuery(postId, queryOptions, {
+    enabled: !!postId && !isAuthLoading  // 인증 확인 완료 후에만 호출
+  });
 
   // 댓글 데이터 추출 (메모이제이션)
   const { comments, totalComments, totalPages } = useMemo(() => ({

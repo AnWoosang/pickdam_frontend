@@ -52,12 +52,25 @@ export const ReviewWriteForm = React.memo(function ReviewWriteForm({ onCancel, o
 
   // 이미지 업로드 핸들러
   const handleImageUpload = React.useCallback(async (): Promise<string[]> => {
-    if (!imageUploadManager) return [];
-    
+    console.log('📷 [ReviewWriteForm] 이미지 업로드 시작:', {
+      hasImageUploadManager: !!imageUploadManager,
+      isUploading: imageUploadManager?.isUploading
+    });
+
+    if (!imageUploadManager) {
+      console.log('⚠️ [ReviewWriteForm] imageUploadManager가 없음');
+      return [];
+    }
+
     try {
       const uploadedImages = await imageUploadManager.commitUploads();
+      console.log('✅ [ReviewWriteForm] 이미지 업로드 성공:', {
+        count: uploadedImages.length,
+        images: uploadedImages.map(img => ({ url: img.url }))
+      });
       return uploadedImages.map(img => img.url);
     } catch (_error: unknown) {
+      console.error('❌ [ReviewWriteForm] 이미지 업로드 실패:', _error);
       throw new Error('이미지 업로드에 실패했습니다.');
     }
   }, [imageUploadManager]);
@@ -102,14 +115,11 @@ export const ReviewWriteForm = React.memo(function ReviewWriteForm({ onCancel, o
   // 폼 제출 핸들러 (UI 책임 처리)
   const handleSubmit = React.useCallback(async (event: React.FormEvent) => {
     event.preventDefault();
-    
+
     try {
-      // 1. 먼저 이미지 업로드
       const imageUrls = await handleImageUpload();
-      
-      // 2. 폼 제출 (이미지 URL과 함께)
       const result = await submitForm(imageUrls);
-      
+
       if (!result.success) {
         if (result.type === 'validation' && result.errors) {
           handleValidationError(result.errors);

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/infrastructure/api/supabaseServer'
-// StatusCodes 제거 - getStatusFromErrorCode 사용
-import { createSuccessResponse, createErrorResponse, mapApiError, getStatusFromErrorCode } from '@/infrastructure/api/supabaseResponseUtils'
+import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
+import { StatusCodes } from 'http-status-codes'
+import { ToggleCommentLikeResponseDto } from '@/domains/community/types/dto/communityDto'
 
 export async function POST(
   request: NextRequest,
@@ -9,13 +10,7 @@ export async function POST(
 ) {
   try {const { memberId } = await request.json()
     const { id: commentId } = await params
-    
-    if (!commentId || !memberId) {
-      const mappedError = mapApiError({ message: 'Missing required fields' })
-      const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
-    }
-    
+        
     // Use RPC function for like toggle
     const { data: result, error } = await supabaseServer
       .rpc('toggle_comment_like', {
@@ -24,32 +19,22 @@ export async function POST(
       })
     
     if (error) {
-      console.error('Toggle comment like RPC error:', error)
-      
-      if (error.message === 'COMMENT_NOT_FOUND') {
-        const mappedError = mapApiError({ message: 'Comment not found' })
-        const errorResponse = createErrorResponse(mappedError)
-        return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
-      } else if (error.message === 'MEMBER_NOT_FOUND') {
-        const mappedError = mapApiError({ message: 'User not found' })
-        const errorResponse = createErrorResponse(mappedError)
-        return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
-      }
-      
       const mappedError = mapApiError(error)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
-    return NextResponse.json(createSuccessResponse({
-      success: result.success,
+    const responseData: ToggleCommentLikeResponseDto = {
+      commentId: commentId,
       isLiked: result.liked,
-      newLikeCount: result.like_count
-    }), { status: 201 })
+      likeCount: result.like_count
+    }
+
+    return NextResponse.json(createSuccessResponse(responseData), { status: StatusCodes.CREATED })
     
   } catch (error) {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }

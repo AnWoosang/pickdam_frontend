@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { productApi } from '@/domains/product/api/productApi'
 import { productKeys } from '@/domains/product/constants/productQueryKeys'
-import { ProductsRequestParamDto } from '@/domains/product/types/dto/productRequestDto'
+import { ProductsRequestParamDto } from '@/domains/product/types/dto/productDto'
 import { ProductDetail } from '@/domains/product/types/product'
 
 // 상품 목록 조회 (페이지네이션)
@@ -43,5 +43,15 @@ export const useIncrementProductViews = () => {
         }
       })
     },
+  })
+}
+
+// 월별 가격 히스토리 조회
+export const useMonthlyPriceHistory = (productId: string, year: number, month: number, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: [...productKeys.product(productId), 'price-history', year, month],
+    queryFn: () => productApi.getMonthlyPriceHistory(productId, year, month),
+    enabled: !!productId && enabled,
+    staleTime: 1000 * 60 * 10, // 10분
   })
 }

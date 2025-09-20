@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSuccessResponse, createErrorResponse, mapApiError, getStatusFromErrorCode } from '@/infrastructure/api/supabaseResponseUtils'
+import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
 import { supabaseServer } from '@/infrastructure/api/supabaseServer'
 
 export async function GET(
@@ -11,14 +11,13 @@ export async function GET(
     const { data, error } = await supabaseServer
       .from('user_stats_view')
       .select('*')
-      .eq('member_id', id)
+      .eq('user_id', id)
       .single()
     
     if (error) {
-      console.error('User stats fetch error:', error)
       const mappedError = mapApiError(error)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
     return NextResponse.json(createSuccessResponse({ stats: data }))
@@ -26,6 +25,6 @@ export async function GET(
   } catch (error) {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }

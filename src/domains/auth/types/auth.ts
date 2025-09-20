@@ -1,46 +1,7 @@
-import { User } from '@/domains/user/types/user';
+import { User, Gender } from '@/domains/user/types/user';
 
-// Gender enum과 GENDER_LABELS를 여기에서 재export
-export { Gender, GENDER_LABELS } from '@/domains/user/types/user';
+// ========== ENUMS ==========
 
-// 로그인 관련 타입 정의
-export interface LoginFormData {
-  email: string;
-  password: string;
-}
-
-export interface SessionInfo {
-  user: User;
-  session: Session;
-}
-
-// Auth 상태 관리 타입 정의
-export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-}
-
-// 세션 타입 정의
-export interface Session {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  expires_at?: number;
-  token_type: string;
-}
-
-// 이메일 인증 처리 타입
-export interface EmailVerificationParams {
-  token_hash?: string
-  token?: string
-  access_token?: string
-  refresh_token?: string
-  type?: string
-}
-
-// 로그인 제공자 enum
 export enum LoginProvider {
   EMAIL = 'EMAIL',
   KAKAO = 'KAKAO',
@@ -48,7 +9,14 @@ export enum LoginProvider {
   GOOGLE = 'GOOGLE',
 }
 
-// 로그인 제공자 라벨 맵핑
+export enum Role {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
+  SELLER = 'SELLER',
+}
+
+// ========== CONSTANTS ==========
+
 export const LOGIN_PROVIDER_LABELS: Record<LoginProvider, string> = {
   [LoginProvider.EMAIL]: 'EMAIL',
   [LoginProvider.KAKAO]: 'KAKAO',
@@ -56,37 +24,59 @@ export const LOGIN_PROVIDER_LABELS: Record<LoginProvider, string> = {
   [LoginProvider.GOOGLE]: 'GOOGLE',
 };
 
-// 사용자 역할 enum
-export enum Role {
-  USER = 'USER',
-  ADMIN = 'ADMIN', 
-  SELLER = 'SELLER',
-}
-
-// 사용자 역할 라벨 맵핑
 export const USER_ROLE_LABELS: Record<Role, string> = {
-  [Role.USER]: 'USER',
-  [Role.ADMIN]: 'ADMIN',
-  [Role.SELLER]: 'SELLER',
+  [Role.USER]: '일반 사용자',
+  [Role.ADMIN]: '관리자',
+  [Role.SELLER]: '판매자',
 };
 
-// 비밀번호 관련 타입 정의
-export interface PasswordResetRequest {
+// ========== SESSION TYPES ==========
+
+export interface Session {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  expiresAt?: number;
+  tokenType: string;
+}
+
+export interface SessionInfo {
+  user: User;
+  session: Session;
+}
+
+// ========== AUTH FORM TYPES ==========
+
+export interface LoginForm {
   email: string;
+  password: string;
 }
 
-export interface PasswordResetConfirm {
-  token: string;
-  newPassword: string;
-}
-
-export interface PasswordChangeData {
-  currentPassword: string;
-  newPassword: string;
+export interface SignupForm {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  name: string;
+  nickname: string;
+  birthDate: string;
+  gender: Gender;
+  termsAccepted: boolean;
+  privacyAccepted: boolean;
+  marketingAccepted?: boolean;
 }
 
 // 이메일 재발송 폼 타입
 export interface ResendEmailForm {
   email: string;
-  type?: 'signup' | 'reset';
+  type?: 'signup' | 'email_change';
+}
+
+// ========== EMAIL VERIFICATION TYPES ==========
+
+export interface EmailVerificationParams {
+  tokenHash?: string
+  token?: string
+  accessToken?: string
+  refreshToken?: string
+  type?: string
 }

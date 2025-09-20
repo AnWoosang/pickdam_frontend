@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 import { useLogout, useRefreshSession } from '@/domains/auth/hooks/useAuthQueries';
 import { useUserStats, useDeleteAccount, useUpdateProfile } from './useMyPageQueries';
 
@@ -10,18 +10,8 @@ import { useUserStats, useDeleteAccount, useUpdateProfile } from './useMyPageQue
 const _DEFAULT_PAGE = 1;
 const _DEFAULT_PAGE_SIZE = 10;
 
-// API 응답 타입 정의 (snake_case)
-interface UserStatsApiResponse {
-  wishlist_count: number;
-  review_count: number;
-  post_count: number;
-  comment_count: number;
-  liked_posts_count: number;
-  liked_comments_count: number;
-}
-
 export function useMypage() {
-  const { user, isLoading } = useAuthStore();
+  const { user, isLoading } = useAuthUtils();
   const logoutMutation = useLogout();
   const refreshMutation = useRefreshSession();
   const router = useRouter();
@@ -36,15 +26,11 @@ export function useMypage() {
   const updateProfileMutation = useUpdateProfile();
   const deleteAccountMutation = useDeleteAccount();
 
-  // 통계 데이터 변환 - API 응답의 snake_case를 camelCase로 변환
-  const statsData = userStatsData as UserStatsApiResponse | undefined;
+  // 통계 데이터 - 이미 도메인 타입으로 변환됨
   const stats = {
-    wishlistCount: statsData?.wishlist_count || 0,
-    reviewCount: statsData?.review_count || 0,
-    postCount: statsData?.post_count || 0,
-    commentCount: statsData?.comment_count || 0,
-    likedPostsCount: statsData?.liked_posts_count || 0,
-    likedCommentsCount: statsData?.liked_comments_count || 0,
+    reviewCount: userStatsData?.reviewCount || 0,
+    postCount: userStatsData?.postCount || 0,
+    commentCount: userStatsData?.commentCount || 0,
   };
 
   // 로그아웃 다이얼로그 열기
@@ -60,7 +46,8 @@ export function useMypage() {
       await logoutMutation.mutateAsync();
       router.push('/');
     } catch (error) {
-      console.error('Logout error:', error);
+      // 로그아웃 실패 시에도 홈으로 이동
+      router.push('/');
     } finally {
       setIsLoggingOut(false);
     }
@@ -75,7 +62,7 @@ export function useMypage() {
   // 닉네임 저장
   const handleNicknameSave = useCallback(async (newNickname: string) => {
     if (!user) return;
-    
+
     try {
       await updateProfileMutation.mutateAsync({
         userId: user.id,
@@ -83,7 +70,6 @@ export function useMypage() {
       });
       await refreshMutation.mutateAsync();
     } catch (error) {
-      console.error('닉네임 업데이트 실패:', error);
       throw error;
     }
   }, [user, refreshMutation, updateProfileMutation]);
@@ -99,19 +85,18 @@ export function useMypage() {
   }, []);
 
   // 회원탈퇴 확인
-  const handleAccountDeletionConfirm = useCallback(async () => {
+  const handleAccountDeletionConfirm = useCallback(async (form?: { reason?: string }) => {
     if (!user) return;
 
     setIsLoggingOut(true);
     try {
       await deleteAccountMutation.mutateAsync({
         userId: user.id,
-        reason: '사용자 요청'
+        reason: form?.reason || undefined
       });
       await logoutMutation.mutateAsync();
       router.push('/');
     } catch (error) {
-      console.error('회원탈퇴 실패:', error);
       throw error; // 에러를 다시 throw해서 모달에서 처리하도록
     } finally {
       setIsLoggingOut(false);

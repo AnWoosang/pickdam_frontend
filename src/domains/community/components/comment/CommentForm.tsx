@@ -3,7 +3,8 @@
 import React from 'react';
 import { Button } from '@/shared/components/Button';
 import { Avatar } from '@/shared/components/Avatar';
-import { useAuthStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
+import { useUIStore } from '@/domains/auth/store/authStore';
 
 interface CommentFormProps {
   newComment: string;
@@ -16,7 +17,8 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   setNewComment,
   onSubmit
 }) => {
-  const { openLoginModal, user } = useAuthStore();
+  const { user } = useAuthUtils();
+  const { openLoginModal } = useUIStore();
   if (!user) {
     return (
       <div className="mb-6 text-center">

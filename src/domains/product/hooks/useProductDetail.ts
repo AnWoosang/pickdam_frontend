@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuthStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 import { useRecentProducts } from '@/domains/user/hooks/useRecentProducts';
 import { BusinessError, createBusinessError } from '@/shared/error/BusinessError';
 import { 
@@ -11,7 +11,7 @@ import {
 import { Product } from '@/domains/product/types/product';
 
 export const useProductDetail = (productId: string) => {
-  const { isLoading: authLoading } = useAuthStore();
+  const { isLoading: authLoading } = useAuthUtils();
   const { addProduct: addRecentProduct } = useRecentProducts();
   
   // useProduct 훅 사용

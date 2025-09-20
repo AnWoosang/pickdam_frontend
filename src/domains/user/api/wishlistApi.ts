@@ -1,10 +1,12 @@
 import { apiClient } from '@/shared/api/axiosClient'
 import { Product } from '@/domains/product/types/product'
+import { WishlistLikeInfo } from '@/domains/user/types/user'
 import { API_ROUTES } from '@/app/router/apiRoutes'
 import { PaginationResult } from '@/shared/types/pagination'
 import { PaginatedResponse, ApiResponse } from '@/shared/api/types'
-import { ProductResponseDto, ToggleWishlistResponseDto } from '@/domains/product/types/dto/productResponseDto';
+import { ProductResponseDto, ToggleWishlistResponseDto } from '@/domains/product/types/dto/productDto';
 import { toProduct } from '@/domains/product/types/dto/productMapper';
+import { toWishlistLikeInfo } from '@/domains/user/types/dto/userMapper';
 
 // 찜한 상품 페이지네이션 조회
 export const getWishlistProducts = async (
@@ -22,46 +24,29 @@ export const getWishlistProducts = async (
 }
 
 // 찜 상태 토글 (추가/제거)
-export const toggleWishlist = async (userId: string, productId: string): Promise<{
-  success: boolean;
-  isWishlisted: boolean;
-  newWishlistCount: number;
-}> => {
+export const toggleWishlist = async (userId: string, productId: string): Promise<WishlistLikeInfo> => {
   const response = await apiClient.post<ApiResponse<ToggleWishlistResponseDto>>(
     API_ROUTES.USERS.WISHLIST_TOGGLE(userId, productId)
   );
-  
-  return {
-    success: response.success,
-    isWishlisted: response.data?.isWishlisted || false,
-    newWishlistCount: response.data?.newFavoriteCount || 0
-  };
+
+  return toWishlistLikeInfo(response.data!);
 }
 
 // 찜 목록에서 여러 상품 일괄 삭제
-export const removeMultipleFromWishlist = async (userId: string, productIds: string[]): Promise<{
-  success: boolean;
-  deletedCount: number;
-}> => {
-  const response = await apiClient.delete<ApiResponse<{
-    deletedCount: number;
-  }>>(API_ROUTES.USERS.WISHLIST(userId), {
+export const removeMultipleFromWishlist = async (userId: string, productIds: string[]): Promise<void> => {
+  await apiClient.delete(API_ROUTES.USERS.WISHLIST(userId), {
     data: { productIds }
   });
-  
-  return {
-    success: response.success,
-    deletedCount: response.data?.deletedCount || 0
-  };
 }
 
 // 찜 상태 확인 (단일 확인 API 사용)
-export const checkWishlistStatus = async (memberId: string, productId: string): Promise<boolean> => {
+export const checkWishlistStatus = async (memberId: string, productId: string): Promise<{ isWishlisted: boolean }> => {
+  
   const response = await apiClient.get<ApiResponse<{ isWishlisted: boolean }>>(
     API_ROUTES.USERS.WISHLIST_STATUS(memberId, productId)
   );
-  
-  return response.data?.isWishlisted || false;
+
+  return response.data!;
 }
 
 

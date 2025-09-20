@@ -2,7 +2,7 @@
 
 import { useReducer, useCallback } from 'react';
 import { Review } from '@/domains/review/types/review';
-import { useAuthStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 import { useReviews } from '@/domains/review/hooks/useReviewList';
 import { toast } from 'react-hot-toast';
 
@@ -56,7 +56,7 @@ interface UseReviewListSectionParams {
 }
 
 export const useReviewListSection = ({ productId }: UseReviewListSectionParams) => {
-  const { user } = useAuthStore();
+  const { user } = useAuthUtils();
   const [filters, dispatchFilters] = useReducer(filtersReducer, initialFilters);
 
   const { 
@@ -75,33 +75,18 @@ export const useReviewListSection = ({ productId }: UseReviewListSectionParams) 
   }, []);
 
   // 리뷰 수정 저장
-  const handleSaveReview = useCallback(async (editingReview: Review, updatedReview: Partial<Review>) => {
-    if (!editingReview || !user?.id) return;
+  const handleSaveReview = useCallback(async (updatedReview: Review) => {
+    if (!updatedReview || !user?.id) return;
+
+    console.log('💾 [handleSaveReview] 리뷰 수정 시작:', { reviewId: updatedReview.id, productId: updatedReview.productId });
 
     try {
-      // 이미지를 ImageUploadRequestDto 형태로 변환
-      const images = updatedReview.images?.map(img => ({
-        image_url: img.url,
-        image_order: img.order
-      })) || [];
-      
-      // 비즈니스 로직 훅 사용
-      await updateReview({
-        reviewId: editingReview.id,
-        memberId: user.id,
-        updates: {
-          content: updatedReview.content || '',
-          rating: updatedReview.rating || 5,
-          sweetness: updatedReview.sweetness,
-          menthol: updatedReview.menthol,
-          throatHit: updatedReview.throatHit,
-          body: updatedReview.body,
-          freshness: updatedReview.freshness,
-          images: images
-        }
-      });
+      await updateReview(updatedReview);
+      console.log('✅ [handleSaveReview] 리뷰 수정 성공:', updatedReview.id);
+      toast.success('리뷰가 수정되었습니다');
     } catch (error) {
-      console.error('리뷰 수정 실패:', error);
+      console.error('❌ [handleSaveReview] 리뷰 수정 실패:', error);
+      toast.error('리뷰 수정 중 오류가 발생했습니다');
       throw error;
     }
   }, [user?.id, updateReview]);

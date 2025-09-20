@@ -5,7 +5,7 @@ import { Comment } from '@/domains/community/types/community';
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/shared/components/Button';
 import { Avatar } from '@/shared/components/Avatar';
-import { formatAbsoluteDate } from '@/utils/dateUtils';
+import { formatAbsoluteDate } from '@/shared/utils/Format';
 
 interface CommentHeaderProps {
   comment: Comment;
@@ -51,7 +51,7 @@ export const CommentHeader = React.memo(({
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-3">
           <Avatar
-            src={comment.author?.profile_image_url}
+            src={comment.author?.profileImageUrl}
             alt={`${comment.author?.nickname || '탈퇴한 사용자'} 프로필 사진`}
             size="small"
           />

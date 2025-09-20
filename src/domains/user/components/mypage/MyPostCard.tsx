@@ -3,10 +3,10 @@
 import React, { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Heart, MessageCircle } from 'lucide-react';
-import { MyPost } from '@/domains/user/types/mypage/mypage';
+import { MyPost } from '@/domains/user/types/mypage';
 import { PostCategoryBadge } from '@/domains/community/components/post/PostCategoryBadge';
-import { formatDate } from '@/utils/dateUtils';
-import { truncateHTMLContent } from '@/utils/textUtils';
+import { formatDate } from '@/shared/utils/Format';
+import { stripHtml } from 'string-strip-html';
 import { ROUTES } from '@/app/router/routes';
 
 interface MyPostCardProps {
@@ -45,7 +45,13 @@ export const MyPostCard = React.memo(({
       
       {showContent && post.content && (
         <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-          {truncateHTMLContent(post.content, maxContentLength)}
+          {(() => {
+            const textContent = stripHtml(post.content).result;
+            const cleanContent = textContent.replace(/\s+/g, ' ').trim();
+            return cleanContent.length > maxContentLength
+              ? cleanContent.substring(0, maxContentLength) + '...'
+              : cleanContent;
+          })()}
         </p>
       )}
       

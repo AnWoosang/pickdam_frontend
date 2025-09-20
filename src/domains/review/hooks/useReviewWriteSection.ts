@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from 'react';
-import { useAuthStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 import { useCreateReview } from './useReviewQueries';
 import type { ReviewForm } from '../types/review';
 
@@ -14,7 +14,7 @@ export function useReviewWriteSection({
   productId, 
   onReviewCreated 
 }: UseReviewWriteSectionOptions) {
-  const { user } = useAuthStore();
+  const { user } = useAuthUtils();
   const createReviewMutation = useCreateReview();
 
   const submitReview = useCallback(async (formData: ReviewForm) => {
@@ -26,11 +26,7 @@ export function useReviewWriteSection({
       await createReviewMutation.mutateAsync({
         productId,
         memberId: user.id,
-        reviewForm: formData,
-        reviewImages: formData.uploadedImageUrls.map((url, index) => ({
-          url,
-          order: index + 1
-        }))
+        reviewForm: formData
       });
 
       onReviewCreated?.();

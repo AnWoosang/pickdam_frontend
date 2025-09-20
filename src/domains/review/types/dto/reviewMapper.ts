@@ -1,16 +1,17 @@
 import { Review, ReviewImage } from '../review';
-import { ReviewResponseDto, ReviewImageResponseDto } from './reviewResponseDto';
+import { ReviewResponseDto, ReviewImageResponseDto } from './reviewDto';
 
 function toReviewImage(dto: ReviewImageResponseDto): ReviewImage {
   return {
-    url: dto.url,
-    order: dto.order
+    imageUrl: dto.imageUrl,
+    imageOrder: dto.imageOrder
   };
 }
 
 export function toReview(dto: ReviewResponseDto): Review {
   return {
     id: dto.id,
+    productId: dto.productId,
     userId: dto.userId,
     userName: dto.userName,
     profileImage: dto.profileImage,

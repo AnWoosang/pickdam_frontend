@@ -33,13 +33,13 @@ export const usePostHeader = ({ post, user, onPostDelete }: UsePostHeaderProps) 
   const isOwner = user && (user.id === post.authorId);
 
   // 편집 저장 핸들러
-  const handleSaveEdit = useCallback((updatedData: { title: string; content: string; images?: File[] }, onSuccess?: () => void) => {
+  const handleSaveEdit = useCallback((updatedData: { title: string; content: string }, onSuccess?: () => void) => {
     if (!user) {
       const authError = createBusinessError.unauthorized('로그인이 필요합니다.');
       toast.error(authError.message);
       return;
     }
-    
+
     updatePostMutation.mutate({
       id: post.id,
       form: {

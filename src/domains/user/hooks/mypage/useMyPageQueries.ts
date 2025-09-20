@@ -2,9 +2,9 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { userApi } from '@/domains/user/api/userApi'
-import { mypageApi } from '@/domains/user/api/mypage/mypageApi'
+import { mypageApi } from '@/domains/user/api/mypageApi'
 import { getWishlistProducts } from '@/domains/user/api/wishlistApi'
-import { UpdateProfileData } from '@/domains/user/types/user'
+import { UpdateProfileForm, WithdrawMemberForm } from '@/domains/user/types/user'
 import { myPageKeys } from '@/domains/user/constants/userQueryKeys'
 
 // 사용자 찜목록 조회 (마이페이지용)
@@ -64,7 +64,7 @@ export const useUpdateProfile = () => {
   return useMutation({
     mutationFn: ({ userId, updates }: { 
       userId: string; 
-      updates: UpdateProfileData 
+      updates: UpdateProfileForm 
     }) => userApi.updateProfile(userId, updates),
     onSuccess: (_, { userId }) => {
       // 사용자 관련 캐시 무효화
@@ -78,8 +78,8 @@ export const useDeleteAccount = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ userId, reason }: { userId: string; reason?: string }) => 
-      userApi.withdrawMember(userId, reason),
+    mutationFn: ({ memberId, requestForm }: { memberId: string; requestForm: WithdrawMemberForm }) =>
+      userApi.withdrawMember(memberId, requestForm),
     onSuccess: () => {
       // 모든 마이페이지 관련 캐시 삭제
       queryClient.removeQueries({ queryKey: myPageKeys.all })

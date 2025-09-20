@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { StatusCodes } from 'http-status-codes'
-import { createSuccessResponse, createErrorResponse, mapApiError, getStatusFromErrorCode } from '@/infrastructure/api/supabaseResponseUtils'
+import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
 import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { ToggleLikeResponseDto } from '@/domains/community/types/dto/communityDto'
 
 export async function POST(
   request: NextRequest,
@@ -14,7 +15,7 @@ export async function POST(
     if (!memberId) {
       const mappedError = mapApiError({ message: 'memberId is required', status: StatusCodes.BAD_REQUEST })
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
     // 새로운 RPC 함수 사용하여 좋아요 토글
@@ -26,25 +27,26 @@ export async function POST(
     if (error) {
       const mappedError = mapApiError(error)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
     if (!data.success) {
       const mappedError = mapApiError({ message: data.message || 'Failed to toggle like', status: StatusCodes.BAD_REQUEST })
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
-    return NextResponse.json(createSuccessResponse({
-      success: data.success,
-      liked: data.liked,
-      likeCount: data.like_count
-    }))
+    const responseDto: ToggleLikeResponseDto = {
+      isLiked: data.liked,
+      newLikeCount: data.like_count
+    }
+
+    return NextResponse.json(createSuccessResponse(responseDto))
     
   } catch (error) {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }
 
@@ -60,7 +62,7 @@ export async function GET(
     if (!memberId) {
       const mappedError = mapApiError({ message: 'memberId is required', status: StatusCodes.BAD_REQUEST })
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
     const { data, error } = await supabaseServer
@@ -71,10 +73,9 @@ export async function GET(
       .single()
     
     if (error && error.code !== 'PGRST116') { // PGRST116은 "no rows returned" 오류
-      console.error('Check post like error:', error)
       const mappedError = mapApiError(error)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
     const liked = !!data
@@ -86,6 +87,6 @@ export async function GET(
   } catch (error) {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }

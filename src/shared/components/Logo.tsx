@@ -38,7 +38,6 @@ export const Logo: React.FC<LogoProps> = ({
         width={dimensions.width}
         height={dimensions.height}
         className="object-contain"
-        priority
       />
     </button>
   );

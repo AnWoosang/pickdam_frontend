@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
-;
-import { createPaginatedResponse, createErrorResponse, mapApiError, getStatusFromErrorCode } from '@/infrastructure/api/supabaseResponseUtils';
+import { supabaseServer } from '@/infrastructure/api/supabaseServer';
+import { createPaginatedResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils';
+import { MyCommentResponseDto } from '@/domains/user/types/dto/mypageDto';
 
 export async function GET(
   request: NextRequest,
@@ -35,7 +35,6 @@ export async function GET(
         like_count,
         parent_comment_id,
         post_id,
-        is_deleted,
         author:author_id (
           nickname,
           profile_image_url
@@ -55,12 +54,10 @@ export async function GET(
     }
 
     // 데이터 변환
-    const transformedComments = comments?.map(comment => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transformedComments: MyCommentResponseDto[] = comments?.map(comment => {
       const author = Array.isArray(comment.author) ? comment.author[0] : comment.author as any;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const post = Array.isArray(comment.post) ? comment.post[0] : comment.post as any;
-      
+
       return {
         id: comment.id,
         postId: comment.post_id,
@@ -71,7 +68,6 @@ export async function GET(
         likeCount: comment.like_count || 0,
         parentCommentId: comment.parent_comment_id,
         author: author?.nickname || '알 수 없음',
-        isDeleted: comment.is_deleted || false,
         isLiked: false, // 내 댓글이므로 좋아요 여부 상관없음
         profileImageUrl: author?.profile_image_url
       };
@@ -89,9 +85,8 @@ export async function GET(
     }));
 
   } catch (error) {
-    console.error('내 댓글 조회 실패:', error);
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }

@@ -9,6 +9,7 @@ import { ReviewCard } from '@/domains/review/components/ReviewCard';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { ReviewEditModal } from '@/domains/review/components/ReviewEditModal';
 import { useReviewListSection } from '@/domains/review/hooks/useReviewListSection';
+import { formatAbsoluteDate } from '@/shared/utils/Format';
 
 // UI 상수 정의
 const RATING_OPTIONS = [5, 4, 3, 2, 1] as const;
@@ -56,23 +57,20 @@ export const ReviewListSection = React.memo<ReviewListSectionProps>(function Rev
     setIsEditModalOpen(true);
   }, []);
 
-  const handleCloseEditModal = React.useCallback(() => {
+  const resetEditModalState = React.useCallback(() => {
     setIsEditModalOpen(false);
     setEditingReview(null);
   }, []);
 
-  const handleSaveReviewWrapper = React.useCallback(async (updatedReview: Partial<Review>) => {
-    if (!editingReview) return;
-    
+  const handleSubmit = React.useCallback(async (updatedReview: Review) => {
     try {
-      await handleSaveReview(editingReview, updatedReview);
-      setIsEditModalOpen(false);
-      setEditingReview(null);
+      await handleSaveReview(updatedReview);
+      resetEditModalState();
     } catch (error) {
       // 에러는 비즈니스 로직 훅에서 처리됨
       throw error;
     }
-  }, [editingReview, handleSaveReview]);
+  }, [handleSaveReview, resetEditModalState]);
 
   const handleToggleFilters = React.useCallback(() => {
     setShowFilters(prev => !prev);
@@ -88,17 +86,6 @@ export const ReviewListSection = React.memo<ReviewListSectionProps>(function Rev
     });
   }, [handlePageChange]);
 
-  // 날짜 포맷팅
-  const formatDate = React.useCallback((dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }, []);
 
   if (totalReviews === 0 && !isLoading) {
     return (
@@ -203,14 +190,14 @@ export const ReviewListSection = React.memo<ReviewListSectionProps>(function Rev
       <div>
         {currentPageReviews.map((review: Review, index: number) => (
           <div key={review.id}>
-            <ReviewCard
-              review={review}
-              onEdit={handleEditReview}
-              onDelete={handleDeleteReview}
-              showEditButton={isMyReview(review)}
-              showDeleteButton={isMyReview(review)}
-              formatDate={formatDate}
-            />
+              <ReviewCard
+                review={review}
+                onEdit={handleEditReview}
+                onDelete={handleDeleteReview}
+                showEditButton={isMyReview(review)}
+                showDeleteButton={isMyReview(review)}
+                formatDate={formatAbsoluteDate}
+              />
             {/* 마지막 리뷰가 아닌 경우에만 구분선 표시 */}
             {index < currentPageReviews.length - 1 && (
               <div className="border-b border-gray-200" />
@@ -241,9 +228,9 @@ export const ReviewListSection = React.memo<ReviewListSectionProps>(function Rev
       {editingReview && (
         <ReviewEditModal
           isOpen={isEditModalOpen}
-          onClose={handleCloseEditModal}
+          onClose={resetEditModalState}
           review={editingReview}
-          onSave={handleSaveReviewWrapper}
+          onSave={handleSubmit}
         />
       )}
     </div>

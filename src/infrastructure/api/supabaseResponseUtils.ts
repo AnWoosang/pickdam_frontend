@@ -1,12 +1,14 @@
 import { v4 as uuidv4 } from 'uuid'
-import { 
+import { StatusCodes } from 'http-status-codes'
+import {
   AuthApiError,
   StorageError,
+  PostgresError,
   isAuthApiError,
   isAuthSessionMissingError,
   isAuthWeakPasswordError,
   isStorageError,
-  HTTP_STATUS_CODES 
+  isPostgresError
 } from '@/infrastructure/errors/SupabaseErrorTypes'
 import { 
   ApiResponse, 
@@ -15,7 +17,7 @@ import {
   PaginatedResponse, 
   MappedError 
 } from '@/shared/api/types'
-import { ApiErrorCode, API_ERROR_MESSAGES } from '@/shared/error/errorCodes'
+import { ApiErrorCode } from '@/shared/error/errorCodes'
 /**
  * 메타데이터 생성 헬퍼
  */
@@ -62,99 +64,14 @@ export function createErrorResponse(error: MappedError): ApiResponse {
 }
 
 /**
- * ApiErrorCode에 따른 HTTP 상태 코드 반환
- */
-export function getStatusFromErrorCode(errorCode: string): number {
-  switch (errorCode) {
-    case ApiErrorCode.INVALID_INPUT:
-    case ApiErrorCode.MISSING_REQUIRED_FIELD:
-    case ApiErrorCode.INVALID_FILE_TYPE:
-    case ApiErrorCode.FILE_TOO_LARGE:
-      return HTTP_STATUS_CODES.BAD_REQUEST
-      
-    case ApiErrorCode.UNAUTHORIZED:
-    case ApiErrorCode.SESSION_EXPIRED:
-    case ApiErrorCode.INVALID_CREDENTIALS:
-      return HTTP_STATUS_CODES.UNAUTHORIZED
-      
-    case ApiErrorCode.FORBIDDEN:
-      return HTTP_STATUS_CODES.FORBIDDEN
-      
-    case ApiErrorCode.NOT_FOUND:
-    case ApiErrorCode.USER_NOT_FOUND:
-      return HTTP_STATUS_CODES.NOT_FOUND
-      
-    case ApiErrorCode.ALREADY_EXISTS:
-    case ApiErrorCode.EMAIL_ALREADY_EXISTS:
-      return HTTP_STATUS_CODES.CONFLICT
-      
-    case ApiErrorCode.TOO_MANY_REQUESTS:
-      return HTTP_STATUS_CODES.TOO_MANY_REQUESTS
-      
-    default:
-      return HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR
-  }
-}
-
-/**
  * Auth 에러 매핑 함수 (Built-in 유틸리티 활용)
  */
 function mapAuthApiError(error: AuthApiError): MappedError {
-  // HTTP 상태 코드 기반으로 분류
-  switch (error.status) {
-    case HTTP_STATUS_CODES.BAD_REQUEST:
-      if (error.message.includes('invalid') || error.message.includes('credentials')) {
-        return {
-          code: ApiErrorCode.INVALID_CREDENTIALS,
-          message: API_ERROR_MESSAGES[ApiErrorCode.INVALID_CREDENTIALS],
-          details: error.message
-        }
-      }
-      break
-      
-    case HTTP_STATUS_CODES.UNAUTHORIZED:
-      return {
-        code: ApiErrorCode.UNAUTHORIZED,
-        message: API_ERROR_MESSAGES[ApiErrorCode.UNAUTHORIZED],
-        details: error.message
-      }
-      
-    case HTTP_STATUS_CODES.FORBIDDEN:
-      return {
-        code: ApiErrorCode.FORBIDDEN,
-        message: API_ERROR_MESSAGES[ApiErrorCode.FORBIDDEN],
-        details: error.message
-      }
-      
-    case HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY:
-      if (error.message.includes('weak') || error.message.includes('password')) {
-        return {
-          code: ApiErrorCode.WEAK_PASSWORD,
-          message: API_ERROR_MESSAGES[ApiErrorCode.WEAK_PASSWORD],
-          details: error.message
-        }
-      }
-      if (error.message.includes('email') && error.message.includes('exists')) {
-        return {
-          code: ApiErrorCode.EMAIL_ALREADY_EXISTS,
-          message: API_ERROR_MESSAGES[ApiErrorCode.EMAIL_ALREADY_EXISTS],
-          details: error.message
-        }
-      }
-      break
-      
-    case HTTP_STATUS_CODES.TOO_MANY_REQUESTS:
-      return {
-        code: ApiErrorCode.TOO_MANY_REQUESTS,
-        message: API_ERROR_MESSAGES[ApiErrorCode.TOO_MANY_REQUESTS],
-        details: error.message
-      }
-  }
-  
-  // 기본 처리
+  // Auth 에러는 원본 정보 그대로 사용
   return {
-    code: ApiErrorCode.INTERNAL_SERVER_ERROR,
-    message: API_ERROR_MESSAGES[ApiErrorCode.INTERNAL_SERVER_ERROR],
+    statusCode: error.status,
+    errorCode: error.message, // 원본 에러 메시지를 errorCode로 사용
+    message: error.message,
     details: error.message
   }
 }
@@ -163,58 +80,82 @@ function mapAuthApiError(error: AuthApiError): MappedError {
  * Storage 에러 매핑 함수 (Built-in 유틸리티 활용)
  */
 function mapStorageApiError(error: StorageError): MappedError {
-  const errorMessage = error.message.toLowerCase()
-  
-  // 파일 크기 관련
-  if (errorMessage.includes('file') && (errorMessage.includes('large') || errorMessage.includes('size'))) {
-    return {
-      code: ApiErrorCode.FILE_TOO_LARGE,
-      message: API_ERROR_MESSAGES[ApiErrorCode.FILE_TOO_LARGE],
-      details: error.message
-    }
-  }
-  
-  // 파일 형식 관련
-  if (errorMessage.includes('file') && errorMessage.includes('type')) {
-    return {
-      code: ApiErrorCode.INVALID_FILE_TYPE,
-      message: API_ERROR_MESSAGES[ApiErrorCode.INVALID_FILE_TYPE],
-      details: error.message
-    }
-  }
-  
-  // 할당량 초과
-  if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
-    return {
-      code: ApiErrorCode.QUOTA_EXCEEDED,
-      message: API_ERROR_MESSAGES[ApiErrorCode.QUOTA_EXCEEDED],
-      details: error.message
-    }
-  }
-  
-  // 파일 없음
-  if (errorMessage.includes('not found') || errorMessage.includes('does not exist')) {
-    return {
-      code: ApiErrorCode.NOT_FOUND,
-      message: API_ERROR_MESSAGES[ApiErrorCode.NOT_FOUND],
-      details: error.message
-    }
-  }
-  
-  // 권한 없음
-  if (errorMessage.includes('permission') || errorMessage.includes('access')) {
-    return {
-      code: ApiErrorCode.FORBIDDEN,
-      message: API_ERROR_MESSAGES[ApiErrorCode.FORBIDDEN],
-      details: error.message
-    }
-  }
-  
-  // 기본 처리
+  // Storage 에러는 보통 400 Bad Request
   return {
-    code: ApiErrorCode.INTERNAL_SERVER_ERROR,
-    message: API_ERROR_MESSAGES[ApiErrorCode.INTERNAL_SERVER_ERROR],
+    statusCode: StatusCodes.BAD_REQUEST,
+    errorCode: ApiErrorCode.STORAGE_ERROR,
+    message: error.message,
     details: error.message
+  }
+}
+
+
+function mapPostgresCodeToHttpStatus(pgCode: string): number {
+  switch (pgCode) {
+    case 'PGRST116': // No rows returned (single() 사용 시 0개 결과)
+      return StatusCodes.NOT_FOUND
+    case 'PGRST117': // More than one row returned (single() 사용 시 2개 이상 결과)
+      return StatusCodes.CONFLICT
+    case 'PGRST301': // Parse error (잘못된 쿼리)
+      return StatusCodes.BAD_REQUEST
+    case 'PGRST204': // Invalid range headers
+      return StatusCodes.BAD_REQUEST
+
+    // PostgreSQL 에러 코드들
+    case '23505': // unique_violation (중복 키)
+      return StatusCodes.CONFLICT
+    case '23503': // foreign_key_violation (외래키 위반)
+      return StatusCodes.BAD_REQUEST
+    case '23502': // not_null_violation (필수 필드 누락)
+      return StatusCodes.BAD_REQUEST
+    case '23514': // check_violation (체크 제약 조건 위반)
+      return StatusCodes.BAD_REQUEST
+    case '42P01': // undefined_table (테이블 없음)
+      return StatusCodes.NOT_FOUND
+    case '42703': // undefined_column (컬럼 없음)
+      return StatusCodes.BAD_REQUEST
+    case '08006': // connection_failure (연결 실패)
+      return StatusCodes.SERVICE_UNAVAILABLE
+    case '53300': // too_many_connections (연결 수 초과)
+      return StatusCodes.SERVICE_UNAVAILABLE
+    case '40001': // serialization_failure (트랜잭션 충돌)
+      return StatusCodes.CONFLICT
+    case '22001': // string_data_right_truncation (문자열 길이 초과)
+      return StatusCodes.BAD_REQUEST
+    case '22003': // numeric_value_out_of_range (숫자 범위 초과)
+      return StatusCodes.BAD_REQUEST
+    default:
+      return StatusCodes.INTERNAL_SERVER_ERROR
+  }
+}
+
+function mapPostgresError(error: PostgresError): MappedError {
+  // PostgreSQL/PostgREST 에러를 ApiErrorCode로 매핑
+  let errorCode: ApiErrorCode
+
+  switch (error.code) {
+    case 'PGRST116': // No rows returned
+      errorCode = ApiErrorCode.NOT_FOUND
+      break
+    case 'PGRST117': // More than one row returned
+      errorCode = ApiErrorCode.CONFLICT
+      break
+    case '23505': // unique_violation
+      errorCode = ApiErrorCode.ALREADY_EXISTS
+      break
+    case '23503': // foreign_key_violation
+    case '23502': // not_null_violation
+      errorCode = ApiErrorCode.INVALID_INPUT
+      break
+    default:
+      errorCode = ApiErrorCode.DATABASE_ERROR
+  }
+
+  return {
+    statusCode: mapPostgresCodeToHttpStatus(error.code),
+    errorCode: errorCode,
+    message: error.message,
+    details: error.details
   }
 }
 
@@ -222,58 +163,58 @@ function mapStorageApiError(error: StorageError): MappedError {
  * HTTP 상태 코드 기반 에러 매핑 (Database 등 일반 에러용)
  */
 function mapByHttpStatus(error: unknown): MappedError {
-  const errorObj = error as { status?: number; statusCode?: number; message?: string };
-  const status = errorObj.status || errorObj.statusCode
-  
+  const errorObj = error as { status?: number; statusCode?: number; message?: string; code?: string };
+  const status = errorObj.status || errorObj.statusCode || StatusCodes.INTERNAL_SERVER_ERROR
+
+  // 커스텀 코드 우선 처리
+  if (errorObj.code === 'EMAIL_NOT_VERIFIED') {
+    return {
+      statusCode: status,
+      errorCode: 'EMAIL_NOT_VERIFIED' as ApiErrorCode,
+      message: errorObj.message || '이메일 인증이 필요합니다.',
+      details: errorObj.message || '이메일 인증이 필요합니다.'
+    }
+  }
+
+  // HTTP 상태 코드에 따른 적절한 ApiErrorCode 매핑
+  let errorCode: ApiErrorCode
+
   switch (status) {
-    case HTTP_STATUS_CODES.BAD_REQUEST:
-      return {
-        code: ApiErrorCode.INVALID_INPUT,
-        message: API_ERROR_MESSAGES[ApiErrorCode.INVALID_INPUT],
-        details: errorObj.message
-      }
-      
-    case HTTP_STATUS_CODES.UNAUTHORIZED:
-      return {
-        code: ApiErrorCode.UNAUTHORIZED,
-        message: API_ERROR_MESSAGES[ApiErrorCode.UNAUTHORIZED],
-        details: errorObj.message
-      }
-      
-    case HTTP_STATUS_CODES.FORBIDDEN:
-      return {
-        code: ApiErrorCode.FORBIDDEN,
-        message: API_ERROR_MESSAGES[ApiErrorCode.FORBIDDEN],
-        details: errorObj.message
-      }
-      
-    case HTTP_STATUS_CODES.NOT_FOUND:
-      return {
-        code: ApiErrorCode.NOT_FOUND,
-        message: API_ERROR_MESSAGES[ApiErrorCode.NOT_FOUND],
-        details: errorObj.message
-      }
-      
-    case HTTP_STATUS_CODES.CONFLICT:
-      return {
-        code: ApiErrorCode.ALREADY_EXISTS,
-        message: API_ERROR_MESSAGES[ApiErrorCode.ALREADY_EXISTS],
-        details: errorObj.message
-      }
-      
-    case HTTP_STATUS_CODES.TOO_MANY_REQUESTS:
-      return {
-        code: ApiErrorCode.TOO_MANY_REQUESTS,
-        message: API_ERROR_MESSAGES[ApiErrorCode.TOO_MANY_REQUESTS],
-        details: errorObj.message
-      }
-      
+    case StatusCodes.BAD_REQUEST:
+      errorCode = ApiErrorCode.INVALID_INPUT
+      break
+    case StatusCodes.UNAUTHORIZED:
+      errorCode = ApiErrorCode.UNAUTHORIZED
+      break
+    case StatusCodes.FORBIDDEN:
+      errorCode = ApiErrorCode.FORBIDDEN
+      break
+    case StatusCodes.NOT_FOUND:
+      errorCode = ApiErrorCode.NOT_FOUND
+      break
+    case StatusCodes.CONFLICT:
+      errorCode = ApiErrorCode.CONFLICT
+      break
+    case StatusCodes.UNPROCESSABLE_ENTITY:
+      errorCode = ApiErrorCode.VALIDATION_ERROR
+      break
+    case StatusCodes.TOO_MANY_REQUESTS:
+      errorCode = ApiErrorCode.TOO_MANY_REQUESTS
+      break
+    case StatusCodes.SERVICE_UNAVAILABLE:
+      errorCode = ApiErrorCode.SERVICE_UNAVAILABLE
+      break
+    case StatusCodes.INTERNAL_SERVER_ERROR:
     default:
-      return {
-        code: ApiErrorCode.INTERNAL_SERVER_ERROR,
-        message: API_ERROR_MESSAGES[ApiErrorCode.INTERNAL_SERVER_ERROR],
-        details: errorObj.message
-      }
+      errorCode = ApiErrorCode.INTERNAL_SERVER_ERROR
+      break
+  }
+
+  return {
+    statusCode: status,
+    errorCode: errorCode,
+    message: errorObj.message || 'Unknown error',
+    details: errorObj.message
   }
 }
 /**
@@ -282,39 +223,45 @@ function mapByHttpStatus(error: unknown): MappedError {
 export function mapApiError(error: unknown): MappedError {
   // 간단한 에러 로깅 (개발 환경에서만)
   if (process.env.NODE_ENV === 'development') {
-    console.error('API Error:', error)
+    // console.error('API Error:', error)
   }
 
-  // 1. Auth 에러 - Built-in 유틸리티 활용
-  if (isAuthApiError(error)) {
-    return mapAuthApiError(error)
+  // 1. PostgreSQL 에러 - 최우선 처리
+  if (isPostgresError(error)) {
+    return mapPostgresError(error)
   }
-  
+
+
   // 특별한 Auth 에러 케이스들
   if (isAuthSessionMissingError(error)) {
+    console.log(error)
     return {
-      code: ApiErrorCode.UNAUTHORIZED,
-      message: API_ERROR_MESSAGES[ApiErrorCode.UNAUTHORIZED],
+      statusCode: error.status,
+      errorCode: ApiErrorCode.SESSION_MISSING,
+      message: error.message,
       details: error.message
     }
   }
-  
+
+  // 2. Auth 에러 - Built-in 유틸리티 활용
+  if (isAuthApiError(error)) {
+    return mapAuthApiError(error)
+  }
+
   if (isAuthWeakPasswordError(error)) {
     return {
-      code: ApiErrorCode.WEAK_PASSWORD,
-      message: API_ERROR_MESSAGES[ApiErrorCode.WEAK_PASSWORD],
-      details: error.message,
+      statusCode: StatusCodes.BAD_REQUEST,
+      errorCode: ApiErrorCode.WEAK_PASSWORD,
+      message: error.message,
+      details: error.message
     }
   }
-  
-  // 2. Storage 에러 - Built-in 유틸리티 활용
+
+  // 3. Storage 에러 - Built-in 유틸리티 활용
   if (isStorageError(error)) {
     return mapStorageApiError(error)
   }
-  
-  // 3. 일반 에러 - HTTP 상태 코드로 처리
+
+  // 4. 일반 에러 - HTTP 상태 코드로 처리
   return mapByHttpStatus(error)
 }
-
-
-

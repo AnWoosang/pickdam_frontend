@@ -3,24 +3,58 @@
 import { useCallback, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { useAuthStore } from '@/domains/auth/store/authStore';
-import { PostSort } from '@/domains/community/types/community';
-import {
-  CommunityPageParams,
-  CommunityPageState,
-  CommunityQueryParams,
-  UpdateCommunityParams,
-  COMMUNITY_PAGE_DEFAULTS,
-} from '@/domains/community/types/communityPageTypes';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
+import { PostSort, isValidCategoryId, PostCategoryId } from '@/domains/community/types/community';
 import { usePostsQuery } from '@/domains/community/hooks/usePostQueries';
-import { isValidCategoryId, PostCategoryId } from '@/domains/community/types/community';
 import { SearchFilterType } from '@/shared/components/SearchBar';
 import { BusinessError, createBusinessError } from '@/shared/error/BusinessError';
+
+// CommunityPage 전용 타입들
+
+// URL 파라미터 타입
+interface CommunityPageParams {
+  category?: PostCategoryId | 'all';
+  sortBy?: PostSort;
+  query?: string;
+  searchFilter?: SearchFilterType;
+  page?: number;
+}
+
+// URL에서 파싱된 상태 타입 (기본값 적용된)
+interface CommunityPageState {
+  selectedCategory: PostCategoryId | 'all';
+  sortBy: PostSort;
+  searchQuery: string;
+  searchFilter: SearchFilterType;
+  currentPage: number;
+}
+
+// 쿼리 파라미터 변환 타입 (API 호출용)
+interface CommunityQueryParams {
+  category?: PostCategoryId;
+  page: number;
+  limit: number;
+  search?: string;
+  searchType: 'title' | 'titleContent' | 'author';
+  sortBy: PostSort;
+}
+
+// URL 업데이트 함수 타입
+type UpdateCommunityParams = (params: Partial<CommunityPageParams>) => void;
+
+// 기본값 상수
+const COMMUNITY_PAGE_DEFAULTS = {
+  POSTS_PER_PAGE: 10,
+  DEFAULT_CATEGORY: 'all' as const,
+  DEFAULT_SORT: 'created_at' as PostSort,
+  DEFAULT_SEARCH_FILTER: 'title' as SearchFilterType,
+  DEFAULT_PAGE: 1,
+} as const;
 
 export const useCommunityPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user } = useAuthUtils();
   // URL 파라미터에서 타입 안전하게 상태 추출
   const state: CommunityPageState = useMemo(() => {
     const category = searchParams.get('category');

@@ -1,14 +1,22 @@
 'use client';
 
 import React from 'react';
-import { SortBy, SORT_BY_OPTIONS } from '@/domains/product/types/product';
+import { SortBy, SortOrder } from '@/domains/product/types/product';
+
+// 정렬 기준 UI 표시명
+const SORT_BY_OPTIONS: Record<SortBy, string> = {
+  'totalViews': '인기순',
+  'price': '가격순',
+  'createdAt': '최신순',
+  'name': '이름순'
+};
 
 export interface ProductSortAndViewProps {
   totalCount: number;
   isLoading: boolean;
   itemsPerPage: number;
-  sortBy: string;
-  sortOrder: string;
+  sortBy: SortBy;
+  sortOrder: SortOrder;
   onItemsPerPageChange: (itemsPerPage: number) => void;
   onSortChange: (sortBy: SortBy) => void;
 }

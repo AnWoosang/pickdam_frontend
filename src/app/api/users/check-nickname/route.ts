@@ -6,7 +6,6 @@ import {
   createSuccessResponse,
   createErrorResponse,
   mapApiError,
-  getStatusFromErrorCode
 } from '@/infrastructure/api/supabaseResponseUtils'
 
 export async function GET(request: NextRequest) {
@@ -17,7 +16,7 @@ export async function GET(request: NextRequest) {
     if (!nickname) {
       const mappedError = mapApiError({ message: 'nickname이 필요합니다', status: StatusCodes.BAD_REQUEST })
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
 
     // 닉네임 validation (공통 validation 사용)
@@ -25,7 +24,7 @@ export async function GET(request: NextRequest) {
     if (validationError) {
       const mappedError = mapApiError({ message: validationError, status: StatusCodes.BAD_REQUEST })
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
 
     const trimmedNickname = nickname.trim()
@@ -37,10 +36,9 @@ export async function GET(request: NextRequest) {
       .limit(1)
     
     if (error) {
-      console.error('Nickname check error:', error)
       const mappedError = mapApiError(error)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
     return NextResponse.json(createSuccessResponse({ isDuplicate: data && data.length > 0 }))
@@ -48,6 +46,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }

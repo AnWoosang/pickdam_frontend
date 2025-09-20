@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/app/router/routes';
 
@@ -14,9 +14,17 @@ export function RememberMeSection({
   // 내부 상태 관리
   const [rememberMe, setRememberMe] = useState(false);
 
+  // 컴포넌트 마운트 시 localStorage에서 값 읽기
+  useEffect(() => {
+    const savedRememberMe = localStorage.getItem('rememberMe') === 'true';
+    setRememberMe(savedRememberMe);
+  }, []);
+
   // 상태 변경 핸들러를 메모이제이션
   const handleRememberMeChange = useCallback((checked: boolean) => {
     setRememberMe(checked);
+    // localStorage에 저장
+    localStorage.setItem('rememberMe', checked.toString());
     onRememberMeChange?.(checked);
   }, [onRememberMeChange]);
 

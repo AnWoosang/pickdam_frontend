@@ -70,11 +70,11 @@ export const ReviewImageUpload = React.memo(function ReviewImageUpload({ onImage
       
       {/* 이미지 미리보기 - blob URL 사용으로 즉시 표시 */}
       {uploadManager.imagePreviewUrls.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-3">
+        <div className="flex flex-wrap gap-3 mb-4">
           {uploadManager.imagePreviewUrls.map((previewUrl, index) => (
             <div key={index} className="relative w-20 h-20">
-              <div 
-                className="relative w-full h-full rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+              <div
+                className="relative w-full h-full rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-gray-200"
                 onClick={() => handleImageClick(index)}
               >
                 <Image

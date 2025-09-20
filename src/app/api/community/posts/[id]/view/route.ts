@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSuccessResponse, createErrorResponse, mapApiError, getStatusFromErrorCode } from '@/infrastructure/api/supabaseResponseUtils'
+import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
 import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { PostIncrementViewResponseDto } from '@/domains/community/types/dto/communityDto'
 
 export async function POST(
   request: NextRequest,
@@ -14,20 +15,21 @@ export async function POST(
     })
     
     if (error) {
-      console.error('RPC call failed:', error)
       const mappedError = mapApiError(error)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
-    return NextResponse.json(createSuccessResponse({
-      success: data.success,
-      newViewCount: data.view_count
-    }))
+    const responseDto: PostIncrementViewResponseDto = {
+      postId: id,
+      viewCount: data.view_count
+    }
+
+    return NextResponse.json(createSuccessResponse(responseDto))
     
   } catch (error) {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }

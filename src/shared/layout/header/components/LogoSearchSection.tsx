@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { ROUTES } from '@/app/router/routes';
-import { authStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 import { Logo } from '@/shared/components/Logo';
 import { SearchBar } from '@/shared/components/SearchBar';
 import { GuestMenu } from '@/shared/layout/header/components/GuestMenu';
@@ -18,8 +18,8 @@ interface LogoSearchSectionProps {
 
 export function LogoSearchSection({ showSearchBar = true }: LogoSearchSectionProps) {
   const router = useRouter();
-  const { isAuthenticated, user } = authStore();
-  
+  const { user, isAuthenticated } = useAuthUtils();
+
   const [activeSection, setActiveSection] = useState<'recent' | 'favorite' | 'user' | null>(null);
   
 

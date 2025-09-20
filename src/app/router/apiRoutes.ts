@@ -13,6 +13,7 @@ export const API_ROUTES = {
     POPULAR: '/products/popular',
     BESTSELLERS: '/products/bestsellers',
     VIEW: (id: string) => `/products/${id}/view`,
+    PRICE_HISTORY: (id: string) => `/products/${id}/price-history`,
   },
   
   // 커뮤니티 API
@@ -34,17 +35,19 @@ export const API_ROUTES = {
     LOGOUT: '/auth/logout',
     SIGNUP: '/auth/signup',
     ME: '/auth/me',
+    REFRESH: '/auth/refresh',
     VERIFY_EMAIL: '/auth/verify-email',
     RESEND_EMAIL: '/auth/resend-email',
   },
   
   // 사용자 API
   USERS: {
+    BY_ID: (id: string) => `/users/${id}`,
     PROFILE: (id: string) => `/users/${id}/profile`,
     WISHLIST: (id: string) => `/users/${id}/wishlist`,
     WISHLIST_TOGGLE: (memberId: string, productId: string) => `/users/${memberId}/wishlist/${productId}`,
     WISHLIST_STATUS: (memberId: string, productId: string) => `/users/${memberId}/wishlist/${productId}/status`,
-    REVIEWS: (id: string) => `/users/${id}/reviews`,
+    MY_REVIEWS: (id: string) => `/users/${id}/my-reviews`,
     MY_COMMENTS: (id: string) => `/users/${id}/my-comments`,
     MY_POSTS: (id: string) => `/users/${id}/my-posts`,
     LIKED_POSTS: (id: string) => `/users/${id}/liked-posts`,
@@ -53,10 +56,6 @@ export const API_ROUTES = {
     CHECK_NICKNAME: '/users/check-nickname',
     CHECK_EMAIL: '/users/check-email',
     DELETE: (id: string) => `/users/${id}/delete`,
-    CURRENT_ROLE: '/users/current-role',
-    IS_ADMIN: '/users/is-admin',
-    IS_MODERATOR: '/users/is-moderator',
-    ADMIN_ALL: '/users/admin/all',
     UPDATE_ROLE: (id: string) => `/users/${id}/role`,
   },
   

@@ -7,13 +7,10 @@ export interface ApiMetaData {
 
 // 통합 에러 응답 타입
 export interface MappedError {
-  code: string
+  statusCode: number      // HTTP 상태 코드
+  errorCode: string       // 에러 구분용 코드 (PGRST116, TOKEN_EXPIRED 등)
   message: string
   details?: string        // Supabase 원본 메시지
-  metadata?: {            // 개발/디버깅용
-    originalError?: string
-    reasons?: string[]     // 약한 비밀번호 이유 등
-  }
 }
 
 export interface ApiResponse<T = unknown> {

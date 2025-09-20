@@ -34,26 +34,20 @@ export function PriceHistoryHeader({
     };
   }, [filteredHistory]);
   return (
-    <div>
-      <h3 className="text-xl font-bold text-gray-900">가격 변동 이력</h3>
-      <div className="flex items-center space-x-4 mt-1 h-6">
-        {priceChange && (
-          <div className={`flex items-center space-x-2 text-sm ${
-            priceChange.isIncrease ? 'text-red-500' : 'text-green-500'
-          }`}>
-            {priceChange.isIncrease ? (
-              <TrendingUp className="w-4 h-4" />
-            ) : (
-              <TrendingDown className="w-4 h-4" />
-            )}
-            <span>{formatPrice(Math.abs(priceChange.amount))}원</span>
-            <span>({priceChange.isIncrease ? '+' : ''}{priceChange.percent}%)</span>
-          </div>
-        )}
-        {viewMode === 'monthly' && (
-          <p className="text-xs text-gray-500">최대 1년까지의 데이터를 제공합니다</p>
-        )}
-      </div>
-    </div>
+    <>
+      {priceChange && (
+        <div className={`flex items-center space-x-2 text-sm ${
+          priceChange.isIncrease ? 'text-red-500' : 'text-green-500'
+        }`}>
+          {priceChange.isIncrease ? (
+            <TrendingUp className="w-4 h-4" />
+          ) : (
+            <TrendingDown className="w-4 h-4" />
+          )}
+          <span>{formatPrice(Math.abs(priceChange.amount))}원</span>
+          <span>({priceChange.isIncrease ? '+' : ''}{priceChange.percent}%)</span>
+        </div>
+      )}
+    </>
   );
 }

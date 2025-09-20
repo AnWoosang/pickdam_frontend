@@ -84,7 +84,7 @@ export function Mypage({ className = '' }: MypageProps) {
   // 배지 수치 계산 함수
   const getBadgeCount = (itemId: string): number | undefined => {
     if (statsLoading) return undefined;
-    
+
     switch (itemId) {
       case 'reviews':
         return stats.reviewCount > 0 ? stats.reviewCount : undefined;
@@ -92,10 +92,6 @@ export function Mypage({ className = '' }: MypageProps) {
         return stats.postCount > 0 ? stats.postCount : undefined;
       case 'my-comments':
         return stats.commentCount > 0 ? stats.commentCount : undefined;
-      case 'liked-posts':
-        return stats.likedPostsCount > 0 ? stats.likedPostsCount : undefined;
-      case 'liked-comments':
-        return stats.likedCommentsCount > 0 ? stats.likedCommentsCount : undefined;
       default:
         return undefined;
     }

@@ -16,7 +16,13 @@ export interface Image {
   userId?: string // 사용자 ID (선택적 필드)
 }
 
-// 이미지 업로드 상태
+// 이미지 업로드 도메인 객체
+export interface ImageUpload {
+  files: File[]
+  contentType: ImageContentType
+}
+
+// 이미지 업로드 상태 (UI용)
 export interface ImageUploadState {
   id: string
   file: File
@@ -25,13 +31,6 @@ export interface ImageUploadState {
   status: 'pending' | 'uploading' | 'success' | 'error'
   error?: string
   result?: Image  // 업로드 완료된 서버 이미지
-}
-
-// 기존 이미지 상태 (EDIT 모드용)
-export interface ExistingImageState {
-  id: string
-  image: Image  // 서버에서 로드된 원본 이미지
-  isDeleted: boolean  // UI에서 삭제됨 (실제 삭제는 최종 제출 시)
 }
 
 // 통합된 이미지 상태 (기존 + 새 이미지)

@@ -1,16 +1,87 @@
 "use client";
 
 import { useCallback } from 'react';
-import { useAuthStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 import { useImageUploadQuery } from './useImageUploadQueries';
-import { compressImage } from '@/utils/imageCompression';
-import type { Image } from '../types/Image';
-import type { ImageContentType } from '../types/Image';
+import type { Image, ImageUpload, ImageContentType } from '../types/Image';
 
 interface UseImageUploadOptions {
   contentType: ImageContentType;
   onSuccess?: (images: Image[]) => void;
   onError?: (error: string) => void;
+}
+
+interface CompressOptions {
+  maxWidth?: number;
+  maxHeight?: number;
+  quality?: number;
+  maxSizeKB?: number;
+}
+
+async function compressImage(
+  file: File,
+  options: CompressOptions = {}
+): Promise<File> {
+  const {
+    maxWidth = 1200,
+    maxHeight = 1200,
+    quality = 0.8,
+    maxSizeKB = 500
+  } = options;
+
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+
+    img.onload = () => {
+      let { width, height } = img;
+
+      if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height);
+        width *= ratio;
+        height *= ratio;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      if (!ctx) {
+        reject(new Error('Canvas context not available'));
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+
+      let currentQuality = quality;
+      const tryCompress = () => {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error('Failed to compress image'));
+            return;
+          }
+
+          const sizeKB = blob.size / 1024;
+
+          if (sizeKB <= maxSizeKB || currentQuality <= 0.1) {
+            const compressedFile = new File([blob], file.name, {
+              type: blob.type,
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          } else {
+            currentQuality -= 0.1;
+            tryCompress();
+          }
+        }, file.type, currentQuality);
+      };
+
+      tryCompress();
+    };
+
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 const COMPRESS_OPTIONS: Record<ImageContentType, {
@@ -50,7 +121,7 @@ export function useImageUpload({
   onSuccess, 
   onError 
 }: UseImageUploadOptions) {
-  const { user } = useAuthStore();
+  const { user } = useAuthUtils();
   const imageUploadMutation = useImageUploadQuery();
   
   const compressOptions = COMPRESS_OPTIONS[contentType];
@@ -72,10 +143,12 @@ export function useImageUpload({
         compressedFiles.push(compressedFile);
       }
 
-      const uploadedImages = await imageUploadMutation.mutateAsync({
+      const imageUpload: ImageUpload = {
         files: compressedFiles,
-        type: contentType
-      });
+        contentType: contentType
+      };
+
+      const uploadedImages = await imageUploadMutation.mutateAsync(imageUpload);
       
       onSuccess?.(uploadedImages);
       return uploadedImages;

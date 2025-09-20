@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createPaginatedResponse, createSuccessResponse, createErrorResponse, mapApiError, getStatusFromErrorCode } from '@/infrastructure/api/supabaseResponseUtils'
+import { createPaginatedResponse, createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
 import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { CreateReviewRequestDto } from '@/domains/review/types/dto/reviewDto'
 
 export async function GET(
   request: NextRequest,
@@ -32,10 +33,9 @@ export async function GET(
       .range(offset, offset + limit - 1)
     
     if (reviewsError) {
-      console.error('Reviews fetch error:', reviewsError)
       const mappedError = mapApiError(reviewsError)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
     // 리뷰 데이터 변환
@@ -44,8 +44,8 @@ export async function GET(
       const images = item.review_image
         ?.sort((a: { image_order: number }, b: { image_order: number }) => a.image_order - b.image_order)
         ?.map((img: { image_url: string, image_order: number }) => ({
-          url: img.image_url,
-          order: img.image_order
+          imageUrl: img.image_url,
+          imageOrder: img.image_order
         })) || [];
 
       return {
@@ -78,7 +78,7 @@ export async function GET(
   } catch (error) {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }
 
@@ -88,35 +88,35 @@ export async function POST(
 ) {
   try {
     const { id: productId } = await params
-    const { images, throatHit, ...reviewData } = await request.json()
+    const requestData: CreateReviewRequestDto = await request.json()
+
     
     // RPC 함수 호출
     const { data: reviewResult, error: reviewError } = await supabaseServer
       .rpc('create_review_with_images', {
         p_product_id: productId,
-        p_member_id: reviewData.memberId,
-        p_rating: reviewData.rating,
-        p_content: reviewData.content,
-        p_sweetness: reviewData.sweetness,
-        p_menthol: reviewData.menthol,
-        p_throat_hit: throatHit,
-        p_body: reviewData.body,
-        p_freshness: reviewData.freshness,
-        p_images: images || []
+        p_member_id: requestData.memberId,
+        p_rating: requestData.rating,
+        p_content: requestData.content,
+        p_sweetness: requestData.sweetness,
+        p_menthol: requestData.menthol,
+        p_throat_hit: requestData.throatHit,
+        p_body: requestData.body,
+        p_freshness: requestData.freshness,
+        p_images: requestData.images || []
       })
     
     if (reviewError) {
-      console.error('Review creation error:', reviewError)
       const mappedError = mapApiError(reviewError)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
-    
+
     return NextResponse.json(createSuccessResponse({ review: reviewResult }), { status: 201 })
     
   } catch (error) {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }

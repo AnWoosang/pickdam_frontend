@@ -1,22 +1,37 @@
 'use client';
 import React, { useState, useCallback, useMemo } from 'react';
 import { Lock, Eye, EyeOff } from 'lucide-react';
-import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
 import { checkPasswordStrength } from '@/shared/validation/common';
 import { convertKoreanToEnglish } from '@/shared/utils/KoreanToEnglish';
-import { PasswordFieldProps } from '../../types/password';
 
-export function PasswordField({ 
-  value, 
-  onChange, 
-  error, 
+// 비밀번호 필드 Props
+export interface PasswordFieldProps {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
+  disabled?: boolean;
+  showStrength?: boolean;
+  label?: string;
+  placeholder?: string;
+  name?: string;
+  id?: string;
+  hideLabel?: boolean;
+  className?: string;
+}
+
+export function PasswordField({
+  value,
+  onChange,
+  error,
   disabled = false,
   showStrength = false,
   label = '비밀번호',
   placeholder = '영문, 숫자 , 특수문자 포함 8자 이상',
   name = 'password',
-  id = 'password'
+  id = 'password',
+  hideLabel = false,
+  className
 }: PasswordFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
   
@@ -50,20 +65,19 @@ export function PasswordField({
 
   // 입력 필드 스타일
   const inputClassName = useMemo(() => {
-    return `w-full px-3 py-2 pr-10 border rounded-md shadow-sm placeholder-gray-400  
-            focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent 
+    if (className) {
+      return className;
+    }
+
+    return `w-full px-3 py-2 pr-10 border rounded-md shadow-sm placeholder-gray-400
+            focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
             disabled:bg-gray-50 disabled:text-gray-500 ${
               error ? 'border-red-300' : 'border-gray-300'
             }`;
-  }, [error]);
+  }, [error, className]);
 
-  return (
-    <FormField
-      label={label}
-      icon={<Lock className="w-4 h-4" />}
-      required
-      error={error}
-    >
+  const fieldContent = (
+    <>
       <div className="relative">
         <input
           type={showPassword ? 'text' : 'password'}
@@ -75,20 +89,24 @@ export function PasswordField({
           className={inputClassName}
           placeholder={placeholder}
         />
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          size="small"
           onClick={togglePasswordVisibility}
-          className="absolute inset-y-0 right-0 pr-3 flex items-center p-0 h-auto cursor-pointer"
-          icon={showPassword ? (
+          className="absolute inset-y-0 right-0 pr-3 flex items-center"
+        >
+          {showPassword ? (
             <EyeOff className="h-4 w-4 text-gray-400" />
           ) : (
             <Eye className="h-4 w-4 text-gray-400" />
           )}
-        />
+        </button>
       </div>
-      
+
+      {/* 에러 메시지 표시 */}
+      {error && hideLabel && (
+        <p className="text-red-500 text-xs mt-1 ml-1">{error}</p>
+      )}
+
       {/* 비밀번호 강도 표시 */}
       {showStrength && value && (
         <div className="mt-2">
@@ -104,12 +122,27 @@ export function PasswordField({
           </div>
           <p className="text-xs text-gray-600">
             {passwordStrength.text && `강도: ${passwordStrength.text}`}
-            {passwordStrength.requirements.length > 0 && 
+            {passwordStrength.requirements.length > 0 &&
               ` (${passwordStrength.requirements.join(', ')} 포함)`
             }
           </p>
         </div>
       )}
+    </>
+  );
+
+  if (hideLabel) {
+    return fieldContent;
+  }
+
+  return (
+    <FormField
+      label={label}
+      icon={<Lock className="w-4 h-4" />}
+      required
+      error={error}
+    >
+      {fieldContent}
     </FormField>
   );
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
-;
-import { createPaginatedResponse, createErrorResponse, mapApiError, getStatusFromErrorCode } from '@/infrastructure/api/supabaseResponseUtils';
+import { supabaseServer } from '@/infrastructure/api/supabaseServer';
+import { createPaginatedResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils';
+import { MyPostResponseDto } from '@/domains/user/types/dto/mypageDto';
 
 export async function GET(
   request: NextRequest,
@@ -53,10 +53,9 @@ export async function GET(
     }
 
     // 데이터 변환 (MyPost DTO 형식으로)
-    const transformedPosts = posts?.map(post => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transformedPosts: MyPostResponseDto[] = posts?.map(post => {
       const author = Array.isArray(post.author) ? post.author[0] : post.author as any;
-      
+
       return {
         id: post.id,
         title: post.title,
@@ -86,9 +85,8 @@ export async function GET(
     }));
 
   } catch (error) {
-    console.error('내 게시글 조회 실패:', error);
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }

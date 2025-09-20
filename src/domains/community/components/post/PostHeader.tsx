@@ -3,6 +3,7 @@
 import { Post } from '@/domains/community/types/community';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/shared/components/Button';
 import { Avatar } from '@/shared/components/Avatar';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
@@ -11,8 +12,7 @@ import { IoShareOutline } from 'react-icons/io5';
 import { MdEdit } from 'react-icons/md';
 import { IoTrashOutline } from 'react-icons/io5';
 import { IoHeart, IoEye, IoChatbubble } from 'react-icons/io5';
-import { formatAbsoluteDate } from '@/utils/dateUtils';
-import { PostEditModal } from '@/domains/community/components/post/edit/PostEditModal';
+import { formatAbsoluteDate } from '@/shared/utils/Format';
 import { User } from '@/domains/user/types/user';
 import { usePostHeader } from '@/domains/community/hooks/usePostHeader';
 
@@ -22,31 +22,28 @@ interface PostHeaderProps {
   onPostDelete?: () => void;
 }
 
-export const PostHeader: React.FC<PostHeaderProps> = ({ 
-  post, 
+export const PostHeader: React.FC<PostHeaderProps> = ({
+  post,
   user,
   onPostDelete
 }) => {
+  const router = useRouter();
+
   // UI 상태 관리
-  const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  
+
   // 비즈니스 로직
   const {
     isOwner,
-    isSubmitting,
-    handleSaveEdit,
     handleConfirmDelete,
     handleShare,
   } = usePostHeader({ post, user, onPostDelete });
-  
+
   // UI 핸들러들
-  const handleEdit = () => setShowEditModal(true);
-  const handleDelete = () => setShowDeleteDialog(true);
-  
-  const onSaveEdit = (updatedData: { title: string; content: string; images?: File[] }) => {
-    handleSaveEdit(updatedData, () => setShowEditModal(false));
+  const handleEdit = () => {
+    router.push(`/community/${post.id}/edit`);
   };
+  const handleDelete = () => setShowDeleteDialog(true);
   return (
     <div>
       <div className="flex items-start justify-between mb-8">
@@ -100,16 +97,7 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
         </div>
       </div>
       <Divider color="medium" spacing="none" />
-      
-      {/* 게시글 수정 모달 */}
-      <PostEditModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        post={post}
-        onSave={onSaveEdit}
-        isSubmitting={isSubmitting}
-      />
-      
+
       {/* 게시글 삭제 확인 다이얼로그 */}
       <ConfirmDialog
         isOpen={showDeleteDialog}

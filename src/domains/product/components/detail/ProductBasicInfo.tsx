@@ -33,12 +33,7 @@ export function ProductBasicInfo({
         
         <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
           <span className="text-sm text-gray-600">용량</span>
-          <span className="text-sm font-medium">{product.capacity}</span>
-        </div>
-        
-        <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-          <span className="text-sm text-gray-600">플레이버</span>
-          <span className="text-sm font-medium">{product.flavor}</span>
+          <span className="text-sm font-medium">{product.capacity}ml</span>
         </div>
         
         <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">

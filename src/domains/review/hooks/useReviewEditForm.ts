@@ -3,11 +3,12 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useImageModifyManager } from '@/domains/image/hooks/useImageModifyManager';
 import { useImageInputHandlers } from '@/domains/image/hooks/useImageInputHandlers';
+import { validateReviewForm } from '@/domains/review/validation/reviewValidation';
 import { Review } from '@/domains/review/types/review';
 
 interface UseReviewEditFormOptions {
   review: Review;
-  onSubmit?: (updatedReview: Partial<Review>) => Promise<void>;
+  onSubmit?: (updatedReview: Review) => Promise<void>;
   onError?: (error: unknown) => void;
 }
 
@@ -68,10 +69,10 @@ export function useReviewEditForm({ review, onSubmit, onError }: UseReviewEditFo
       // 기존 이미지 초기화
       if (review.images && review.images.length > 0) {
         const existingImages = review.images.map((img) => ({
-          id: `review-${review.id}-img-${img.order}`, // ReviewImage.order 사용
-          url: img.url,
-          fileName: `review-image-${img.order}`,
-          filePath: img.url,
+          id: `review-${review.id}-img-${img.image_order}`, // ReviewImage.order 사용
+          url: img.image_url,
+          fileName: `review-image-${img.image_order}`,
+          filePath: img.image_url,
           contentType: 'review' as const,
           createdAt: new Date(),
           isPreview: false
@@ -79,7 +80,7 @@ export function useReviewEditForm({ review, onSubmit, onError }: UseReviewEditFo
         uploadManager.initializeExistingImages(existingImages);
       }
     }
-  }, [review, uploadManager]);
+  }, [review?.id]); // review.id만 의존성으로 설정
 
   // 필드 변경 핸들러
   const handleFieldChange = useCallback((field: keyof ReviewEditFormData, value: string | number) => {
@@ -91,25 +92,21 @@ export function useReviewEditForm({ review, onSubmit, onError }: UseReviewEditFo
 
   // 폼 검증
   const validateForm = useCallback(() => {
-    if (!formData.content.trim()) {
-      return {
-        isValid: false,
-        errors: { content: '리뷰 내용을 입력해주세요.' }
-      };
-    }
-    if (formData.content.trim().length < 10) {
-      return {
-        isValid: false,
-        errors: { content: '리뷰는 최소 10자 이상 입력해주세요.' }
-      };
-    }
-    return { isValid: true, errors: {} };
-  }, [formData.content]);
+    return validateReviewForm({
+      rating: formData.rating,
+      content: formData.content,
+      sweetness: formData.sweetness,
+      menthol: formData.menthol,
+      throatHit: formData.throatHit,
+      body: formData.body,
+      freshness: formData.freshness
+    });
+  }, [formData]);
 
   // 폼 제출 핸들러
   const handleSubmit = useCallback(async () => {
     const validationResult = validateForm();
-    
+
     if (!validationResult.isValid) {
       return {
         success: false,
@@ -119,10 +116,18 @@ export function useReviewEditForm({ review, onSubmit, onError }: UseReviewEditFo
     }
 
     setIsSubmitting(true);
-    
+
     try {
       if (onSubmit) {
-        await onSubmit({
+        const imageUrls = await uploadManager.getFinalImageUrls();
+
+        const updateData: Review = {
+          id: review.id,
+          productId: review.productId,
+          userId: review.userId,
+          userName: review.userName,
+          profileImage: review.profileImage,
+          createdAt: review.createdAt,
           content: formData.content,
           rating: formData.rating,
           sweetness: formData.sweetness,
@@ -130,13 +135,15 @@ export function useReviewEditForm({ review, onSubmit, onError }: UseReviewEditFo
           throatHit: formData.throatHit,
           body: formData.body,
           freshness: formData.freshness,
-          images: (await uploadManager.getFinalImageUrls()).map((url, index) => ({
-            url,
-            order: index + 1
+          images: imageUrls.map((url, index) => ({
+            image_url: url,
+            image_order: index + 1
           }))
-        });
+        };
+
+        await onSubmit(updateData);
       }
-      
+
       return {
         success: true,
         type: 'submit' as const,

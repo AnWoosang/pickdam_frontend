@@ -8,32 +8,29 @@ type ViewMode = 'daily' | 'monthly';
 
 interface PriceHistoryControlsProps {
   priceHistory: LowestPriceHistory[];
-  onViewModeChange: (viewMode: ViewMode, selectedMonth: number, selectedWeekStart: Date) => void;
+  viewMode: ViewMode;
+  selectedMonth: number;
+  selectedWeekStart: Date;
+  onViewModeChange: (viewMode: ViewMode) => void;
+  onMonthChange: (month: number) => void;
+  onWeekChange: (weekStart: Date) => void;
 }
 
 export function PriceHistoryControls({
   priceHistory,
-  onViewModeChange
+  viewMode,
+  selectedMonth,
+  selectedWeekStart,
+  onViewModeChange,
+  onMonthChange,
+  onWeekChange
 }: PriceHistoryControlsProps) {
-  // UI 상태 관리 (컴포넌트에서 직접 관리)
-  const [viewMode, setViewMode] = useState<ViewMode>('daily');
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
-    return now.getFullYear() * 12 + now.getMonth();
-  });
-  const [selectedWeekStart, setSelectedWeekStart] = useState(() => {
-    const now = new Date();
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
-    return startOfWeek;
-  });
 
   // 비즈니스 로직만 훅에서 가져오기
   const {
     currentMonthInfo,
     currentWeekInfo,
-    navigationLimits,
-    getMostRecentWeekStart
+    navigationLimits
   } = usePriceHistoryControls({
     priceHistory,
     viewMode,
@@ -41,83 +38,80 @@ export function PriceHistoryControls({
     selectedWeekStart
   });
 
-  // 일별 뷰에서 데이터가 있는 가장 최근 주로 자동 이동
-  useEffect(() => {
-    if (viewMode === 'daily' && getMostRecentWeekStart) {
-      setSelectedWeekStart(getMostRecentWeekStart);
-    }
-  }, [viewMode, getMostRecentWeekStart]);
 
-  // 상태 변경을 부모에게 알림
-  useEffect(() => {
-    onViewModeChange(viewMode, selectedMonth, selectedWeekStart);
-  }, [viewMode, selectedMonth, selectedWeekStart, onViewModeChange]);
-
-  // UI 이벤트 핸들러들 (컴포넌트에서 직접 관리)
+  // UI 이벤트 핸들러들
   const handleViewModeChange = (mode: ViewMode) => {
-    setViewMode(mode);
+    onViewModeChange(mode);
   };
 
   const handlePrevMonth = () => {
-    setSelectedMonth(prev => Math.max(prev - 1, navigationLimits.minMonth));
+    const newMonth = Math.max(selectedMonth - 1, navigationLimits.minMonth);
+    if (newMonth !== selectedMonth) {
+      onMonthChange(newMonth);
+
+      // 월이 변경되면 해당 월의 첫 주로 selectedWeekStart 업데이트
+      const { year, month } = { year: Math.floor(newMonth / 12), month: newMonth % 12 };
+      const firstDayOfMonth = new Date(year, month, 1);
+      const firstMondayOfMonth = new Date(firstDayOfMonth);
+
+      // 해당 월의 첫 번째 월요일 찾기
+      const dayOfWeek = firstDayOfMonth.getDay();
+      const daysToMonday = dayOfWeek === 0 ? 1 : (8 - dayOfWeek) % 7;
+      firstMondayOfMonth.setDate(1 + daysToMonday);
+
+      onWeekChange(firstMondayOfMonth);
+    }
   };
 
   const handleNextMonth = () => {
-    setSelectedMonth(prev => Math.min(prev + 1, navigationLimits.maxMonth));
+    const newMonth = Math.min(selectedMonth + 1, navigationLimits.maxMonth);
+    if (newMonth !== selectedMonth) {
+      onMonthChange(newMonth);
+
+      // 월이 변경되면 해당 월의 첫 주로 selectedWeekStart 업데이트
+      const { year, month } = { year: Math.floor(newMonth / 12), month: newMonth % 12 };
+      const firstDayOfMonth = new Date(year, month, 1);
+      const firstMondayOfMonth = new Date(firstDayOfMonth);
+
+      // 해당 월의 첫 번째 월요일 찾기
+      const dayOfWeek = firstDayOfMonth.getDay();
+      const daysToMonday = dayOfWeek === 0 ? 1 : (8 - dayOfWeek) % 7;
+      firstMondayOfMonth.setDate(1 + daysToMonday);
+
+      onWeekChange(firstMondayOfMonth);
+    }
   };
 
   const handlePrevWeek = () => {
-    setSelectedWeekStart(prev => {
-      const newDate = new Date(prev);
-      newDate.setDate(prev.getDate() - 7);
-      return newDate;
-    });
+    const newDate = new Date(selectedWeekStart);
+    newDate.setDate(selectedWeekStart.getDate() - 7);
+
+    // 주가 변경되면서 월이 바뀐 경우 selectedMonth도 업데이트
+    const newMonth = newDate.getFullYear() * 12 + newDate.getMonth();
+    if (newMonth !== selectedMonth) {
+      onMonthChange(newMonth);
+    }
+
+    onWeekChange(newDate);
   };
 
   const handleNextWeek = () => {
     const now = new Date();
-    setSelectedWeekStart(prev => {
-      const newDate = new Date(prev);
-      newDate.setDate(prev.getDate() + 7);
-      return newDate <= now ? newDate : prev;
-    });
+    const newDate = new Date(selectedWeekStart);
+    newDate.setDate(selectedWeekStart.getDate() + 7);
+
+    if (newDate <= now) {
+      // 주가 변경되면서 월이 바뀐 경우 selectedMonth도 업데이트
+      const newMonth = newDate.getFullYear() * 12 + newDate.getMonth();
+      if (newMonth !== selectedMonth) {
+        onMonthChange(newMonth);
+      }
+      onWeekChange(newDate);
+    }
   };
   return (
     <>
-      {/* 뷰 모드 토글 */}
-      <div className="flex items-center space-x-2">
-        <div className="flex bg-gray-100 rounded-lg p-1 space-x-1">
-          <Button
-            onClick={() => handleViewModeChange('daily')}
-            variant="ghost"
-            size="small"
-            noFocus
-            className={`text-sm ${
-              viewMode === 'daily'
-                ? '!bg-white !text-primary shadow-sm hover:!bg-white'
-                : 'text-gray-600 hover:text-gray-800 bg-transparent'
-            }`}
-          >
-            일별
-          </Button>
-          <Button
-            onClick={() => handleViewModeChange('monthly')}
-            variant="ghost"
-            size="small"
-            noFocus
-            className={`text-sm ${
-              viewMode === 'monthly'
-                ? '!bg-white !text-primary shadow-sm hover:!bg-white'
-                : 'text-gray-600 hover:text-gray-800 bg-transparent'
-            }`}
-          >
-            월별
-          </Button>
-        </div>
-      </div>
-
-      {/* 기간 선택 네비게이션 */}
-      <div className="flex items-center justify-center mb-6 mt-6">
+      <div className="flex items-center justify-center">
         {viewMode === 'monthly' ? (
           <div className="flex items-center space-x-4">
             <Button

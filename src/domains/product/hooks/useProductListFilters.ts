@@ -2,13 +2,18 @@
 
 import { useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import {
-  SortBy,
-  SortOrder,
-  isValidSortBy,
-  isValidSortOrder,
-  mapUrlToInhaleTypeIds
-} from '@/domains/product/types/product';
+import { SortBy, SortOrder } from '@/domains/product/types/product';
+import { mapUrlToInhaleTypeIds } from '@/domains/product/types/category';
+
+// 정렬 기준 검증
+const isValidSortBy = (value: string): value is SortBy => {
+  return ['price', 'totalViews', 'createdAt', 'name'].includes(value);
+};
+
+// 정렬 순서 검증
+const isValidSortOrder = (value: string): value is SortOrder => {
+  return value === 'asc' || value === 'desc';
+};
 
 // 페이지네이션 상수
 const PAGINATION_LIMITS = {
@@ -63,7 +68,7 @@ export function useProductListFilters(): ProductListFilters {
   // 정렬 파라미터 검증 (메모이제이션)
   const sortBy: SortBy = useMemo(() => {
     const sortByParam = searchParams.get('sortBy');
-    return (sortByParam && isValidSortBy(sortByParam)) ? sortByParam : 'total_views';
+    return (sortByParam && isValidSortBy(sortByParam)) ? sortByParam : 'totalViews';
   }, [searchParams]);
   
   const sortOrder: SortOrder = useMemo(() => {
@@ -88,7 +93,8 @@ export function useProductListFilters(): ProductListFilters {
   
   // 호흡방식 필터 상태 (최적화된 의존성)
   const selectedInhaleTypes = useMemo(() => {
-    return mapUrlToInhaleTypeIds(subCategory);
+    if (!subCategory) return [];
+    return mapUrlToInhaleTypeIds([subCategory]);
   }, [subCategory]);
 
   return {

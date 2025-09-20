@@ -4,7 +4,7 @@ import React, { useCallback, useReducer } from "react";
 import { X } from "lucide-react";
 import { Logo } from "@/shared/components/Logo";
 import { useLoginModal } from "../hooks/useLoginModal";
-import { EmailPasswordForm } from "./login/EmailPasswordForm";
+import { LoginForm } from "./login/LoginForm";
 import { RememberMeSection } from "./login/RememberMeSection";
 import { SocialLoginButtons } from "./login/SocialLoginButtons";
 import { SignupPrompt } from "./login/SignupPrompt";
@@ -183,7 +183,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
 
         {/* Email & Password Form */}
-        <EmailPasswordForm
+        <LoginForm
           isLoading={isLoading}
           onSubmit={handleLoginSubmit}
         />

@@ -23,7 +23,6 @@ export const CommentContent = React.memo(({
         className="text-gray-700"
         onMentionClick={(username) => {
           console.log(`Clicked mention: ${username}`);
-          // TODO: 사용자 프로필 페이지로 이동하거나 다른 액션 수행
         }}
       />
     </div>

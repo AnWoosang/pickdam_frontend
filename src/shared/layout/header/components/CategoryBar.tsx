@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Menu, ChevronRight } from 'lucide-react';
 
 import { ROUTES } from '@/app/router/routes';
-import { allCategories, CATEGORY_CONFIG } from '@/domains/product/types/category';
+import { getHeaderCategories, CATEGORY_CONFIG } from '@/domains/product/types/category';
 import { cn } from '@/shared/utils/Format';
 import { Container } from '@/shared/layout/Container';
 
@@ -18,6 +18,7 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
   const router = useRouter();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const headerCategories = getHeaderCategories();
 
   // 메인 네비게이션 메뉴
   const mainNavItems = [
@@ -42,9 +43,10 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
 
     // 상위 카테고리 클릭 (category가 빈 문자열인 경우)
     if (category === '') {
-      const categoryGroup = allCategories.find(group => group.title === groupTitle);
-      if (categoryGroup?.id) {
-        router.push(`${ROUTES.PRODUCT.LIST}?category=${categoryGroup.id}`);
+      const categoryGroup = headerCategories.find(group => group.title === groupTitle);
+      if (categoryGroup?.title) {
+        // display name을 전달 (groupTitle이 이미 display name임)
+        router.push(`${ROUTES.PRODUCT.LIST}?category=${groupTitle}`);
       } else {
         router.push(ROUTES.PRODUCT.LIST);
       }
@@ -54,15 +56,16 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
     }
 
     // 서브카테고리 클릭 처리
-    const categoryGroup = allCategories.find(group => group.title === groupTitle);
-    
-    if (categoryGroup?.id) {
-      const categoryParam = categoryGroup.id;
-      
+    const categoryGroup = headerCategories.find(group => group.title === groupTitle);
+
+    if (categoryGroup?.title) {
+      // display name을 전달
+      const categoryParam = groupTitle;
+
       // 카테고리 설정에서 서브카테고리 찾기
       const categoryConfig = CATEGORY_CONFIG.find(config => config.id === categoryGroup.id);
       const subCategory = categoryConfig?.subCategories.find(sub => sub.displayName === category);
-      
+
       if (subCategory) {
         router.push(`${ROUTES.PRODUCT.LIST}?category=${categoryParam}&subCategory=${subCategory.name}`);
       } else {
@@ -135,7 +138,7 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
               <div className="absolute top-full mt-px left-0 w-64 bg-white border border-grayLight border-t border-t-grayLight
                             shadow-lg z-50">
                 <div className="py-2">
-                  {allCategories.map((group) => (
+                  {headerCategories.map((group) => (
                     <div key={group.title}>
                       {/* 카테고리 그룹 제목 - 모든 상위 카테고리 클릭 가능하게 */}
                       <button

@@ -4,7 +4,7 @@ import { usePostQuery } from '@/domains/community/hooks/usePostQueries';
 import { useDeletePostMutation, useIncrementPostViewMutation } from '@/domains/community/hooks/usePostQueries';
 
 import { useEffect, useCallback, useMemo } from 'react';
-import { useAuthStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 import { BusinessError, createBusinessError } from '@/shared/error/BusinessError';
 
 interface UsePostDetailPageProps {
@@ -12,7 +12,7 @@ interface UsePostDetailPageProps {
 }
 
 export const usePostDetailPage = ({ postId }: UsePostDetailPageProps) => {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuthUtils();
 
   // 에러 핸들러
   const createErrorHandler = useCallback((defaultMessage: string) => 
@@ -30,16 +30,6 @@ export const usePostDetailPage = ({ postId }: UsePostDetailPageProps) => {
   const incrementViewMutation = useIncrementPostViewMutation();
   
 
-  // Safe sessionStorage access for SSR
-  const getSessionStorage = useCallback((key: string) => {
-    if (typeof window === 'undefined') return null;
-    return sessionStorage.getItem(key);
-  }, []);
-
-  const setSessionStorage = useCallback((key: string, value: string) => {
-    if (typeof window === 'undefined') return;
-    sessionStorage.setItem(key, value);
-  }, []);
 
   // 권한 검증 (memoized)
   const isOwner = useMemo(() => 
@@ -55,9 +45,9 @@ export const usePostDetailPage = ({ postId }: UsePostDetailPageProps) => {
     }
 
     const viewKey = `post_view_${postId}`;
-    
-    // 이미 조회한 게시글인지 확인
-    if (getSessionStorage(viewKey)) {
+
+    // 이미 조회한 게시글인지 확인 (직접 sessionStorage 접근)
+    if (typeof window !== 'undefined' && sessionStorage.getItem(viewKey)) {
       return;
     }
 
@@ -65,11 +55,13 @@ export const usePostDetailPage = ({ postId }: UsePostDetailPageProps) => {
       { id: postId },
       {
         onSuccess: () => {
-          setSessionStorage(viewKey, 'true');
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem(viewKey, 'true');
+          }
         }
       }
     );
-  }, [postId, post, authLoading, incrementViewMutation, getSessionStorage, setSessionStorage]);
+  }, [postId, post, authLoading]);
 
 
   // 게시글 삭제 핸들러

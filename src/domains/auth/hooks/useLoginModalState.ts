@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useAuthStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 
 export function useLoginModalState() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const searchParams = useSearchParams();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthUtils();
 
   // URL 파라미터에서 login=true 감지하여 로그인 모달 자동 열기
   useEffect(() => {

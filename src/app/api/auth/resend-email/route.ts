@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSuccessResponse, createErrorResponse, mapApiError, getStatusFromErrorCode } from '@/infrastructure/api/supabaseResponseUtils'
+import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
 import { ROUTES } from '@/app/router/routes'
 import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { ResendEmailRequestDto } from '@/domains/auth/types/dto/authDto'
 
 export async function POST(request: NextRequest) {
-  try {const { email, type } = await request.json()
-    
-    if (!email) {
-      const mappedError = mapApiError({ message: '이메일이 필요합니다.' })
-      const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
-    }
+  try {
+    const { email, type }: ResendEmailRequestDto = await request.json()
     
     const { error } = await supabaseServer.auth.resend({
       type: type || 'signup',
@@ -23,7 +19,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       const mappedError = mapApiError(error)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
     return NextResponse.json(
@@ -35,6 +31,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }

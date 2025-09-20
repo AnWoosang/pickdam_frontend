@@ -1,7 +1,7 @@
 // 회원가입 관련 validation 함수들
 import { validateEmail, validatePassword, validatePasswordConfirm, validateNickname } from '@/shared/validation/common';
 import { Gender } from '@/domains/user/types/user';
-import { SignupForm } from '@/domains/auth/types/signup';
+import { SignupForm } from '@/domains/auth/types/auth';
 
 // 이름 validation
 export const validateName = (name: string): string | null => {

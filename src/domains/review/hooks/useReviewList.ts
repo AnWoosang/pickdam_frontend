@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useProductReviews, useUpdateReview, useDeleteReview } from './useReviewQueries';
+import { Review } from '@/domains/review/types/review';
 
 type SortOption = 'latest' | 'oldest' | 'highest' | 'lowest';
 
@@ -28,12 +29,22 @@ export function useReviews({
   const updateReviewMutation = useUpdateReview();
   const deleteReviewMutation = useDeleteReview();
 
+  // 로컬 상태로 즉시 반영 관리
+  const [localReviews, setLocalReviews] = useState<Review[]>([]);
+
+  useEffect(() => {
+    // React Query가 데이터를 가져왔을 때만 localReviews 업데이트
+    if (allReviews.length > 0 || (allReviews.length === 0 && !isLoading)) {
+      setLocalReviews([...allReviews]);
+    }
+  }, [allReviews.length, isLoading, productId]);
+
   // 정렬 및 필터링 로직
   const processedReviews = useMemo(() => {
-    if (!filters) return allReviews;
+    if (!filters) return localReviews;
 
     // 정렬 적용
-    const sortedReviews = [...allReviews].sort((a, b) => {
+    const sortedReviews = [...localReviews].sort((a, b) => {
       switch (filters.sortBy) {
         case 'latest':
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -56,15 +67,15 @@ export function useReviews({
     });
 
     return filteredReviews;
-  }, [allReviews, filters]);
+  }, [localReviews, filters]);
 
   // 페이지네이션 적용
   const paginationData = useMemo(() => {
     if (!filters) {
       return {
-        currentPageReviews: allReviews,
+        currentPageReviews: localReviews,
         totalFilteredPages: 1,
-        totalReviews: allReviews.length
+        totalReviews: localReviews.length
       };
     }
 
@@ -76,38 +87,38 @@ export function useReviews({
     return {
       currentPageReviews,
       totalFilteredPages,
-      totalReviews: allReviews.length
+      totalReviews: localReviews.length
     };
-  }, [processedReviews, filters, reviewsPerPage, allReviews]);
+  }, [processedReviews, filters, reviewsPerPage, localReviews]);
 
   // 리뷰 수정 비즈니스 로직
-  const handleUpdateReview = async (params: {
-    reviewId: string;
-    memberId: string;
-    updates: {
-      content: string;
-      rating: number;
-      sweetness?: number;
-      menthol?: number;
-      throatHit?: number;
-      body?: number;
-      freshness?: number;
-      images?: { image_url: string; image_order: number }[];
-    };
-  }): Promise<boolean> => {
+  const handleUpdateReview = async (updatedReview: Review): Promise<boolean> => {
     try {
+      console.log('🔄 [handleUpdateReview] 뮤테이션 시작:', { reviewId: updatedReview.id, productId });
+
       await updateReviewMutation.mutateAsync({
-        reviewId: params.reviewId,
-        updates: {
-          ...params.updates,
-          productId,
-          memberId: params.memberId
-        },
-        productId
+        updates: updatedReview
       });
+
+      // 성공 시 즉시 localReviews 업데이트
+      setLocalReviews(prev => {
+        const updatedData = prev.map(review =>
+          review.id === updatedReview.id ? { ...review, ...updatedReview } : review
+        );
+
+        console.log('🎯 [handleUpdateReview] localReviews 즉시 업데이트:', {
+          originalCount: prev.length,
+          updatedCount: updatedData.length,
+          updated: updatedData.find(r => r.id === updatedReview.id)
+        });
+
+        return updatedData;
+      });
+
+      console.log('✅ [handleUpdateReview] 뮤테이션 성공:', updatedReview.id);
       return true;
     } catch (error) {
-      console.error('리뷰 수정 실패:', error);
+      console.error('❌ [handleUpdateReview] 리뷰 수정 실패:', error);
       throw error;
     }
   };

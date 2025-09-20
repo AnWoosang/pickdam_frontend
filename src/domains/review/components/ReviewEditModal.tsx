@@ -1,23 +1,36 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
-import { Star, Upload, X } from 'lucide-react';
+import { Star, Upload, X, Heart, Wind, Zap, Droplets, Info } from 'lucide-react';
 import { BaseModal } from '@/shared/components/BaseModal';
 import { Button } from '@/shared/components/Button';
+import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { TextEditor } from '@/shared/components/TextEditor';
+import { StarRating } from '@/domains/review/components/write-form/StarRating';
 import { Review } from '@/domains/review/types/review';
 import { useReviewEditForm } from '@/domains/review/hooks/useReviewEditForm';
 import { useImageViewer } from '@/domains/image/hooks/useImageViewer';
+import { getValidationErrorMessage, type ReviewValidationErrors } from '@/domains/review/validation/reviewValidation';
+import { toast } from 'react-hot-toast';
 
 // 평점 옵션
 const RATING_OPTIONS = [1, 2, 3, 4, 5] as const;
+const MAX_RATING = 5;
+
+const DETAILED_RATINGS = [
+  { field: 'sweetness' as const, label: '달콤함', icon: Heart, color: 'text-pink-500' },
+  { field: 'menthol' as const, label: '멘솔감', icon: Wind, color: 'text-blue-500' },
+  { field: 'throatHit' as const, label: '목넘김', icon: Zap, color: 'text-yellow-500' },
+  { field: 'body' as const, label: '바디감', icon: Droplets, color: 'text-purple-500' },
+  { field: 'freshness' as const, label: '신선함', icon: Info, color: 'text-green-500' },
+] as const;
 
 interface ReviewEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   review: Review;
-  onSave: (updatedReview: Partial<Review>) => Promise<void>;
+  onSave: (updatedReview: Review) => Promise<void>;
 }
 
 export const ReviewEditModal = React.memo<ReviewEditModalProps>(function ReviewEditModal({
@@ -26,6 +39,9 @@ export const ReviewEditModal = React.memo<ReviewEditModalProps>(function ReviewE
   review,
   onSave
 }) {
+  // UI 상태 관리
+  const [validationErrors, setValidationErrors] = useState<ReviewValidationErrors>({});
+
   const {
     formData,
     isSubmitting,
@@ -47,12 +63,38 @@ export const ReviewEditModal = React.memo<ReviewEditModalProps>(function ReviewE
     handleFieldChange('content', content);
   }, [handleFieldChange]);
 
+  // 검증 에러 처리
+  const handleValidationError = React.useCallback((errors: ReviewValidationErrors) => {
+    setValidationErrors(errors);
+    const errorMessage = getValidationErrorMessage(errors);
+    toast.error(errorMessage || '필수 항목을 확인해주세요');
+  }, []);
+
+  // 제출 에러 처리
+  const handleSubmitError = React.useCallback((message: string) => {
+    toast.error(message || '리뷰 수정에 실패했습니다');
+  }, []);
+
+  // 성공 처리
+  const handleSuccess = React.useCallback(() => {
+    setValidationErrors({});
+    toast.success('리뷰가 수정되었습니다!');
+    onClose();
+  }, [onClose]);
+
   const handleSave = React.useCallback(async () => {
     const result = await handleSubmit();
-    if (result.success) {
-      onClose();
+
+    if (!result.success) {
+      if (result.type === 'validation' && result.errors) {
+        handleValidationError(result.errors);
+      } else if (result.type === 'submit' && result.message) {
+        handleSubmitError(result.message);
+      }
+    } else if (result.success) {
+      handleSuccess();
     }
-  }, [handleSubmit, onClose]);
+  }, [handleSubmit, handleValidationError, handleSubmitError, handleSuccess]);
 
   const handleClose = React.useCallback(() => {
     onClose();
@@ -60,51 +102,21 @@ export const ReviewEditModal = React.memo<ReviewEditModalProps>(function ReviewE
 
   const isLoading = isSubmitting;
 
-  // 평점 변경 핸들러들
-  const ratingChangeHandlers = React.useMemo(() => ({
-    rating: (value: number) => handleFieldChange('rating', value),
-    sweetness: (value: number) => handleFieldChange('sweetness', value),
-    menthol: (value: number) => handleFieldChange('menthol', value),
-    throatHit: (value: number) => handleFieldChange('throatHit', value),
-    body: (value: number) => handleFieldChange('body', value),
-    freshness: (value: number) => handleFieldChange('freshness', value),
-  }), [handleFieldChange]);
+  // 평점 변경 핸들러
+  const handleStarClick = React.useCallback(
+    (rating: number) => {
+      handleFieldChange('rating', rating);
+    },
+    [handleFieldChange]
+  );
 
-  // 평점 선택 컴포넌트
-  const RatingSelector = React.useCallback(({ 
-    label, 
-    value, 
-    onChange 
-  }: { 
-    label: string; 
-    value: number; 
-    onChange: (value: number) => void; 
-  }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label}
-      </label>
-      <div className="flex space-x-1">
-        {RATING_OPTIONS.map((star) => (
-          <button
-            key={star}
-            type="button"
-            onClick={() => onChange(star)}
-            className="focus:outline-none"
-          >
-            <Star
-              className={`w-6 h-6 ${
-                star <= value
-                  ? 'text-yellow-400 fill-current'
-                  : 'text-gray-300'
-              } hover:text-yellow-400`}
-            />
-          </button>
-        ))}
-      </div>
-      <span className="text-sm text-gray-500 mt-1">{value}/5</span>
-    </div>
-  ), []);
+  const handleDetailedRatingChange = React.useCallback(
+    (field: 'sweetness' | 'menthol' | 'throatHit' | 'body' | 'freshness') => (rating: number) => {
+      handleFieldChange(field, rating);
+    },
+    [handleFieldChange]
+  );
+
 
   return (
     <BaseModal
@@ -112,59 +124,93 @@ export const ReviewEditModal = React.memo<ReviewEditModalProps>(function ReviewE
       onClose={handleClose}
       title="리뷰 수정"
       size="large"
+      preventBodyScroll={true}
     >
-      <div className="space-y-6">
+      <div className="space-y-6 p-6">
         {/* 전체 평점 */}
-        <RatingSelector
-          label="전체 평점"
-          value={formData.rating}
-          onChange={ratingChangeHandlers.rating}
-        />
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <label className="text-sm font-medium text-gray-700">
+              전체 평점 <span className="text-red-500">*</span>
+            </label>
+            <span className="text-sm text-gray-500">
+              ({formData.rating}/{MAX_RATING})
+            </span>
+            {validationErrors.rating && (
+              <span className="text-xs text-red-500">{validationErrors.rating}</span>
+            )}
+          </div>
 
-        {/* 세부 평점 */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <RatingSelector
-            label="달콤함"
-            value={formData.sweetness}
-            onChange={ratingChangeHandlers.sweetness}
-          />
-          <RatingSelector
-            label="멘솔감"
-            value={formData.menthol}
-            onChange={ratingChangeHandlers.menthol}
-          />
-          <RatingSelector
-            label="목넘김"
-            value={formData.throatHit}
-            onChange={ratingChangeHandlers.throatHit}
-          />
-          <RatingSelector
-            label="바디감"
-            value={formData.body}
-            onChange={ratingChangeHandlers.body}
-          />
-          <RatingSelector
-            label="신선함"
-            value={formData.freshness}
-            onChange={ratingChangeHandlers.freshness}
-          />
+          <div className="flex gap-1" role="radiogroup" aria-label="전체 평점 선택">
+            {RATING_OPTIONS.map((star) => (
+              <Star
+                key={star}
+                onClick={() => handleStarClick(star)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleStarClick(star);
+                  }
+                }}
+                tabIndex={0}
+                role="radio"
+                aria-checked={star === formData.rating}
+                aria-label={`${star}점`}
+                className={`w-6 h-6 cursor-pointer transition-colors ${
+                  star <= formData.rating
+                    ? 'text-yellow-400 fill-current'
+                    : 'text-gray-300 hover:text-yellow-400'
+                } ${isLoading ? 'pointer-events-none opacity-50' : ''}`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* 상세 평가 */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <label className="block text-sm font-medium text-gray-700">
+              상세 평가 <span className="text-red-500">*</span>
+            </label>
+            {(validationErrors.sweetness || validationErrors.menthol || validationErrors.throatHit || validationErrors.body || validationErrors.freshness) && (
+              <span className="text-xs text-red-500">모든 상세 평가를 선택해주세요</span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+            {DETAILED_RATINGS.map(({ field, label, icon, color }) => (
+              <StarRating
+                key={field}
+                label={label}
+                value={formData[field]}
+                onChange={handleDetailedRatingChange(field)}
+                icon={icon}
+                color={color}
+              />
+            ))}
+          </div>
         </div>
 
         {/* 리뷰 내용 */}
-        <TextEditor
-          content={formData.content}
-          onContentChange={handleContentChange}
-          onPaste={fileHandlers.handlePaste}
-          onDragOver={fileHandlers.handleDragOver}
-          onDragLeave={fileHandlers.handleDragLeave}
-          onDrop={fileHandlers.handleDrop}
-          isDragOver={fileHandlers.isDragOver}
-          placeholder="리뷰 내용을 입력해주세요..."
-          rows={8}
-          maxLength={2000}
-          label="리뷰 내용"
-          required
-        />
+        <div>
+          <TextEditor
+            content={formData.content}
+            onContentChange={handleContentChange}
+            onPaste={fileHandlers.handlePaste}
+            onDragOver={fileHandlers.handleDragOver}
+            onDragLeave={fileHandlers.handleDragLeave}
+            onDrop={fileHandlers.handleDrop}
+            isDragOver={fileHandlers.isDragOver}
+            placeholder="리뷰 내용을 입력해주세요..."
+            rows={8}
+            maxLength={1000}
+            label="리뷰 내용"
+            required
+          />
+          {validationErrors.content && (
+            <p className="text-xs text-red-500 mt-1">{validationErrors.content}</p>
+          )}
+        </div>
 
         {/* 이미지 업로드 섹션 */}
         <div>
@@ -172,13 +218,13 @@ export const ReviewEditModal = React.memo<ReviewEditModalProps>(function ReviewE
             사진 첨부 (선택)
           </label>
           
-          {/* 기존 이미지 미리보기 */}
+          {/* 이미지 미리보기 */}
           {uploadManager.activeImages.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
+            <div className="flex flex-wrap gap-3 mb-4">
               {uploadManager.activeImages.map((imageState, index: number) => (
                 <div key={imageState.id} className="relative w-20 h-20">
-                  <div 
-                    className="relative w-full h-full rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                  <div
+                    className="relative w-full h-full rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-gray-200"
                     onClick={() => imageViewer.openViewer(uploadManager.allImagePreviewUrls, index)}
                   >
                     <Image
@@ -193,9 +239,8 @@ export const ReviewEditModal = React.memo<ReviewEditModalProps>(function ReviewE
                     size="small"
                     onClick={() => uploadManager.removeImage(imageState.id)}
                     className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full p-0 hover:bg-red-600 z-10"
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
+                    icon={<X className="w-3 h-3" />}
+                  />
                 </div>
               ))}
             </div>
@@ -217,18 +262,25 @@ export const ReviewEditModal = React.memo<ReviewEditModalProps>(function ReviewE
               <label
                 htmlFor="image-upload-edit"
                 className={`inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg transition-colors ${
-                  uploadManager.isUploading 
-                    ? 'cursor-not-allowed bg-gray-100 text-gray-400' 
+                  uploadManager.isUploading
+                    ? 'cursor-not-allowed bg-gray-100 text-gray-400'
                     : 'cursor-pointer hover:bg-gray-50 text-gray-700'
                 }`}
               >
-                <Upload className="w-4 h-4" />
-                <span className="text-sm">
-                  {uploadManager.isUploading ? '업로드 중...' : '사진 선택'}
-                </span>
+                {uploadManager.isUploading ? (
+                  <>
+                    <LoadingSpinner size="small" showMessage={false} className="py-0" />
+                    <span className="text-sm">업로드 중...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm">사진 선택</span>
+                  </>
+                )}
               </label>
               <p className="text-xs text-gray-500 mt-1">
-                최대 {uploadManager.maxImages}장까지 업로드 가능
+                최대 {uploadManager.maxImages}장까지 업로드 가능 (JPG, PNG) · 자동 압축 및 최적화
               </p>
             </div>
           )}

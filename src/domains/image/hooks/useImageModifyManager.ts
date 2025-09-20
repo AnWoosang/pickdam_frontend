@@ -94,9 +94,12 @@ export function useImageModifyManager({
     [activeImages]
   );
 
-  const isUploading = useMemo(() => 
-    activeImages.some(state => !state.isExisting && state.file),
-    [activeImages]
+  // 업로드 상태 추가
+  const [uploadingImageIds, setUploadingImageIds] = useState<Set<string>>(new Set());
+
+  const isUploading = useMemo(() =>
+    uploadingImageIds.size > 0,
+    [uploadingImageIds]
   );
   
   const currentImageCount = activeImages.length;
@@ -114,10 +117,20 @@ export function useImageModifyManager({
   const uploadNewImages = useCallback(async () => {
     const newImages = activeImages.filter(state => !state.isExisting && state.file);
     const filesToUpload = newImages.map(state => state.file!);
-    
+
     if (filesToUpload.length === 0) return [];
-    
-    return await uploadImages(filesToUpload);
+
+    // 업로드 시작 시 상태 설정
+    const imageIds = new Set(newImages.map(state => state.id));
+    setUploadingImageIds(imageIds);
+
+    try {
+      const result = await uploadImages(filesToUpload);
+      return result;
+    } finally {
+      // 업로드 완료 시 상태 클리어
+      setUploadingImageIds(new Set());
+    }
   }, [activeImages, uploadImages]);
 
   // 최종 제출용 이미지 URL 목록 생성

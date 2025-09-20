@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Calendar } from 'lucide-react';
 import { Button } from '@/shared/components/Button';
 import { ROUTES } from '@/app/router/routes';
-import { MyComment } from '@/domains/user/types/mypage/mypage';
+import { MyComment } from '@/domains/user/types/mypage';
 
 interface MypageCommentCardProps {
   comment: MyComment;

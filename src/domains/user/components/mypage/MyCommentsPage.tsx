@@ -6,7 +6,7 @@ import { useMyCommentsPage } from '@/domains/user/hooks/mypage/useMyCommentsPage
 import { MypageLayout } from '@/domains/user/components/mypage/MypageLayout';
 import { MypageCommentCard } from '@/domains/user/components/mypage/MypageCommentCard';
 import { Button } from '@/shared/components/Button';
-import type { MyComment } from '@/domains/user/types/mypage/mypage';
+import type { MyComment } from '@/domains/user/types/mypage';
 
 export function MyCommentsPage() {
   const {

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 import { useUserReviews } from './useMyPageQueries';
 import { ROUTES } from '@/app/router/routes';
 import { toast } from 'react-hot-toast';
@@ -10,7 +10,7 @@ import { Review } from '@/domains/review/types/review';
 
 export function useMyReviewsPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user } = useAuthUtils();
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 10;
   

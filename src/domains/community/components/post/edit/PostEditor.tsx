@@ -1,22 +1,19 @@
 "use client";
 
-import React, { useRef, useState, useCallback } from 'react';
-import { ImageIcon } from 'lucide-react';
+import React from 'react';
+import dynamic from 'next/dynamic';
 import { useQuill } from '@/domains/community/hooks/useQuill';
-import {UnifiedImageState} from '@/domains/image/types/Image';
+import 'react-quill/dist/quill.snow.css';
+
+const ReactQuill = dynamic(() => import('react-quill'), {
+  ssr: false,
+  loading: () => <div className="min-h-[300px] border border-gray-300 rounded-lg p-4">에디터 로딩 중...</div>
+});
 
 // Constants
 const TITLE_MAX_LENGTH = 99;
-const EDITOR_MIN_HEIGHT = 300;
-const IMAGE_INSERT_DELAY = 100;
 
 // Types
-interface ImageEditorType {
-  addNewImages: (files: File[]) => Promise<void>;
-  activeImages: UnifiedImageState[];
-  parseExistingImages?: (content: string) => void;
-}
-
 interface PostEditorProps {
   title: string;
   content: string;
@@ -24,7 +21,6 @@ interface PostEditorProps {
   onErrorChange: (errors: { title?: string; content?: string }) => void;
   titleError?: string;
   contentError?: string;
-  imageEditor: ImageEditorType;
 }
 
 export function PostEditor({
@@ -34,13 +30,10 @@ export function PostEditor({
   onErrorChange,
   titleError,
   contentError,
-  imageEditor,
 }: PostEditorProps) {
   // Quill CSS는 글로벌 CSS에서 처리
 
   // UI 상태
-  const [isDragOver, setIsDragOver] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleTitleChange = (newTitle: string) => {
     onChange({ title: newTitle });
@@ -56,60 +49,12 @@ export function PostEditor({
     }
   };
 
-  const handleImageButtonClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
   // Use Quill hook
-  const { quillRef, textLength, insertImage } = useQuill({
+  const { quillRef, textLength, modules, handleChange } = useQuill({
     content,
-    onChange: handleContentChange,
-    onImageButtonClick: handleImageButtonClick
+    onChange: handleContentChange
   });
   
-  // 드래그 앤 드롭 핸들러들
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isDragOver) {
-      setIsDragOver(true);
-    }
-  }, [isDragOver]);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.currentTarget === e.target) {
-      setIsDragOver(false);
-    }
-  }, []);
-
-  // 이미지 추가를 위한 핸들러
-  const handleAddImages = useCallback(async (files: File[]) => {
-    // Processing image files
-    
-    try {
-      // imageEditor를 통해 이미지 추가
-      await imageEditor.addNewImages(files);
-      
-      // Data URL들을 Quill에 삽입
-      const newImages = imageEditor.activeImages.slice(-files.length);
-      
-      // Use Promise chain instead of setTimeout to avoid race conditions
-      newImages.reduce((promise, img: UnifiedImageState) => {
-        return promise.then(() => {
-          insertImage(img.previewUrl);
-          return new Promise(resolve => setTimeout(resolve, IMAGE_INSERT_DELAY));
-        });
-      }, Promise.resolve());
-    } catch (error) {
-      console.error('Image conversion failed:', error);
-    }
-    
-    setIsDragOver(false);
-  }, [insertImage, imageEditor]);
 
   return (
     <div className="space-y-6">
@@ -149,29 +94,20 @@ export function PostEditor({
         
         <div className="space-y-4">
           {/* Quill 에디터 */}
-          <div 
-            className={`relative ${isDragOver ? 'ring-2 ring-primary ring-opacity-50' : ''} ${
+          <div
+            className={`relative ${
               contentError ? 'ring-2 ring-red-500' : ''
             }`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const files = Array.from(e.dataTransfer.files);
-              handleAddImages(files);
-            }}
           >
-            {/* Quill이 여기에 마운트됩니다 */}
-            <div ref={quillRef} className={`min-h-[${EDITOR_MIN_HEIGHT}px]`} />
-            {isDragOver && (
-              <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-lg border-2 border-dashed border-primary pointer-events-none z-10">
-                <div className="text-center">
-                  <ImageIcon className="w-12 h-12 text-primary mx-auto mb-2" />
-                  <p className="text-primary font-medium">이미지를 여기에 드롭하세요</p>
-                </div>
-              </div>
-            )}
+            {/* ReactQuill 컴포넌트 */}
+            <ReactQuill
+              ref={quillRef}
+              theme="snow"
+              modules={modules}
+              value={content}
+              onChange={handleChange}
+              className="min-h-[300px] quill-editor"
+            />
           </div>
         </div>
         
@@ -185,24 +121,6 @@ export function PostEditor({
         </div>
       </div>
 
-      {/* 숨겨진 파일 입력 */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        multiple
-        onChange={(e) => {
-          const files = Array.from(e.target.files || []);
-          if (files.length > 0) {
-            handleAddImages(files);
-          }
-          // 입력 초기화
-          if (e.target) {
-            e.target.value = '';
-          }
-        }}
-        className="hidden"
-      />
     </div>
   );
 }

@@ -4,7 +4,14 @@ import { User, Check, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
 import { useNicknameCheck } from '@/shared/hooks/useNicknameCheck';
-import { NicknameFieldProps } from '../../types/nickname';
+
+// 닉네임 필드 Props
+export interface NicknameFieldProps {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onValidChange: (nickname: string, isValid: boolean) => void;
+  disabled?: boolean;
+}
 
 export function NicknameField({ 
   value, 

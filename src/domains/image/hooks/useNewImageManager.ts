@@ -44,8 +44,8 @@ export function useNewImageManager({
     [uploadStates]
   );
   
-  const isUploading = useMemo(() => 
-    uploadStates.some(state => state.status === 'uploading' || state.status === 'pending'), 
+  const isUploading = useMemo(() =>
+    uploadStates.some(state => state.status === 'uploading'),
     [uploadStates]
   );
 
@@ -74,20 +74,29 @@ export function useNewImageManager({
     const pendingStates = uploadStates.filter(state => state.status === 'pending');
     if (pendingStates.length === 0) return [];
 
+    // pending → uploading 상태로 변경
+    setUploadStates(prev =>
+      prev.map(state =>
+        pendingStates.some(p => p.id === state.id)
+          ? { ...state, status: 'uploading' as const, progress: 0 }
+          : state
+      )
+    );
+
     try {
       const filesToUpload = pendingStates.map(state => state.file);
       const uploadedImages = await uploadImages(filesToUpload);
 
-      // pending → success 상태 업데이트
-      setUploadStates(prev => 
+      // uploading → success 상태 업데이트
+      setUploadStates(prev =>
         prev.map(state => {
           const pendingIndex = pendingStates.findIndex(p => p.id === state.id);
           if (pendingIndex !== -1) {
-            return { 
-              ...state, 
-              status: 'success' as const, 
-              result: uploadedImages[pendingIndex], 
-              progress: 100 
+            return {
+              ...state,
+              status: 'success' as const,
+              result: uploadedImages[pendingIndex],
+              progress: 100
             };
           }
           return state;
@@ -96,15 +105,15 @@ export function useNewImageManager({
 
       return uploadedImages;
     } catch (error) {
-      // pending → error 상태 업데이트
-      setUploadStates(prev => 
-        prev.map(state => 
+      // uploading → error 상태 업데이트
+      setUploadStates(prev =>
+        prev.map(state =>
           pendingStates.some(p => p.id === state.id)
             ? { ...state, status: 'error' as const, error: error instanceof Error ? error.message : '업로드 실패' }
             : state
         )
       );
-      
+
       throw error;
     }
   }, [uploadStates, uploadImages]);

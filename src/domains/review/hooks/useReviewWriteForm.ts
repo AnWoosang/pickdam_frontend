@@ -48,6 +48,7 @@ export function useReviewWriteForm({ onSubmit }: UseReviewWriteFormOptions) {
 
   // 폼 제출 핸들러 (순수 비즈니스 로직만)
   const handleSubmit = useCallback(async (imageUrls: string[] = []) => {
+
     // 검증 실행
     const validationResult = validateReviewForm({
       rating: formData.rating,
@@ -60,15 +61,15 @@ export function useReviewWriteForm({ onSubmit }: UseReviewWriteFormOptions) {
     });
 
     if (!validationResult.isValid) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         errors: validationResult.errors,
         type: 'validation' as const
       };
     }
 
     setIsSubmitting(true);
-    
+
     try {
       if (onSubmit) {
         // 이미지 URL들을 함께 전달
@@ -78,16 +79,15 @@ export function useReviewWriteForm({ onSubmit }: UseReviewWriteFormOptions) {
         };
         await onSubmit(submitData);
       }
-      
-      return { 
-        success: true, 
+      return {
+        success: true,
         type: 'submit' as const,
         shouldReset: true,
         shouldClose: true
       };
     } catch (error) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error,
         type: 'submit' as const,
         message: error instanceof Error ? error.message : '리뷰 등록에 실패했습니다.'

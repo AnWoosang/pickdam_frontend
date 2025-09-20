@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CATEGORY_CONFIG } from '@/domains/product/types/category';
-import { INHALE_TYPE_NAMES } from '@/domains/product/types/product';
+import { CATEGORY_CONFIG, INHALE_TYPE_CONFIG } from '@/domains/product/types/category';
 
 export interface ProductFiltersProps {
   selectedCategories: string[];
@@ -66,17 +65,17 @@ export function ProductFilters({
               {/* 호흡방식 체크박스들 */}
               <td className="py-3 px-3 align-top">
                 <div className="space-y-2">
-                  {Object.entries(INHALE_TYPE_NAMES).map(([id, name]) => (
-                    <label key={id} className="flex items-center space-x-2 cursor-pointer">
+                  {INHALE_TYPE_CONFIG.map(config => (
+                    <label key={config.name} className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={selectedInhaleTypes.includes(id)}
-                        onChange={() => onInhaleTypeChange(id)}
-                        className="w-4 h-4 text-primary bg-white border-grayLight rounded 
+                        checked={selectedInhaleTypes.includes(config.name)}
+                        onChange={() => onInhaleTypeChange(config.name)}
+                        className="w-4 h-4 text-primary bg-white border-grayLight rounded
                                  focus:ring-2 focus:ring-primary focus:ring-offset-0
                                  checked:bg-primary checked:border-primary cursor-pointer"
                       />
-                      <span className="text-sm text-textDefault">{name}</span>
+                      <span className="text-sm text-textDefault">{config.displayName}</span>
                     </label>
                   ))}
                 </div>
@@ -108,13 +107,13 @@ export function ProductFilters({
                   })}
                   
                   {selectedInhaleTypes.map(inhaleTypeId => {
-                    const name = INHALE_TYPE_NAMES[inhaleTypeId];
+                    const config = INHALE_TYPE_CONFIG.find(c => c.name === inhaleTypeId);
                     return (
                       <span
                         key={inhaleTypeId}
                         className="inline-flex items-center gap-1 px-2 py-1 bg-limeOlive text-white text-xs rounded-full mr-1 mb-1"
                       >
-                        {name || inhaleTypeId}
+                        {config?.displayName || inhaleTypeId}
                         <button
                           onClick={() => onInhaleTypeChange(inhaleTypeId)}
                           className="text-white hover:text-gray-200 cursor-pointer"

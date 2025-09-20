@@ -13,6 +13,7 @@ export enum ApiErrorCode {
   WEAK_PASSWORD = 'WEAK_PASSWORD',
   TOO_MANY_REQUESTS = 'TOO_MANY_REQUESTS',
   SESSION_EXPIRED = 'SESSION_EXPIRED',
+  SESSION_MISSING = 'SESSION_MISSING',
   IS_DELETED = 'IS_DELETED',
   
   // 유효성 검증
@@ -38,12 +39,9 @@ export enum ApiErrorCode {
   
   // 네트워크 관련
   NETWORK_ERROR = 'NETWORK_ERROR',
-  TIMEOUT = 'TIMEOUT',
   
   // 파일 관련
-  FILE_TOO_LARGE = 'FILE_TOO_LARGE',
-  INVALID_FILE_TYPE = 'INVALID_FILE_TYPE',
-  FILE_UPLOAD_ERROR = 'FILE_UPLOAD_ERROR',
+  STORAGE_ERROR = 'STORAGE_ERROR'
 }
 
 // 에러 코드별 기본 메시지
@@ -60,6 +58,7 @@ export const API_ERROR_MESSAGES: Record<ApiErrorCode, string> = {
   [ApiErrorCode.WEAK_PASSWORD]: '비밀번호는 8자 이상, 영문+숫자+특수문자 조합으로 설정해주세요.',
   [ApiErrorCode.TOO_MANY_REQUESTS]: '너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.',
   [ApiErrorCode.SESSION_EXPIRED]: '세션이 만료되었습니다. 다시 로그인해주세요.',
+  [ApiErrorCode.SESSION_MISSING]: '로그인이 필요합니다.',
   [ApiErrorCode.IS_DELETED]: '삭제된 회원입니다.',
   
   // 유효성 검증
@@ -85,10 +84,5 @@ export const API_ERROR_MESSAGES: Record<ApiErrorCode, string> = {
   
   // 네트워크 관련
   [ApiErrorCode.NETWORK_ERROR]: '네트워크 연결을 확인해주세요.',
-  [ApiErrorCode.TIMEOUT]: '요청 시간이 초과되었습니다.',
-  
-  // 파일 관련
-  [ApiErrorCode.FILE_TOO_LARGE]: '파일 크기가 너무 큽니다.',
-  [ApiErrorCode.INVALID_FILE_TYPE]: '지원하지 않는 파일 형식입니다.',
-  [ApiErrorCode.FILE_UPLOAD_ERROR]: '파일 업로드 중 오류가 발생했습니다.',
+  [ApiErrorCode.STORAGE_ERROR]: '파일 저장 중 오류가 발생했습니다.'
 };

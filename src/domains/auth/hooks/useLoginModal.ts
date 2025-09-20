@@ -1,10 +1,10 @@
 'use client';
 
 import { useCallback } from 'react';
-import { LoginFormData, ResendEmailForm } from '@/domains/auth/types/auth';
+import { LoginForm, ResendEmailForm } from '@/domains/auth/types/auth';
 import { useLogin } from './useAuthQueries';
 import { useResendEmail } from './useResendEmail';
-import { BusinessError } from '@/shared/error';
+import { BusinessError } from '@/shared/error/BusinessError';
 
 interface LoginResult {
   success: boolean;
@@ -13,7 +13,6 @@ interface LoginResult {
     code?: string;
     email?: string; // for unverified email case
     details?: string;
-    metadata?: Record<string, unknown>;
   };
 }
 
@@ -28,7 +27,7 @@ interface UseLoginModalReturn {
   isResending: boolean;
   
   // Actions
-  handleLogin: (formData: LoginFormData) => Promise<LoginResult>;
+  handleLogin: (formData: LoginForm) => Promise<LoginResult>;
   handleResendEmail: (email: string) => Promise<ResendResult>;
 }
 
@@ -37,7 +36,7 @@ export function useLoginModal(): UseLoginModalReturn {
   const { resendEmail, isResending, resendMessage } = useResendEmail();
 
   // 로그인 처리 (순수 비즈니스 로직만)
-  const handleLogin = useCallback(async (formData: LoginFormData): Promise<LoginResult> => {
+  const handleLogin = useCallback(async (formData: LoginForm): Promise<LoginResult> => {
     try {
       await loginMutation.mutateAsync(formData);
       return { success: true };
@@ -51,7 +50,6 @@ export function useLoginModal(): UseLoginModalReturn {
             code: error.code,
             email: error.code === 'EMAIL_NOT_VERIFIED' ? formData.email : undefined,
             details: error.details,
-            metadata: error.metadata
           }
         };
       }

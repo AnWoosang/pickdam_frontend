@@ -1,11 +1,11 @@
 'use client';
 
 import { Comment } from '@/domains/community/types/community';
-import { getReplies } from '@/domains/community/api/commentsApi';
+import { useRepliesQuery } from '@/domains/community/hooks/comment/useCommentQueries';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/shared/components/Button';
-import { useAuthStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 
 interface CommentCardProps {
   comment: Comment;
@@ -31,31 +31,33 @@ export const CommentReplyList = React.memo(({
   CommentCard
 }: CommentReplyListProps) => {
   const [showReplies, setShowReplies] = useState(false);
-  const [replies, setReplies] = useState<Comment[]>([]);
-  const [isLoadingReplies, setIsLoadingReplies] = useState(false);
-  const { user } = useAuthStore();
+  const { user } = useAuthUtils();
 
-  const handleToggleReplies = useCallback(async () => {
-    if (showReplies) {
-      setShowReplies(false);
-    } else {
-      setIsLoadingReplies(true);
-      try {
-        const repliesData = await getReplies(comment.id, {
-          page: 1,
-          limit: 50,
-          currentUserId: user?.id
-        });
-        setReplies(repliesData.data);
-        setShowReplies(true);
-      } catch (error) {
-        console.error('답글 로딩 실패:', error);
-        alert('답글을 불러오는데 실패했습니다.');
-      } finally {
-        setIsLoadingReplies(false);
-      }
-    }
-  }, [showReplies, comment.id, user?.id]);
+  // React Query로 답글 데이터 가져오기 (showReplies가 true일 때만 활성화)
+  const {
+    data: repliesData,
+    isLoading: isLoadingReplies
+  } = useRepliesQuery(
+    comment.id,
+    {
+      page: 1,
+      limit: 50,
+      currentUserId: user?.id
+    },
+    { enabled: showReplies && !isReply }
+  );
+
+  const replies = repliesData?.data || [];
+
+  // 디버깅을 위한 로그
+  useEffect(() => {
+    console.log('[DEBUG CommentReplyList] Comment ID:', comment.id, 'showReplies:', showReplies, 'replies count:', replies.length, 'isLoading:', isLoadingReplies);
+  }, [comment.id, showReplies, replies.length, isLoadingReplies]);
+
+  const handleToggleReplies = useCallback(() => {
+    console.log('[DEBUG CommentReplyList] Toggling replies for comment:', comment.id, 'current showReplies:', showReplies);
+    setShowReplies(!showReplies);
+  }, [comment.id, showReplies]);
 
   return (
     <>

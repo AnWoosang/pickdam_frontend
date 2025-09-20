@@ -6,7 +6,7 @@ import { useCreatePostMutation } from '@/domains/community/hooks/usePostQueries'
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { useAuthStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 import { ROUTES } from '@/app/router/routes';
 import { BusinessError, createBusinessError } from '@/shared/error/BusinessError';
 
@@ -24,7 +24,7 @@ interface FormData {
 
 export function useWritePostPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user } = useAuthUtils();
   const createPostMutation = useCreatePostMutation();
   
   const [formData, setFormData] = useState<FormData>({
@@ -84,30 +84,30 @@ export function useWritePostPage() {
     setShowCancelDialog(false);
   }, []);
 
-  const createFormData = useCallback((data: FormData, userId: string) => ({
+  const createFormData = useCallback((data: FormData, userId: string): import('@/domains/community/types/community').PostForm => ({
     title: data.title,
     content: data.content,
     categoryId: data.categoryId,
     authorId: userId
   }), []);
 
-  const handleSubmit = useCallback(async (imageUrls: string[] = [], customFormData?: FormData) => {
-    const dataToUse = customFormData || formData;
-    
-    const validationResult = validatePost(dataToUse);
-    
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const validationResult = validatePost(formData);
+
     if (!validationResult.isValid) {
       setErrors(validationResult.errors);
       return false;
     }
-    
+
     setErrors({});
 
     // ProtectedRoute와 canCreatePost로 이미 인증 확인됨
-    const form = createFormData(dataToUse, user!.id);
-    
+    const form = createFormData(formData, user!.id);
+
     createPostMutation.mutate(
-      { form, imageUrls },
+      { form },
       {
         onSuccess: (post) => {
           toast.success('게시글이 등록되었습니다.');

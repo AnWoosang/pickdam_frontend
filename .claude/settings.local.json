@@ -107,7 +107,10 @@
       "Bash(ANALYZE_MODULES=true npm run dev)",
       "Bash(PORT=3001 npm run start)",
       "Bash(kill:*)",
-      "Bash(do echo \"=== Test $i ===\")"
+      "Bash(do echo \"=== Test $i ===\")",
+      "WebFetch(domain:quilljs.com)",
+      "Bash(convert:*)",
+      "WebFetch(domain:stackoverflow.com)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

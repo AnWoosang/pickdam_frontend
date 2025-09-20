@@ -7,7 +7,7 @@ import { CommentForm } from '@/domains/community/components/comment/CommentForm'
 import { CommentList } from '@/domains/community/components/comment/CommentList';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { Pagination } from '@/shared/components/Pagination';
-import { useAuthStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 
 interface CommentSectionProps {
   postId: string;
@@ -16,7 +16,7 @@ interface CommentSectionProps {
 export const CommentSection: React.FC<CommentSectionProps> = ({
   postId,
 }) => {
-  const { user } = useAuthStore();
+  const { user } = useAuthUtils();
   const {
     currentPage,
     comments,

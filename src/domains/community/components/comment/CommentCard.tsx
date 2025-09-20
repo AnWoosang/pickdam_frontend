@@ -5,9 +5,9 @@ import { Comment } from '@/domains/community/types/community';
 import { useCommentCard } from '@/domains/community/hooks/comment/useCommentCard';
 import { CommentHeader } from '@/domains/community/components/comment/CommentHeader';
 import { CommentContent } from '@/domains/community/components/comment/CommentContent';
-import { CommentActions } from '@/domains/community/components/comment/CommentActions';
+import { CommentLikeButton } from '@/domains/community/components/comment/CommentLikeButton';
 import { CommentReplyList } from '@/domains/community/components/comment/reply/CommentReplyList';
-import { CommentReplyWrite } from '@/domains/community/components/comment/reply/CommentReplyWrite';
+import { CommentReplyWrite } from '@/domains/community/components/comment/reply/ReplyWriteForm';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 
 interface CommentCardProps {
@@ -94,7 +94,7 @@ export const CommentCard = React.memo(({
       
       <CommentContent content={comment.content} />
       
-      <CommentActions
+      <CommentLikeButton
         comment={comment}
       />
 

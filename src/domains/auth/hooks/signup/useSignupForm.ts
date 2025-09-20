@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useReducer } from 'react';
-import { SignupForm } from '@/domains/auth/types/signup';
+import { SignupForm } from '@/domains/auth/types/auth';
 import { validateSignup } from '@/domains/auth/validation/signup';
 import { Gender } from '@/domains/user/types/user';
 import { useSignup } from './useSignupQueries';

@@ -4,8 +4,7 @@ import {
   createPaginatedResponse,
   createSuccessResponse,
   createErrorResponse,
-  mapApiError,
-  getStatusFromErrorCode
+  mapApiError
 } from '@/infrastructure/api/supabaseResponseUtils'
 import { supabaseServer } from '@/infrastructure/api/supabaseServer'
 
@@ -25,7 +24,7 @@ export async function GET(request: NextRequest) {
     const validSortColumns = ['created_at', 'view_count', 'like_count'];
     const sortBy = validSortColumns.includes(sortByParam) ? sortByParam : 'created_at'
     
-    // member 뷰를 사용하여 posts 조회 (이미지 포함)
+    // member 뷰를 사용하여 posts 조회
     let query = supabaseServer
       .from('post')
       .select(`
@@ -33,12 +32,6 @@ export async function GET(request: NextRequest) {
         author:member!author_id (
           nickname,
           profile_image_url
-        ),
-        images:post_image(
-          id,
-          image_url,
-          image_name,
-          sort_order
         )
       `, { count: 'exact' })
       .is('deleted_at', null)
@@ -81,7 +74,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       const mappedError = mapApiError(error)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
     return NextResponse.json(createPaginatedResponse(
@@ -99,51 +92,43 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, content, categoryId, authorId, images = [] } = await request.json()
-    
-    console.log('POST /api/community/posts - Request:', { title, content, categoryId, authorId, images })
-    
-    if (!title || !content || !categoryId || !authorId) {
-      const mappedError = mapApiError({ message: 'Missing required fields', status: StatusCodes.BAD_REQUEST })
-      const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
-    }
-    
-    // 이미지 데이터 변환 (URL 문자열을 객체로 변환)
-    const imageData = images.map((imageUrl: string, index: number) => ({
-      url: imageUrl,
-      name: `image_${index}`,
-      order: index
-    }))
-    
-    // RPC 함수 호출
+    const { title, content, categoryId, authorId } = await request.json()
+
+    // 게시글 생성 (author 정보도 함께 조회)
     const { data: postResult, error: postError } = await supabaseServer
-      .rpc('create_post_with_images', {
-        p_title: title,
-        p_content: content,
-        p_category: categoryId,
-        p_author_id: authorId,
-        p_images: imageData
+      .from('post')
+      .insert({
+        title,
+        content,
+        category: categoryId,
+        author_id: authorId
       })
-    
+      .select(`
+        *,
+        author:member!author_id (
+          nickname,
+          profile_image_url
+        )
+      `)
+      .single()
+
     if (postError) {
-      console.error('Post creation error:', postError)
       const mappedError = mapApiError(postError)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
-    
+
     return NextResponse.json(createSuccessResponse({ post: postResult }), { status: 201 })
-    
+
   } catch (error) {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }

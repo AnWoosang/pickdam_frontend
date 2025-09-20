@@ -2,6 +2,8 @@
 
 import React from 'react';
 import Image from 'next/image';
+import Zoom from 'react-medium-image-zoom';
+import 'react-medium-image-zoom/dist/styles.css';
 import {
   ChevronLeft,
   ChevronRight
@@ -91,17 +93,19 @@ export function ImageViewerModal({
             />
           )}
 
-          {/* Main Image */}
+          {/* Main Image with Zoom */}
           <div className="relative w-full h-full flex items-center justify-center">
-            <Image
-              src={images[currentIndex]}
-              alt={`이미지 ${currentIndex + 1}/${images.length}`}
-              width={800}
-              height={600}
-              className="object-contain max-w-full max-h-full w-auto h-auto border border-gray-300 rounded-lg shadow-lg"
-              onLoad={() => console.log('Image loaded successfully')}
-              onError={(e) => console.error('Image load error:', e)}
-            />
+            <Zoom>
+              <Image
+                src={images[currentIndex]}
+                alt={`이미지 ${currentIndex + 1}/${images.length}`}
+                width={800}
+                height={600}
+                className="object-contain max-w-full max-h-full w-auto h-auto border border-gray-300 rounded-lg shadow-lg"
+                onLoad={() => console.log('Image loaded successfully')}
+                onError={(e) => console.error('Image load error:', e)}
+              />
+            </Zoom>
           </div>
 
           {/* Image Counter */}

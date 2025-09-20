@@ -1,19 +1,21 @@
 import { apiClient } from '@/shared/api/axiosClient'
 import type { PaginatedResponse, ApiResponse } from '@/shared/api/types'
 import type { PaginationResult } from '@/shared/types/pagination'
-import type { Product, ProductDetail } from '@/domains/product/types/product'
+import type { Product, ProductDetail, LowestPriceHistory } from '@/domains/product/types/product'
 import {
   toProduct,
-  toProductDetail
+  toProductDetail,
+  toLowestPriceHistory
 } from '@/domains/product/types/dto/productMapper';
 import {
   ProductsRequestParamDto
-} from '@/domains/product/types/dto/productRequestDto';
+} from '@/domains/product/types/dto/productDto';
 import {
   ProductResponseDto,
   ProductDetailResponseDto,
-  IncrementViewResponseDto
-} from '@/domains/product/types/dto/productResponseDto';
+  IncrementViewResponseDto,
+  PriceHistoryItemResponseDto
+} from '@/domains/product/types/dto/productDto';
 
 import { API_ROUTES } from '@/app/router/apiRoutes'
 
@@ -32,8 +34,8 @@ export const productApi = {
       minPrice: params.minPrice,
       maxPrice: params.maxPrice,
       search: params.search,
-      sortBy: params.sortBy || 'total_views',
-      sortOrder: params.sortBy === 'created_at' ? 'desc' : params.sortOrder || 'asc'
+      sortBy: params.sortBy || 'totalViews',
+      sortOrder: params.sortBy === 'createdAt' ? 'desc' : params.sortOrder || 'asc'
     }
 
     const searchParams = new URLSearchParams()
@@ -62,5 +64,13 @@ export const productApi = {
   async incrementProductViews(productId: string): Promise<number> {
     const response = await apiClient.post<IncrementViewResponseDto>(API_ROUTES.PRODUCTS.VIEW(productId), {});
     return response.newViewCount;
+  },
+
+  // 월별 가격 히스토리 조회
+  async getMonthlyPriceHistory(productId: string, year: number, month: number): Promise<LowestPriceHistory[]> {
+    const response = await apiClient.get<ApiResponse<PriceHistoryItemResponseDto[]>>(
+      `${API_ROUTES.PRODUCTS.PRICE_HISTORY(productId)}?year=${year}&month=${month}`
+    );
+    return (response.data || []).map(toLowestPriceHistory);
   }
 }

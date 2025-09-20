@@ -5,9 +5,9 @@ import {
   ProductDetailResponseDto,
   SellerInfoResponseDto,
   PriceHistoryItemResponseDto
-} from '@/domains/product/types/dto/productResponseDto'
-import { AverageReviewInfoResponseDto } from '@/domains/review/types/dto/reviewResponseDto'
-import { createSuccessResponse, createErrorResponse, mapApiError, getStatusFromErrorCode } from '@/infrastructure/api/supabaseResponseUtils'
+} from '@/domains/product/types/dto/productDto'
+import { AverageReviewInfoResponseDto } from '@/domains/review/types/dto/reviewDto'
+import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
 
 export async function GET(
   request: NextRequest,
@@ -15,18 +15,15 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    console.log('=== Product Detail API Start (RPC) ===')
-    console.log('Product ID:', id)
     
     // RPC 함수로 모든 데이터 한번에 가져오기
     const { data: rpcResult, error: rpcError } = await supabaseServer
       .rpc('get_product_detail', { p_product_id: id })
     
     if (rpcError) {
-      console.error('RPC error:', rpcError)
       const mappedError = mapApiError(rpcError)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
 
     const product = rpcResult.product
@@ -39,7 +36,6 @@ export async function GET(
       thumbnailImageUrl: product.thumbnail_image_url,
       productCategory: product.product_category,
       inhaleType: product.inhale_type,
-      flavor: product.flavor,
       capacity: product.capacity,
       totalViews: product.total_views || 0,
       totalFavorites: product.total_favorites || 0,
@@ -97,6 +93,6 @@ export async function GET(
   } catch (error) {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }

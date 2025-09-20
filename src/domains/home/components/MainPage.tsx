@@ -7,7 +7,7 @@ import { Container } from '@/shared/layout/Container';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { ErrorMessage } from '@/shared/components/ErrorMessage';
 import { useHomePage } from '@/domains/home/hooks/useHomePage';
-import { perf } from '@/utils/performance';
+import { perf } from '@/shared/utils/performance';
 
 export function MainPage() {
   // 성능 추적 시작

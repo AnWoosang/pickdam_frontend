@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { Product, SortBy, SortOrder } from '@/domains/product/types/product';
-import { ProductsRequestParamDto } from '@/domains/product/types/dto/productRequestDto';
+import { ProductsRequestParamDto } from '@/domains/product/types/dto/productDto';
 import { useProducts } from './useProductQueries';
 
 export interface ProductListDataState {
@@ -18,8 +18,8 @@ export interface UseProductListDataParams {
   searchQuery: string;
   selectedCategories: string[];
   selectedInhaleTypes: string[]; // InhaleType ID들 ('MTL', 'DL')
-  sortBy: string;
-  sortOrder: string;
+  sortBy: SortBy;
+  sortOrder: SortOrder;
   currentPage: number;
   itemsPerPage: number;
 }
@@ -44,8 +44,8 @@ export function useProductListData({
       category: selectedCategories.length === 1 ? selectedCategories[0] : undefined,
       categories: selectedCategories.length > 1 ? selectedCategories : undefined,
       inhaleType: inhaleTypeForApi,
-      sortBy: sortBy as SortBy,
-      sortOrder: sortOrder as SortOrder,
+      sortBy,
+      sortOrder,
       page: currentPage,
       limit: itemsPerPage
     };

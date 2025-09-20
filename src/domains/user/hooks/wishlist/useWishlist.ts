@@ -52,16 +52,12 @@ export function useWishlist({
     if (!userId || selectedItems.length === 0) return false;
 
     try {
-      const result = await removeMultipleFromWishlist(userId, selectedItems);
-      
-      if (result.success) {
-        // React Query가 자동으로 캐시 업데이트
-        await refetch();
-        
-        return true;
-      }
-      
-      return false;
+      await removeMultipleFromWishlist(userId, selectedItems);
+
+      // React Query가 자동으로 캐시 업데이트
+      await refetch();
+
+      return true;
     } catch (error) {
       throw error;
     }
@@ -73,16 +69,12 @@ export function useWishlist({
 
     try {
       const productIds = wishlistProducts.map(product => product.id);
-      const result = await removeMultipleFromWishlist(userId, productIds);
-      
-      if (result.success) {
-        // React Query가 자동으로 캐시 업데이트
-        await refetch();
-        
-        return true;
-      }
-      
-      return false;
+      await removeMultipleFromWishlist(userId, productIds);
+
+      // React Query가 자동으로 캐시 업데이트
+      await refetch();
+
+      return true;
     } catch (error) {
       throw error;
     }

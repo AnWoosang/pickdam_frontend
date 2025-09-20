@@ -3,6 +3,7 @@
 // 리뷰 타입
 export interface Review {
   id: string;
+  productId: string;
   userId: string;
   userName: string;
   rating: number;
@@ -13,7 +14,7 @@ export interface Review {
   freshness: number;
   content: string;
   createdAt: string;
-  images?: ReviewImage[];
+  images: ReviewImage[];
   profileImage?: string;
 }
 
@@ -35,8 +36,8 @@ export interface AverageReviewInfo extends ReviewRating {
 
 // 리뷰 이미지 타입
 export interface ReviewImage {
-  url: string;
-  order: number;
+  imageUrl: string;
+  imageOrder: number;
 }
 
 // 리뷰 폼 데이터 (컴포넌트에서 사용)

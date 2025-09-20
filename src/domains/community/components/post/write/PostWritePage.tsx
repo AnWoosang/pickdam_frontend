@@ -2,18 +2,11 @@
 
 import React from 'react';
 import { Button } from '@/shared/components/Button';
-import { usePostImageEditor } from '@/domains/community/hooks/usePostImageEditor';
 import { useWritePostPage } from '@/domains/community/hooks/usePostWritePage';
 import { CategorySelector } from '@/domains/community/components/post/CategorySelector';
 import { PostEditor } from '@/domains/community/components/post/edit/PostEditor';
-import { Image } from '@/domains/image/types/Image';
 
 export function PostWritePage() {
-  // 이미지 에디터 (글쓰기용 - 기존 이미지 지원 없음)
-  const imageEditor = usePostImageEditor({
-    supportExistingImages: false
-  });
-
   const {
     formData,
     errors,
@@ -21,29 +14,8 @@ export function PostWritePage() {
     updateFormData,
     setErrors,
     handleCancel,
-    handleSubmit: submitForm,
+    handleSubmit,
   } = useWritePostPage();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      // 1. 이미지 업로드
-      const uploadedImages = await imageEditor.uploadNewImages();
-      const imageUrls = uploadedImages.map((img: Image) => img.url);
-      
-      // 2. Data URL을 서버 URL로 교체
-      const updatedContent = imageEditor.replaceDataUrlsWithServerUrls(formData.content, uploadedImages);
-      
-      // 3. 폼 제출
-      await submitForm(imageUrls, {
-        ...formData,
-        content: updatedContent
-      });
-    } catch (error) {
-      console.error('게시글 등록 실패:', error);
-    }
-  };
 
   return (
     <div className="py-10 mx-auto">
@@ -70,7 +42,6 @@ export function PostWritePage() {
             onErrorChange={setErrors}
             titleError={errors.title}
             contentError={errors.content}
-            imageEditor={imageEditor}
           />
 
           {/* 버튼 영역 */}

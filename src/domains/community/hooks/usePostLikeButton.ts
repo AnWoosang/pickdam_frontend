@@ -7,7 +7,7 @@ import { useState, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { User } from '@/domains/user/types/user';
 import { BusinessError, createBusinessError } from '@/shared/error/BusinessError';
-import { useAuthStore } from '@/domains/auth/store/authStore';
+import { useUIStore } from '@/domains/auth/store/authStore';
 
 interface UsePostLikeButtonProps {
   post: Post;
@@ -18,7 +18,7 @@ export const usePostLikeButton = ({ post, currentUser }: UsePostLikeButtonProps)
   const [isLiked, setIsLiked] = useState(post.isLiked ?? false);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const toggleLikeMutation = useTogglePostLikeMutation();
-  const { requireAuth } = useAuthStore();
+  const { requireAuth } = useUIStore();
   
   // 에러 핸들러
   const createErrorHandler = useCallback((defaultMessage: string) => 
@@ -52,7 +52,7 @@ export const usePostLikeButton = ({ post, currentUser }: UsePostLikeButtonProps)
     }, {
       onSuccess: (result) => {
         setIsLiked(result.isLiked);
-        setLikeCount(result.newLikeCount);
+        setLikeCount(result.likeCount);
       },
       onError: (error) => {
         // 실패 시 이전 상태로 롤백

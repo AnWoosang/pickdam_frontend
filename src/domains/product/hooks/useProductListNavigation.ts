@@ -2,7 +2,8 @@
 
 import { useCallback } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { SortBy, mapInhaleTypeIdToUrl } from '@/domains/product/types/product';
+import { SortBy, SortOrder } from '@/domains/product/types/product';
+import { mapInhaleTypeIdToUrl } from '@/domains/product/types/category';
 import { ROUTES } from '@/app/router/routes';
 
 // URL 업데이트 상수
@@ -53,7 +54,7 @@ export interface UseProductListNavigationParams {
   selectedCategories: string[];
   selectedInhaleTypes: string[]; // InhaleType ID들 ('MTL', 'DL')
   sortBy: SortBy;
-  sortOrder: string;
+  sortOrder: SortOrder;
 }
 
 export function useProductListNavigation({
@@ -107,14 +108,15 @@ export function useProductListNavigation({
   }, [selectedCategories, updateURL]);
 
   const handleInhaleTypeChange = useCallback((inhaleTypeId: string) => {
-    const urlValue = mapInhaleTypeIdToUrl(inhaleTypeId);
-    
+    const urlValues = mapInhaleTypeIdToUrl([inhaleTypeId]);
+    const urlValue = urlValues[0] || inhaleTypeId;
+
     if (selectedInhaleTypes.includes(inhaleTypeId)) {
       // 호흡방식 제거
       updateURL({ subCategory: null, page: null });
     } else {
       // 호흡방식 추가 (현재는 단일 선택만 지원)
-      updateURL({ subCategory: urlValue || null, page: null });
+      updateURL({ subCategory: urlValue, page: null });
     }
   }, [selectedInhaleTypes, updateURL]);
 

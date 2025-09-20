@@ -2,14 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Post,
   PostDetail,
-  CreatePostForm,
-  UpdatePostForm
+  PostForm,
+  PostLikeInfo,
+  PostViewInfo
 } from '@/domains/community/types/community';
 import {
-  CreatePostRequestDto,
-  PostsRequestParamDto,
-  UpdatePostRequestDto
-} from '@/domains/community/types/dto/post/postRequestDto';
+  PostsRequestParamDto
+} from '@/domains/community/types/dto/communityDto';
 import { postApi } from '@/domains/community/api/postApi'
 import { postQueryKeys } from '@/domains/community/constants/postQueryKeys'
 import { PaginationResult } from '@/shared/types/pagination'
@@ -44,15 +43,8 @@ export const useCreatePostMutation = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (data: { form: CreatePostForm; imageUrls?: string[] }): Promise<Post> => {
-      // Domain 타입을 DTO로 변환
-      const requestDto: CreatePostRequestDto = {
-        title: data.form.title,
-        content: data.form.content,
-        categoryId: data.form.categoryId,
-        authorId: data.form.authorId
-      };
-      return await postApi.createPost(requestDto, data.imageUrls)
+    mutationFn: async (data: { form: PostForm }): Promise<Post> => {
+      return await postApi.createPost(data.form)
     },
     onSuccess: (post: Post) => {
       // 게시글 목록 캐시에 새 게시글 추가 (첫 번째에 삽입)
@@ -86,15 +78,8 @@ export const useUpdatePostMutation = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ id, form }: { id: string; form: UpdatePostForm }): Promise<Post> => {
-      // Domain 타입을 DTO로 변환
-      const requestDto: UpdatePostRequestDto = {
-        title: form.title,
-        content: form.content,
-        categoryId: form.categoryId,
-        authorId: form.authorId
-      };
-      return await postApi.updatePost(id, requestDto)
+    mutationFn: async ({ id, form }: { id: string; form: PostForm }): Promise<Post> => {
+      return await postApi.updatePost(id, form)
     },
     onSuccess: (post: Post, { id }) => {
       // 특정 게시글 캐시 업데이트
@@ -159,19 +144,18 @@ export const useTogglePostLikeMutation = () => {
   return useMutation({
     mutationFn: ({ id, memberId }: { id: string; memberId: string }) => 
       postApi.togglePostLike(id, memberId),
-    onSuccess: (response, { id }) => {
-      if (response.success) {
-        // 게시글 상세 캐시에서 좋아요 상태 업데이트
+    onSuccess: (response: PostLikeInfo, { id }) => {
+      // 게시글 상세 캐시에서 좋아요 상태 업데이트
         queryClient.setQueryData(postQueryKeys.detail(id), (old: unknown) => {
           if (!old) return old
           const oldPostDetail = old as PostDetail
           return {
             ...oldPostDetail,
-            likeCount: response.newLikeCount,
+            likeCount: response.likeCount,
             isLiked: response.isLiked
           }
         })
-        
+
         // 게시글 목록 캐시에서 좋아요 상태 업데이트
         queryClient.setQueriesData(
           { queryKey: postQueryKeys.lists() },
@@ -180,17 +164,16 @@ export const useTogglePostLikeMutation = () => {
             const data = oldData as PaginationResult<Post>
             return {
               ...data,
-              data: data.data.map(post => 
+              data: data.data.map(post =>
                 post.id === id ? {
                   ...post,
-                  likeCount: response.newLikeCount,
+                  likeCount: response.likeCount,
                   isLiked: response.isLiked
                 } : post
               )
             }
           }
         )
-      }
     },
     // 에러는 던지기만 하고 처리는 비즈니스 레이어에서
   })
@@ -204,19 +187,17 @@ export const useIncrementPostViewMutation = () => {
     mutationFn: ({ id }: { id: string }) => {
       return postApi.incrementPostView(id);
     },
-    onSuccess: (response, { id }) => {
-      if (response.success) {
-        // 서버 응답으로 조회수 업데이트
+    onSuccess: (response: PostViewInfo, { id }) => {
+      // 서버 응답으로 조회수 업데이트
         queryClient.setQueryData(postQueryKeys.detail(id), (old: unknown) => {
           if (!old) return old
-          
+
           const oldPostDetail = old as PostDetail;
           return {
             ...oldPostDetail,
-            viewCount: response.newViewCount
+            viewCount: response.viewCount
           };
         })
-      }
     }
     // 에러는 던지기만 하고 처리는 비즈니스 레이어에서
   })

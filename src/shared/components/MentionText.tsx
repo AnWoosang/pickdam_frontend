@@ -1,10 +1,73 @@
 import React from 'react';
-import { splitTextWithMentions } from '@/utils/mentionUtils';
 
 interface MentionTextProps {
   text: string;
   className?: string;
   onMentionClick?: (username: string) => void;
+}
+
+interface MentionMatch {
+  username: string;
+  startIndex: number;
+  endIndex: number;
+}
+
+function findMentions(text: string): MentionMatch[] {
+  const mentionRegex = /@(\w+)/g;
+  const mentions: MentionMatch[] = [];
+  let match;
+
+  while ((match = mentionRegex.exec(text)) !== null) {
+    mentions.push({
+      username: match[1],
+      startIndex: match.index,
+      endIndex: match.index + match[0].length,
+    });
+  }
+
+  return mentions;
+}
+
+function splitTextWithMentions(text: string): Array<{
+  type: 'text' | 'mention';
+  content: string;
+  username?: string;
+}> {
+  const mentions = findMentions(text);
+
+  const parts: Array<{
+    type: 'text' | 'mention';
+    content: string;
+    username?: string;
+  }> = [];
+
+  let currentIndex = 0;
+
+  mentions.forEach((mention) => {
+    if (mention.startIndex > currentIndex) {
+      parts.push({
+        type: 'text',
+        content: text.substring(currentIndex, mention.startIndex),
+      });
+    }
+
+    parts.push({
+      type: 'mention',
+      content: `@${mention.username}`,
+      username: mention.username,
+    });
+
+    currentIndex = mention.endIndex;
+  });
+
+  if (currentIndex < text.length) {
+    parts.push({
+      type: 'text',
+      content: text.substring(currentIndex),
+    });
+  }
+
+  return parts;
 }
 
 export function MentionText({ text, className = '', onMentionClick }: MentionTextProps) {

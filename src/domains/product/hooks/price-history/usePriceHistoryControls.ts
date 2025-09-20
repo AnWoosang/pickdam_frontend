@@ -87,11 +87,14 @@ export const usePriceHistoryControls = ({
   // 가장 최근 데이터가 있는 주 계산
   const getMostRecentWeekStart = useMemo(() => {
     if (!priceHistory || priceHistory.length === 0) return null;
-    
+
     const mostRecentDate = new Date(priceHistory[priceHistory.length - 1].date);
     const mostRecentWeekStart = new Date(mostRecentDate);
-    mostRecentWeekStart.setDate(mostRecentDate.getDate() - mostRecentDate.getDay());
-    
+    // 한국식 주 계산: 월요일을 주의 시작일로 설정
+    const dayOfWeek = mostRecentDate.getDay(); // 0: 일요일, 1: 월요일...
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 일요일이면 6일 빼기, 그외는 요일-1
+    mostRecentWeekStart.setDate(mostRecentDate.getDate() - daysToSubtract);
+
     return mostRecentWeekStart;
   }, [priceHistory]);
 

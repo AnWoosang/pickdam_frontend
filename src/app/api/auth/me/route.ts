@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/infrastructure/api/supabaseServerAuth'
-import { createSuccessResponse, createErrorResponse, mapApiError, getStatusFromErrorCode } from '@/infrastructure/api/supabaseResponseUtils'
+import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
+import { UserResponseDto } from '@/domains/user/types/dto/userDto'
 
 export async function GET() {
   try {
@@ -13,37 +14,24 @@ export async function GET() {
       const mappedError = mapApiError(authError || { message: 'Authentication required' })
       const errorResponse = createErrorResponse(mappedError)
       
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
-    // 사용자 상세 정보 조회 (인증된 사용자 본인의 정보이므로 member 테이블 직접 조회)
-    const { data: userData, error: userError } = await supabase
-      .from('member')
-      .select('*')
-      .eq('id', user.id)
-      .is('deleted_at', null)
-      .single()
-    
-    if (userError || !userData) {
-      const mappedError = mapApiError(userError || { message: 'User not found' })
-      const errorResponse = createErrorResponse(mappedError)
-      
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    // auth 메타데이터에서 사용자 정보 추출
+    const userMetadata = user.user_metadata || {}
+
+    const userResponseDto: UserResponseDto = {
+      id: user.id,
+      email: user.email!,
+      nickname: userMetadata.nickname,
+      name: userMetadata.name,
+      profileImageUrl: userMetadata.profile_image_url,
+      role: userMetadata.role
     }
-    
+
     return NextResponse.json(
       createSuccessResponse({
-        user: {
-          id: userData.id,
-          email: userData.email,
-          nickname: userData.nickname,
-          name: userData.name,
-          profileImageUrl: userData.profile_image_url,
-          isEmailVerified: userData.is_email_verified,
-          birthDate: userData.birth_date,
-          gender: userData.gender,
-          createdAt: userData.created_at
-        }
+        user: userResponseDto
       })
     )
     
@@ -51,6 +39,6 @@ export async function GET() {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
     
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }

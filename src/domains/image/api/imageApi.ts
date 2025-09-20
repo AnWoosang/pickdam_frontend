@@ -1,27 +1,21 @@
 import { apiClient } from '@/shared/api/axiosClient';
+import { API_ROUTES } from '@/app/router/apiRoutes';
 import type { ApiResponse } from '@/shared/api/types';
-import type { 
-  ImageUploadResponseDto,
-  ImageUploadResultDto
-} from '../types/dto/imageDto';
+import type { ImageUploadResponseDto } from '../types/dto/imageDto';
 import { toImage } from '../types/dto/imageMapper';
-import type { Image } from '../types/Image';
-import type { ImageContentType } from '../types/Image';
+import type { Image, ImageUpload } from '../types/Image';
 
 
 export const imageApi = {
-  uploadMultiple: async (
-    files: File[], 
-    contentType: ImageContentType
-  ): Promise<Image[]> => {
+  uploadMultiple: async (imageUpload: ImageUpload): Promise<Image[]> => {
     const formData = new FormData();
-    
-    files.forEach(file => formData.append('files', file));
-    formData.append('type', contentType);
 
-    const apiResponse = await apiClient.post<ApiResponse<ImageUploadResultDto[]>>(
-      '/upload-image', 
-      formData, 
+    imageUpload.files.forEach(file => formData.append('files', file));
+    formData.append('type', imageUpload.contentType);
+
+    const apiResponse = await apiClient.post<ApiResponse<ImageUploadResponseDto[]>>(
+      API_ROUTES.UPLOAD_IMAGE,
+      formData,
       {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -30,17 +24,13 @@ export const imageApi = {
     );
 
     const results = apiResponse.data || [];
+
+    // 업로드 결과를 Image 타입으로 변환
     return results
-      .filter((result: ImageUploadResultDto) => result.success)
-      .map((result: ImageUploadResultDto) => {
-        const responseDto: ImageUploadResponseDto = {
-          url: result.url!,
-          path: result.path!,
-          fileName: result.fileName!
-        };
-        
-        const originalFile = files[result.originalIndex];
-        return toImage(responseDto, originalFile, contentType);
+      .filter((result) => result.success) // 성공한 업로드만 필터링
+      .map((result) => {
+        const originalFile = imageUpload.files[result.originalIndex];
+        return toImage(result, originalFile, imageUpload.contentType);
       });
   },
 }

@@ -6,9 +6,9 @@ import React, { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, Heart } from 'lucide-react';
 import { PostCategoryBadge } from '@/domains/community/components/post/PostCategoryBadge';
-import { formatDate } from '@/utils/dateUtils';
-import { truncateHTMLContent } from '@/utils/textUtils';
+import { formatDate } from '@/shared/utils/Format';
 import { ROUTES } from '@/app/router/routes';
+import { stripHtml } from 'string-strip-html';
 
 interface PostCardProps {
   post: Post;
@@ -46,7 +46,13 @@ export const PostCard = React.memo(({
       
       {showContent && post.content && (
         <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-          {truncateHTMLContent(post.content, maxContentLength)}
+          {(() => {
+            const textContent = stripHtml(post.content).result;
+            const cleanContent = textContent.replace(/\s+/g, ' ').trim();
+            return cleanContent.length > maxContentLength
+              ? cleanContent.substring(0, maxContentLength) + '...'
+              : cleanContent;
+          })()}
         </p>
       )}
       

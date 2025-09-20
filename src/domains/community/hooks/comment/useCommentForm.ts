@@ -5,7 +5,7 @@ import { useCreateCommentMutation } from '@/domains/community/hooks/comment/useC
 import { useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { BusinessError } from '@/shared/error/BusinessError';
-import { useAuthStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 
 interface UseCommentFormProps {
   postId: string;
@@ -13,7 +13,7 @@ interface UseCommentFormProps {
 }
 
 export const useCommentForm = ({ postId, onSuccess }: UseCommentFormProps) => {
-  const { user } = useAuthStore();
+  const { user } = useAuthUtils();
   
   // 상태
   const [newComment, setNewComment] = useState('');

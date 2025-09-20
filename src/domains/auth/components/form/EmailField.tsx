@@ -4,7 +4,14 @@ import { Mail, Check, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
 import { useEmailCheck } from '../../hooks/signup/useEmailCheck';
-import { EmailFieldProps } from '../../types/email';
+
+// 이메일 필드 Props
+export interface EmailFieldProps {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onValidChange: (email: string, isValid: boolean) => void;
+  disabled?: boolean;
+}
 
 export function EmailField({ 
   value, 

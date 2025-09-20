@@ -4,7 +4,7 @@ import { Suspense, useEffect } from 'react';
 import { MainLayout } from '@/shared/layout/MainLayout';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { MainPage } from '@/domains/home/components/MainPage';
-import { perf } from '@/utils/performance';
+import { perf } from '@/shared/utils/performance';
 
 function HomeContent() {
   useEffect(() => {

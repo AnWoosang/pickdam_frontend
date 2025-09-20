@@ -43,11 +43,18 @@ export const AUTH_CONFIG = {
   protectedRoutes: [
     ROUTES.PRODUCT.RECENT,
     ROUTES.COMMUNITY.WRITE,
+    ROUTES.MYPAGE.HOME,
+    ROUTES.MYPAGE.ORDERS,
+    ROUTES.MYPAGE.MY_POSTS,
+    ROUTES.MYPAGE.MY_COMMENTS,
+    ROUTES.MYPAGE.LIKED_POSTS,
+    ROUTES.MYPAGE.LIKED_COMMENTS,
   ],
   
   // 보호된 라우트 패턴들
   protectedRoutePatterns: [
     '/mypage/', // 마이페이지 전체
+    '/community/*/edit', // 커뮤니티 수정 페이지
   ],
 };
 
@@ -62,6 +69,11 @@ export const matchesRoute = (pathname: string, route: string): boolean => {
  * 경로가 패턴 배열과 일치하는지 확인
  */
 export const matchesRoutePattern = (pathname: string, pattern: string): boolean => {
+  // 와일드카드 패턴 처리
+  if (pattern.includes('*')) {
+    const regex = new RegExp(pattern.replace(/\*/g, '[^/]+'));
+    return regex.test(pathname);
+  }
   return pathname.startsWith(pattern);
 };
 
@@ -93,12 +105,4 @@ export const isProtectedRoute = (pathname: string): boolean => {
   );
   
   return isExactProtectedRoute || isProtectedRoutePattern;
-};
-
-/**
- * 인증이 필요한 페이지인지 확인 (보호된 페이지이면서 공개 페이지가 아닌 경우)
- */
-export const requiresAuth = (pathname: string): boolean => {
-  // 명시적으로 보호된 페이지이거나, 공개 페이지가 아닌 경우 인증 필요
-  return isProtectedRoute(pathname) || !isPublicRoute(pathname);
 };

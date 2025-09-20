@@ -1,5 +1,5 @@
 
-import { PostsRequestParamDto } from '@/domains/community/types/dto/post/postRequestDto';
+import { PostsRequestParamDto } from '@/domains/community/types/dto/communityDto';
 
 export const postQueryKeys = {
   all: ['posts'] as const,

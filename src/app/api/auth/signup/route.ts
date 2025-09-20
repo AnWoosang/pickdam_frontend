@@ -3,26 +3,24 @@ import { StatusCodes } from 'http-status-codes'
 import {
   createSuccessResponse,
   createErrorResponse,
-  mapApiError,
-  getStatusFromErrorCode
+  mapApiError
 } from '@/infrastructure/api/supabaseResponseUtils'
 import { supabaseServer } from '@/infrastructure/api/supabaseServer'
 import { ROUTES } from '@/app/router/routes'
+import { SignupRequestDto } from '@/domains/auth/types/dto/authDto'
 
 export async function POST(request: NextRequest) {
   try {
-    const { 
-      email, 
-      password, 
-      name, 
-      nickname, 
-      birthDate, 
+    const {
+      email,
+      password,
+      name,
+      nickname,
+      birthDate,
       gender,
       provider,
       role
-    } = await request.json()
-    
-    // 비즈니스 로직에서 이미 검증된 데이터만 받음
+    }: SignupRequestDto = await request.json()
     
     // Supabase Auth로 회원가입
     const { data: authData, error: authError } = await supabaseServer.auth.signUp({
@@ -33,8 +31,9 @@ export async function POST(request: NextRequest) {
         data: {
           name,
           nickname,
-          birth_date: birthDate,
-          gender
+          gender,
+          role,
+          profile_image_url: null
         }
       }
     })
@@ -43,7 +42,7 @@ export async function POST(request: NextRequest) {
       const mappedError = mapApiError(authError)
       const errorResponse = createErrorResponse(mappedError)
       
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
     // authError가 없으면 user는 항상 존재함이 보장됨
@@ -58,18 +57,15 @@ export async function POST(request: NextRequest) {
         name,
         nickname,
         birth_date: birthDate,
-        gender,
-        provider,
-        role,
-        is_email_verified: false
+        gender
       })
     
     if (memberError) {
       await supabaseServer.auth.admin.deleteUser(user.id)
-      const mappedError = mapApiError({ message: '회원가입에 실패했습니다.' })
+      const mappedError = mapApiError(memberError)
       const errorResponse = createErrorResponse(mappedError)
-      
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
     return NextResponse.json(
@@ -81,6 +77,6 @@ export async function POST(request: NextRequest) {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
     
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }

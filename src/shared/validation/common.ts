@@ -1,5 +1,13 @@
 // 공통 validation 함수들 - 여러 기능에서 재사용되는 검증
 
+// 비밀번호 강도 타입 정의
+export interface PasswordStrength {
+  strength: number;
+  text: string;
+  color: string;
+  requirements: string[];
+}
+
 // 이메일 validation
 export const validateEmail = (email: string): string | null => {
   if (!email) return null;
@@ -83,7 +91,7 @@ export const validateNickname = (nickname: string): string | null => {
 };
 
 // 비밀번호 강도 체크 함수
-export const checkPasswordStrength = (password: string) => {
+export const checkPasswordStrength = (password: string): PasswordStrength => {
   if (!password) return { strength: 0, text: '', color: 'bg-gray-200', requirements: [], score: 0 };
   
   let score = 0;

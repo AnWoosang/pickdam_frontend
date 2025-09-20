@@ -31,6 +31,7 @@ export const ROUTES = {
     LIST: '/community',
     DETAIL: (id: string) => `/community/${id}`,
     WRITE: '/community/write',
+    EDIT: (id: string) => `/community/${id}/edit`,
   },
   
   // 마이페이지
@@ -39,6 +40,7 @@ export const ROUTES = {
     ORDERS: '/mypage/orders',
     MY_POSTS: '/mypage/my-posts',
     MY_COMMENTS: '/mypage/my-comments',
+    MY_REVIEWS: '/mypage/reviews',
     LIKED_POSTS: '/mypage/liked-posts',
     LIKED_COMMENTS: '/mypage/liked-comments',
   },

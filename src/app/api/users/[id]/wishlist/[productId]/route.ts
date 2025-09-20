@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { StatusCodes } from 'http-status-codes'
-import { createSuccessResponse, createErrorResponse, mapApiError, getStatusFromErrorCode } from '@/infrastructure/api/supabaseResponseUtils'
+import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
 import { supabaseServer } from '@/infrastructure/api/supabaseServer'
 
 export async function POST(
@@ -12,7 +12,7 @@ export async function POST(
     if (!productId) {
       const mappedError = mapApiError({ message: 'Product ID is required', status: StatusCodes.BAD_REQUEST })
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
 
     // 새로운 RPC 함수로 위시리스트 토글
@@ -22,10 +22,9 @@ export async function POST(
     })
     
     if (error) {
-      console.error('Wishlist toggle RPC error:', error)
       const mappedError = mapApiError(error)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
 
     return NextResponse.json(createSuccessResponse({ 
@@ -37,7 +36,7 @@ export async function POST(
   } catch (error) {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }
 
@@ -51,7 +50,7 @@ export async function DELETE(
     if (!productId) {
       const mappedError = mapApiError({ message: 'Product ID is required', status: StatusCodes.BAD_REQUEST })
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
 
     // 새로운 RPC 함수로 위시리스트 토글 (DELETE도 같은 함수 사용)
@@ -61,21 +60,16 @@ export async function DELETE(
     })
     
     if (error) {
-      console.error('Wishlist toggle RPC error:', error)
       const mappedError = mapApiError(error)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
 
-    return NextResponse.json(createSuccessResponse({ 
-      success: data.success,
-      isWishlisted: data.wishlisted,
-      newWishlistCount: data.wishlist_count
-    }), { status: 204 })
+    return new NextResponse(null, { status: 204 })
     
   } catch (error) {
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }

@@ -93,7 +93,8 @@ export function ProductDetailPage({
         {/* 우측 - 가격 변동 이력 및 추가 정보, 가격 비교 */}
         <div className="col-span-7 space-y-6">
           {/* 가격 변동 차트 */}
-          <PriceHistoryChart 
+          <PriceHistoryChart
+            productId={productId}
             priceHistory={priceHistory}
           />
           

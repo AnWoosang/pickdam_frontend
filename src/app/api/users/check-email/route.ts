@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { StatusCodes } from 'http-status-codes'
 import { validateEmail } from '@/shared/validation/common'
-import { createSuccessResponse, createErrorResponse, mapApiError, getStatusFromErrorCode } from '@/infrastructure/api/supabaseResponseUtils'
+import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
 import { supabaseServer } from '@/infrastructure/api/supabaseServer'
 
 export async function POST(request: NextRequest) {
@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     if (!email) {
       const mappedError = mapApiError({ message: '이메일을 입력해주세요.', status: StatusCodes.BAD_REQUEST })
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
 
     // 이메일 validation (공통 validation 사용)
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     if (validationError) {
       const mappedError = mapApiError({ message: validationError, status: StatusCodes.BAD_REQUEST })
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
 
     const trimmedEmail = email.trim().toLowerCase()
@@ -30,10 +30,9 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error && error.code !== 'PGRST116') {
-      console.error('이메일 중복확인 중 데이터베이스 오류:', error)
       const mappedError = mapApiError(error)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
 
     const isAvailable = !data
@@ -42,9 +41,8 @@ export async function POST(request: NextRequest) {
     }))
 
   } catch (error) {
-    console.error('이메일 중복확인 API 오류:', error)
     const mappedError = mapApiError(error)
     const errorResponse = createErrorResponse(mappedError)
-    return NextResponse.json(errorResponse, { status: getStatusFromErrorCode(mappedError.code) })
+    return NextResponse.json(errorResponse, { status: mappedError.statusCode })
   }
 }
