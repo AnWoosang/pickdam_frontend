@@ -29,7 +29,6 @@ export const useEmailVerification = () => {
 
   return useMutation({
     mutationFn: async (params: EmailVerificationParams) => {
-      // 모든 인증 로직을 verify-email API에서 처리
       return await authApi.verifyEmail(params)
     },
     onSuccess: () => {

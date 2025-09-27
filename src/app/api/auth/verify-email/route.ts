@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
-
-interface VerifyEmailRequestDto {
-  tokenHash?: string;
-  token?: string;
-  type?: 'email' | 'recovery';
-}
+import { supabaseAdmin } from "@/infrastructure/api/supabaseAdmin";
+import { VerifyEmailRequestDto } from '@/domains/auth/types/dto/authDto'
 
 export async function POST(request: NextRequest) {
   try {
-    const data: VerifyEmailRequestDto = await request.json()
+    const requestData: VerifyEmailRequestDto = await request.json()
 
-    const tokenToUse = data.tokenHash || data.token;
+    const tokenToUse = requestData.tokenHash || requestData.token;
 
     if (!tokenToUse) {
       const mappedError = mapApiError({ message: 'Token is required' })
@@ -21,9 +16,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Supabase에서 이메일 인증 처리
-    const { data: authData, error } = await supabaseServer.auth.verifyOtp({
+    const {error } = await supabaseAdmin.auth.verifyOtp({
       token_hash: tokenToUse,
-      type: data.type ?? 'email'
+      type: requestData.type ?? 'email'
     })
 
     if (error) {

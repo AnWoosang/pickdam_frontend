@@ -15,6 +15,7 @@ import { IoHeart, IoEye, IoChatbubble } from 'react-icons/io5';
 import { formatAbsoluteDate } from '@/shared/utils/Format';
 import { User } from '@/domains/user/types/user';
 import { usePostHeader } from '@/domains/community/hooks/usePostHeader';
+import { ROUTES } from '@/app/router/routes';
 
 interface PostHeaderProps {
   post: Post;
@@ -41,9 +42,11 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
 
   // UI 핸들러들
   const handleEdit = () => {
-    router.push(`/community/${post.id}/edit`);
+    router.push(ROUTES.COMMUNITY.EDIT(post.id));
   };
+  
   const handleDelete = () => setShowDeleteDialog(true);
+
   return (
     <div>
       <div className="flex items-start justify-between mb-8">
@@ -109,7 +112,6 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
         message="게시글을 삭제하시겠습니까?"
         confirmText="삭제"
         cancelText="취소"
-        confirmButtonColor="red"
       />
     </div>
   );

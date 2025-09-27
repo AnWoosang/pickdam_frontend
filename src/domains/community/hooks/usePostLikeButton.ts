@@ -4,31 +4,19 @@ import { Post } from '@/domains/community/types/community';
 import { useTogglePostLikeMutation } from '@/domains/community/hooks/usePostQueries';
 
 import { useState, useCallback, useEffect } from 'react';
-import toast from 'react-hot-toast';
-import { User } from '@/domains/user/types/user';
-import { BusinessError, createBusinessError } from '@/shared/error/BusinessError';
 import { useUIStore } from '@/domains/auth/store/authStore';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 
 interface UsePostLikeButtonProps {
   post: Post;
-  currentUser?: User | null;
 }
 
-export const usePostLikeButton = ({ post, currentUser }: UsePostLikeButtonProps) => {
+export const usePostLikeButton = ({ post }: UsePostLikeButtonProps) => {
   const [isLiked, setIsLiked] = useState(post.isLiked ?? false);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const toggleLikeMutation = useTogglePostLikeMutation();
-  const { requireAuth } = useUIStore();
-  
-  // 에러 핸들러
-  const createErrorHandler = useCallback((defaultMessage: string) => 
-    (error: unknown): BusinessError => {
-      if (error instanceof BusinessError) return error;
-      if (error instanceof Error) return createBusinessError.dataProcessing(defaultMessage, error.message);
-      return createBusinessError.dataProcessing(defaultMessage);
-    }, 
-    []
-  );
+  const { showToast } = useUIStore();
+  const { isAuthenticated } = useAuthUtils();
 
   // post 데이터가 변경되면 상태 업데이트
   useEffect(() => {
@@ -37,8 +25,6 @@ export const usePostLikeButton = ({ post, currentUser }: UsePostLikeButtonProps)
   }, [post.isLiked, post.likeCount]);
 
   const handleLikeToggle = useCallback(() => {
-    if (!requireAuth()) return;
-
     // Optimistic UI 업데이트
     const wasLiked = isLiked;
     const oldLikeCount = likeCount;
@@ -48,22 +34,19 @@ export const usePostLikeButton = ({ post, currentUser }: UsePostLikeButtonProps)
 
     toggleLikeMutation.mutate({
       id: post.id,
-      memberId: currentUser!.id
     }, {
       onSuccess: (result) => {
         setIsLiked(result.isLiked);
         setLikeCount(result.likeCount);
       },
-      onError: (error) => {
+      onError: () => {
         // 실패 시 이전 상태로 롤백
         setIsLiked(wasLiked);
         setLikeCount(oldLikeCount);
-        const processedError = createErrorHandler('좋아요 처리에 실패했습니다.')(error);
-        console.error('Post like toggle failed:', processedError);
-        toast.error(processedError.message);
+        showToast('좋아요 처리에 실패했습니다.', 'error');
       }
     });
-  }, [post.id, currentUser, isLiked, likeCount, toggleLikeMutation, createErrorHandler, requireAuth]);
+  }, [post.id, isLiked, likeCount, toggleLikeMutation, showToast]);
 
   return {
     // 상태
@@ -75,6 +58,6 @@ export const usePostLikeButton = ({ post, currentUser }: UsePostLikeButtonProps)
     handleLikeToggle,
     
     // 권한
-    canLike: !!currentUser,
+    canLike: isAuthenticated,
   };
 };

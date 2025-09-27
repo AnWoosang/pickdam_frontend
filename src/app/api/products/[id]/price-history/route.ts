@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/infrastructure/api/supabaseServer';
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils';
 import { PriceHistoryItemResponseDto } from '@/domains/product/types/dto/productDto';
 
@@ -8,6 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
     const { id: productId } = await params;
     const { searchParams } = new URL(request.url);
     const year = searchParams.get('year');
@@ -20,8 +21,8 @@ export async function GET(
     const startDate = new Date(yearNum, monthNum - 1, 1);
     const endDate = new Date(yearNum, monthNum, 0); // 다음달의 0일 = 현재달의 마지막날
 
-    // supabaseServer를 사용하여 직접 쿼리
-    const { data, error } = await supabaseServer
+    // supabase를 사용하여 직접 쿼리
+    const { data, error } = await supabase
       .from('product_price_history')
       .select('recorded_date, lowest_price')
       .eq('product_id', productId)

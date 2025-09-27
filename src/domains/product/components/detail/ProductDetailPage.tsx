@@ -29,9 +29,7 @@ export function ProductDetailPage({
     averageReview,
     priceHistory,
     isLoading,
-    hasError,
-    errorMessage,
-    onRetry,
+    queryError,
   } = useProductDetail(productId);
 
   // 로딩 중일 때
@@ -44,12 +42,12 @@ export function ProductDetailPage({
   }
 
   // 에러 발생 시
-  if (hasError) {
+  if (queryError) {
     return (
       <div className="flex justify-center items-center min-h-96">
-        <ErrorMessage 
-          message={errorMessage || "상품 정보를 불러오는데 실패했습니다."}
-          onRetry={onRetry}
+        <ErrorMessage
+          message="상품 정보를 불러오는데 실패했습니다."
+          onRetry={() => window.location.reload()}
         />
       </div>
     );

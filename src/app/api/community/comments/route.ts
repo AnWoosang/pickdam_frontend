@@ -1,25 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { StatusCodes } from 'http-status-codes'
 import { createSuccessResponse, createPaginatedResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 import { CommentResponseDto, CommentWriteRequestDto } from '@/domains/community/types/dto/communityDto'
 
 export async function GET(request: NextRequest) {
-  
   try {
-
+    const supabase = await createSupabaseClientWithCookie()
     const { searchParams } = new URL(request.url)
 
     const postId = searchParams.get('postId')!  // 타입 단언: 항상 존재함을 보장
-    const currentUserId = searchParams.get('currentUserId')  // 현재 사용자 ID (선택적)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
 
+    // 현재 사용자 ID를 토큰에서 가져오기
+    const { data: { user } } = await supabase.auth.getUser()
+
     // RPC 함수로 댓글 목록 조회 (좋아요 상태 포함, 한 번의 쿼리로 처리)
-    const { data: rpcResult, error: commentsError } = await supabaseServer
+    const { data: rpcResult, error: commentsError } = await supabase
       .rpc('get_comments_with_like_status', {
         p_post_id: postId,
-        p_current_user_id: currentUserId,
+        p_current_user_id: user?.id || null,
         p_page: page,
         p_limit: limit
       })
@@ -34,22 +35,25 @@ export async function GET(request: NextRequest) {
     }
     
     // 응답 데이터 변환 (RPC에서 이미 모든 필드가 처리됨)
-    const processedComments: CommentResponseDto[] = comments.map((comment: any): CommentResponseDto => ({
-      id: comment.id,
-      postId: comment.post_id,
-      parentCommentId: comment.parent_comment_id,
-      content: comment.content,
-      authorId: comment.author_id,
-      createdAt: comment.created_at,
-      updatedAt: comment.updated_at,
-      likeCount: comment.like_count,
-      author: {
-        nickname: comment.author_nickname,
-        profileImageUrl: comment.author_profile_image_url
-      },
-      isLiked: comment.is_liked,
-      replyCount: comment.reply_count
-    }))
+    const processedComments: CommentResponseDto[] = comments.map((comment: unknown) => {
+      const record = comment as Record<string, unknown>;
+      return {
+        id: record.id,
+        postId: record.post_id,
+        parentCommentId: record.parent_comment_id,
+        content: record.content,
+        authorId: record.author_id,
+        createdAt: record.created_at,
+        updatedAt: record.updated_at,
+        likeCount: record.like_count,
+        author: {
+          nickname: record.author_nickname,
+          profileImageUrl: record.author_profile_image_url
+        },
+        isLiked: record.is_liked,
+        replyCount: record.reply_count
+      } as CommentResponseDto;
+    })
     
     const totalPages = Math.ceil((count || 0) / limit)
     return NextResponse.json(createPaginatedResponse(processedComments, {
@@ -70,15 +74,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
     const requestData: CommentWriteRequestDto = await request.json()
-    const { content, postId, authorId } = requestData
+    const { content, postId } = requestData
 
-    // RPC 함수로 댓글 생성 및 게시글 comment_count 업데이트
-    const { data: result, error: rpcError } = await supabaseServer
+    // RPC 함수로 댓글 생성 및 게시글 comment_count 업데이트 (auth.uid() 사용)
+    const { data: result, error: rpcError } = await supabase
       .rpc('create_comment_and_update_count', {
         p_content: content,
-        p_post_id: postId,
-        p_author_id: authorId
+        p_post_id: postId
       })
 
     if (rpcError) {

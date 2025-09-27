@@ -33,9 +33,9 @@ export interface ReviewImageResponseDto {
 export interface ReviewResponseDto {
   id: string;
   productId: string;
-  userId: string;
-  userName: string;
-  profileImage?: string;
+  memberId: string;
+  nickname: string;
+  profileImageUrl?: string;
   rating: number;
   sweetness?: number;
   menthol?: number;

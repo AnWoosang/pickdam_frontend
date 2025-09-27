@@ -2,13 +2,13 @@
 
 import { validatePost } from '@/domains/community/validation/post';
 import { useCreatePostMutation } from '@/domains/community/hooks/usePostQueries';
+import { PostForm } from '@/domains/community/types/community';
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
 import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 import { ROUTES } from '@/app/router/routes';
-import { BusinessError, createBusinessError } from '@/shared/error/BusinessError';
+import { useUIStore } from '@/domains/auth/store/authStore';
 
 interface FormErrors {
   title?: string;
@@ -25,6 +25,7 @@ interface FormData {
 export function useWritePostPage() {
   const router = useRouter();
   const { user } = useAuthUtils();
+  const { showToast } = useUIStore();
   const createPostMutation = useCreatePostMutation();
   
   const [formData, setFormData] = useState<FormData>({
@@ -36,15 +37,6 @@ export function useWritePostPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   
-  // 에러 핸들러
-  const createErrorHandler = useCallback((defaultMessage: string) => 
-    (error: unknown): BusinessError => {
-      if (error instanceof BusinessError) return error;
-      if (error instanceof Error) return createBusinessError.dataProcessing(defaultMessage, error.message);
-      return createBusinessError.dataProcessing(defaultMessage);
-    }, 
-    []
-  );
 
   const updateFormData = useCallback((updates: Partial<FormData>) => {
     setFormData(prev => ({ ...prev, ...updates }));
@@ -84,7 +76,7 @@ export function useWritePostPage() {
     setShowCancelDialog(false);
   }, []);
 
-  const createFormData = useCallback((data: FormData, userId: string): import('@/domains/community/types/community').PostForm => ({
+  const createFormData = useCallback((data: FormData, userId: string): PostForm => ({
     title: data.title,
     content: data.content,
     categoryId: data.categoryId,
@@ -103,26 +95,22 @@ export function useWritePostPage() {
 
     setErrors({});
 
-    // ProtectedRoute와 canCreatePost로 이미 인증 확인됨
     const form = createFormData(formData, user!.id);
 
     createPostMutation.mutate(
       { form },
       {
         onSuccess: (post) => {
-          toast.success('게시글이 등록되었습니다.');
-          // 생성된 게시글 상세 페이지로 이동
+          showToast('게시글이 등록되었습니다.', 'success');
           router.push(ROUTES.COMMUNITY.DETAIL(post.id));
         },
-        onError: (error) => {
-          const processedError = createErrorHandler('게시글 등록에 실패했습니다.')(error);
-          console.error('Post creation failed:', processedError);
-          toast.error(processedError.message);
+        onError: () => {
+          showToast('게시글 작성에 실패했습니다. 잠시 후 다시 시도해주세요.', 'error');
         }
       }
     );
     return true;
-  }, [formData, user, createFormData, createPostMutation, createErrorHandler, router]);
+  }, [formData, user, createFormData, createPostMutation, router, showToast]);
 
   return {
     // 상태

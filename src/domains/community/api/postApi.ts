@@ -6,6 +6,7 @@ import { Post, PostDetail, PostForm, PostViewInfo, PostLikeInfo } from '@/domain
 import {
   PostsRequestParamDto,
   WritePostRequestDto,
+  UpdatePostRequestDto,
   PostResponseDto,
   PostIncrementViewResponseDto,
   ToggleLikeResponseDto
@@ -41,9 +42,8 @@ export const postApi = {
   },
 
   // 게시글 상세 조회
-  async getPost(id: string, currentUserId?: string): Promise<PostDetail> {
-    const queryParams = currentUserId ? `?currentUserId=${currentUserId}` : ''
-    const response = await apiClient.get<ApiResponse<{ post: PostResponseDto }>>(`${API_ROUTES.COMMUNITY.POST_DETAIL(id)}${queryParams}`)
+  async getPost(id: string): Promise<PostDetail> {
+    const response = await apiClient.get<ApiResponse<{ post: PostResponseDto }>>(API_ROUTES.COMMUNITY.POST_DETAIL(id))
     return toPostDetail(response.data!.post)
   },
 
@@ -63,24 +63,22 @@ export const postApi = {
   },
 
   // 게시글 수정
-  async updatePost(id: string, postForm: PostForm, currentUserId?: string): Promise<Post> {
-    // PostForm을 WritePostRequestDto로 변환
-    const requestDto: WritePostRequestDto = {
+  async updatePost(id: string, postForm: PostForm): Promise<Post> {
+    // PostForm을 UpdatePostRequestDto로 변환
+    const requestDto: UpdatePostRequestDto = {
       title: postForm.title,
       content: postForm.content,
-      categoryId: postForm.categoryId,
-      authorId: postForm.authorId
+      categoryId: postForm.categoryId
     };
 
-    const queryParams = currentUserId ? `?currentUserId=${currentUserId}` : ''
-    const response = await apiClient.put<ApiResponse<{ post: PostResponseDto }>>(`${API_ROUTES.COMMUNITY.POST_DETAIL(id)}${queryParams}`, requestDto)
+    const response = await apiClient.put<ApiResponse<{ post: PostResponseDto }>>(API_ROUTES.COMMUNITY.POST_DETAIL(id), requestDto)
 
     return toPost(response.data!.post)
   },
 
   // 게시글 삭제
-  async deletePost(id: string, authorId: string): Promise<boolean> {
-    const response = await apiClient.delete<ApiResponse<{ success: boolean }>>(API_ROUTES.COMMUNITY.POST_DETAIL(id), { data: { authorId } })
+  async deletePost(id: string): Promise<boolean> {
+    const response = await apiClient.delete<ApiResponse<{ success: boolean }>>(API_ROUTES.COMMUNITY.POST_DETAIL(id))
 
     return response.success
   },
@@ -92,14 +90,14 @@ export const postApi = {
   },
 
   // 게시글 좋아요 토글
-  async togglePostLike(id: string, memberId: string): Promise<PostLikeInfo> {
-    const response = await apiClient.post<ApiResponse<ToggleLikeResponseDto>>(API_ROUTES.COMMUNITY.POST_LIKE(id), { memberId })
+  async togglePostLike(id: string): Promise<PostLikeInfo> {
+    const response = await apiClient.post<ApiResponse<ToggleLikeResponseDto>>(API_ROUTES.COMMUNITY.POST_LIKE(id), {})
     return toPostLikeInfo(response.data!, id)
   },
 
   // 게시글 좋아요 상태 확인
-  async checkPostLike(id: string, memberId: string): Promise<boolean> {
-    const response = await apiClient.get<ApiResponse<{ liked: boolean }>>(`${API_ROUTES.COMMUNITY.POST_LIKE(id)}?memberId=${memberId}`)
+  async checkPostLike(id: string): Promise<boolean> {
+    const response = await apiClient.get<ApiResponse<{ liked: boolean }>>(API_ROUTES.COMMUNITY.POST_LIKE(id))
     return response.data!.liked
   }
 }

@@ -5,41 +5,39 @@ import { useCommentSection } from '@/domains/community/hooks/comment/useCommentS
 import { useCommentForm } from '@/domains/community/hooks/comment/useCommentForm';
 import { CommentForm } from '@/domains/community/components/comment/CommentForm';
 import { CommentList } from '@/domains/community/components/comment/CommentList';
-import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { Pagination } from '@/shared/components/Pagination';
-import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
+import { ErrorMessage } from '@/shared/components/ErrorMessage';
 
 interface CommentSectionProps {
   postId: string;
+  postCommentCount?: number; // 게시글의 전체 댓글+답글 개수
 }
 
 export const CommentSection: React.FC<CommentSectionProps> = ({
   postId,
+  postCommentCount,
 }) => {
-  const { user } = useAuthUtils();
   const {
     currentPage,
     comments,
     totalComments,
     totalPages,
     isLoading,
+    queryError,
     handlePageChange,
     handleCommentUpdate
-  } = useCommentSection({ 
-    postId, 
-    currentUserId: user?.id  // ✅ currentUserId 전달
+  } = useCommentSection({
+    postId,
+    postCommentCount
   });
 
   const {
     newComment,
     setNewComment,
-    showSubmitDialog,
-    handleSubmitClick,
-    handleConfirmSubmit,
-    handleCloseSubmitDialog
-  } = useCommentForm({ 
-    postId, 
-    onSuccess: handleCommentUpdate 
+    handleSubmitClick
+  } = useCommentForm({
+    postId,
+    onSuccess: handleCommentUpdate
   });
   
   return (
@@ -54,12 +52,19 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         onSubmit={handleSubmitClick}
       />
 
-      <CommentList
-        comments={comments}
-        isLoading={isLoading}
-        postId={postId}
-        onUpdate={handleCommentUpdate}
-      />
+      {queryError ? (
+        <ErrorMessage
+          message="댓글을 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요."
+          onRetry={() => window.location.reload()}
+        />
+      ) : (
+        <CommentList
+          comments={comments}
+          isLoading={isLoading}
+          postId={postId}
+          onUpdate={handleCommentUpdate}
+        />
+      )}
 
       {totalPages > 1 && (
         <Pagination
@@ -70,16 +75,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         />
       )}
 
-      <ConfirmDialog
-        isOpen={showSubmitDialog}
-        onClose={handleCloseSubmitDialog}
-        onConfirm={handleConfirmSubmit}
-        message="댓글을 등록하시겠습니까?"
-        confirmText="등록"
-        cancelText="취소"
-        confirmButtonColor="primary"
-        icon="✅"
-      />
     </div>
   );
 };

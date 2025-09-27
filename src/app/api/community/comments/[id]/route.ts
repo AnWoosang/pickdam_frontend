@@ -1,30 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { StatusCodes } from 'http-status-codes'
 import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
-import { CommentResponseDto, CommentWriteRequestDto } from '@/domains/community/types/dto/communityDto'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
+import { CommentResponseDto, CommentWriteRequestDto, UpdateCommentRequestDto } from '@/domains/community/types/dto/communityDto'
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { content, authorId, currentUserId } = await request.json()
+    const supabase = await createSupabaseClientWithCookie()
+    const requestData: UpdateCommentRequestDto = await request.json()
     const { id: commentId } = await params
 
-    // RPC 함수로 댓글 업데이트 및 상세 정보 조회
-    const { data: result, error: rpcError } = await supabaseServer
+    // RPC 함수로 댓글 업데이트 및 상세 정보 조회 (RLS가 작성자 권한 확인)
+    const { data: result, error: rpcError } = await supabase
       .rpc('update_comment_with_details', {
         comment_id: commentId,
-        new_content: content,
-        author_id: authorId,
-        current_user_id: currentUserId
+        new_content: requestData.content
       })
 
     if (rpcError) {
       const mappedError = mapApiError(rpcError)
       const errorResponse = createErrorResponse(mappedError)
-      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
+      return NextResponse.json(errorResponse, { status: 400 })
     }
 
     const commentResponse: CommentResponseDto = {
@@ -58,6 +57,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
     const { id: commentId } = await params
 
     //  API: delete_comment_with_replies RPC 함수 사용
@@ -65,8 +65,8 @@ export async function DELETE(
     // - 부모댓글이면 모든 답글도 soft delete
     // - 답글이면 부모의 reply_count 감소
     // - 게시글의 comment_count 업데이트
-    // - 하지만 댓글 좋아요(comment_like)는 처리 안
-    const { data: result, error: rpcError } = await supabaseServer
+    // - RLS가 작성자 권한을 자동으로 확인
+    const { error: rpcError } = await supabase
       .rpc('delete_comment_with_replies', {
         p_comment_id: commentId
       })
@@ -91,20 +91,15 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
     const { id: parentCommentId } = await params
     const requestData: CommentWriteRequestDto = await request.json()
-    const {
-      content,
-      postId,
-      authorId
-    } = requestData
 
-    // 답글 생성을 위한 RPC 함수 호출 (부모 댓글의 reply_count도 업데이트)
-    const { data: result, error: rpcError } = await supabaseServer
+    // 답글 생성을 위한 RPC 함수 호출 (부모 댓글의 reply_count도 업데이트, auth.uid() 사용)
+    const { data: result, error: rpcError } = await supabase
       .rpc('create_reply_and_update_count', {
-        p_content: content,
-        p_post_id: postId,
-        p_author_id: authorId,
+        p_content: requestData.content,
+        p_post_id: requestData.postId,
         p_parent_comment_id: parentCommentId
       })
 

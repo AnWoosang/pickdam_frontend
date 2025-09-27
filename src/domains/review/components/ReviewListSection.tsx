@@ -7,9 +7,9 @@ import { Button } from '@/shared/components/Button';
 import { Pagination } from '@/shared/components/Pagination';
 import { ReviewCard } from '@/domains/review/components/ReviewCard';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
+import { ErrorMessage } from '@/shared/components/ErrorMessage';
 import { ReviewEditModal } from '@/domains/review/components/ReviewEditModal';
-import { useReviewListSection } from '@/domains/review/hooks/useReviewListSection';
-import { formatAbsoluteDate } from '@/shared/utils/Format';
+import { useReviews } from '@/domains/review/hooks/useReviewList';
 
 // UI 상수 정의
 const RATING_OPTIONS = [5, 4, 3, 2, 1] as const;
@@ -42,6 +42,7 @@ export const ReviewListSection = React.memo<ReviewListSectionProps>(function Rev
     totalFilteredPages,
     totalReviews,
     isLoading,
+    queryError,
     handlePageChange,
     handleSaveReview,
     handleDeleteReview,
@@ -49,7 +50,7 @@ export const ReviewListSection = React.memo<ReviewListSectionProps>(function Rev
     handleRatingFilter,
     handleImagesOnlyToggle,
     isMyReview
-  } = useReviewListSection({ productId });
+  } = useReviews({ productId });
 
   // UI 관련 핸들러들
   const handleEditReview = React.useCallback((review: Review) => {
@@ -63,13 +64,8 @@ export const ReviewListSection = React.memo<ReviewListSectionProps>(function Rev
   }, []);
 
   const handleSubmit = React.useCallback(async (updatedReview: Review) => {
-    try {
-      await handleSaveReview(updatedReview);
-      resetEditModalState();
-    } catch (error) {
-      // 에러는 비즈니스 로직 훅에서 처리됨
-      throw error;
-    }
+    await handleSaveReview(updatedReview);
+    resetEditModalState();
   }, [handleSaveReview, resetEditModalState]);
 
   const handleToggleFilters = React.useCallback(() => {
@@ -86,6 +82,19 @@ export const ReviewListSection = React.memo<ReviewListSectionProps>(function Rev
     });
   }, [handlePageChange]);
 
+  // 에러 상태
+  if (queryError) {
+    return (
+      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${className}`}>
+        <div className="text-center py-12">
+          <ErrorMessage
+            message="리뷰를 불러오는데 실패했습니다."
+            onRetry={() => window.location.reload()}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (totalReviews === 0 && !isLoading) {
     return (
@@ -196,7 +205,6 @@ export const ReviewListSection = React.memo<ReviewListSectionProps>(function Rev
                 onDelete={handleDeleteReview}
                 showEditButton={isMyReview(review)}
                 showDeleteButton={isMyReview(review)}
-                formatDate={formatAbsoluteDate}
               />
             {/* 마지막 리뷰가 아닌 경우에만 구분선 표시 */}
             {index < currentPageReviews.length - 1 && (

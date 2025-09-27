@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
-import { createSupabaseServerClient } from '@/infrastructure/api/supabaseServerAuth'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 import { supabaseAdmin } from '@/infrastructure/api/supabaseAdmin'
 import { UpdateProfileRequestDto, WithdrawMemberRequestDto, UserResponseDto } from '@/domains/user/types/dto/userDto'
 import {
@@ -17,10 +16,35 @@ export async function PATCH(
     const { id } = await params
     const updates: UpdateProfileRequestDto = await request.json()
 
-    // 1. Member 테이블 업데이트
-    const { data, error } = await supabaseServer
+    const supabase = await createSupabaseClientWithCookie()
+
+    // 🔒 본인 확인: 토큰으로 현재 사용자 검증
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user || user.id !== id) {
+      const errorResponse = createErrorResponse({
+        statusCode: 401,
+        errorCode: 'UNAUTHORIZED',
+        message: '본인의 프로필만 수정할 수 있습니다.',
+        details: 'User ID mismatch or invalid token'
+      })
+      return NextResponse.json(errorResponse, { status: 401 })
+    }
+
+    // 1. Member 테이블 업데이트 (필드명 매핑)
+    const memberUpdates: Record<string, unknown> = {}
+
+    if (updates.nickname !== undefined) {
+      memberUpdates.nickname = updates.nickname
+    }
+
+    if (updates.profileImageUrl !== undefined) {
+      memberUpdates.profile_image_url = updates.profileImageUrl
+    }
+
+    const { data, error } = await supabase
       .from('member')
-      .update(updates)
+      .update(memberUpdates)
       .eq('id', id)
       .select()
       .single()
@@ -31,10 +55,8 @@ export async function PATCH(
       return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
 
-    // 2. Auth 메타데이터 업데이트
-    const supabaseAuth = await createSupabaseServerClient()
-
-    const userMetadataUpdates: Record<string, any> = {}
+    // 2. Auth 메타데이터 업데이트 (Service Role 권한 필요)
+    const userMetadataUpdates: Record<string, unknown> = {}
 
     if (updates.nickname !== undefined) {
       userMetadataUpdates.nickname = updates.nickname
@@ -45,7 +67,7 @@ export async function PATCH(
     }
 
     if (Object.keys(userMetadataUpdates).length > 0) {
-      const { error: authUpdateError } = await supabaseAuth.auth.admin.updateUserById(id, {
+      const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(id, {
         user_metadata: userMetadataUpdates
       })
 
@@ -56,7 +78,16 @@ export async function PATCH(
       }
     }
 
-    const userResponse: UserResponseDto = data
+    // UserResponseDto 형태로 변환
+    const userResponse: UserResponseDto = {
+      id: data.id,
+      email: data.email,
+      name: data.name,
+      nickname: data.nickname,
+      profileImageUrl: data.profile_image_url,
+      role: data.role
+    }
+
     return NextResponse.json(createSuccessResponse({ user: userResponse }))
 
   } catch (error) {
@@ -74,6 +105,21 @@ export async function DELETE(
     const { id } = await params
     const { reason }: WithdrawMemberRequestDto = await request.json()
 
+    const supabase = await createSupabaseClientWithCookie()
+
+    // 🔒 본인 확인: 토큰으로 현재 사용자 검증
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user || user.id !== id) {
+      const errorResponse = createErrorResponse({
+        statusCode: 401,
+        errorCode: 'UNAUTHORIZED',
+        message: '본인만 탈퇴할 수 있습니다.',
+        details: 'User ID mismatch or invalid token'
+      })
+      return NextResponse.json(errorResponse, { status: 401 })
+    }
+
     // 1. Auth 메타데이터 업데이트
     const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(id, {
       app_metadata: { deleted_at: new Date().toISOString() }
@@ -86,7 +132,7 @@ export async function DELETE(
     }
 
     // 2. 모든 데이터 정리 (Service Role 권한으로)
-    const { data, error: rpcError } = await supabaseAdmin.rpc('process_user_withdrawal', {
+    const { error: rpcError } = await supabaseAdmin.rpc('process_user_withdrawal', {
       p_user_id: id,
       p_reason: reason || null
     })

@@ -8,12 +8,6 @@ export function EmailVerifyPage() {
   const router = useRouter();
   const { status, message } = useEmailVerify();
 
-  console.log('🔍 EmailVerifyPage Render:', {
-    status,
-    message,
-    timestamp: new Date().toISOString()
-  });
-
   // 성공 시 자동 리다이렉트
   useEffect(() => {
     if (status === 'success') {

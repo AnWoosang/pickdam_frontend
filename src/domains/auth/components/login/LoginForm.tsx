@@ -11,11 +11,15 @@ interface LoginFormData {
 interface LoginFormProps {
   isLoading: boolean;
   onSubmit: (formData: LoginFormData) => void;
+  hasCredentialError?: boolean; // 로그인 실패 시 입력란 빨간색 표시용
+  onChange?: (formData: LoginFormData) => void; // 입력 변경 시 콜백
 }
 
 export function LoginForm({
   isLoading,
-  onSubmit
+  onSubmit,
+  hasCredentialError = false,
+  onChange
 }: LoginFormProps) {
   // 내부 상태 관리
   const [formData, setFormData] = useState<LoginFormData>({
@@ -31,17 +35,22 @@ export function LoginForm({
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    setFormData(prev => ({
-      ...prev,
+    const newFormData = {
+      ...formData,
       [name]: value
-    }));
+    };
+
+    setFormData(newFormData);
 
     // 입력 시 해당 필드 에러 메시지 초기화
     setErrors(prev => ({
       ...prev,
       [name]: ''
     }));
-  }, []);
+
+    // 부모 컴포넌트에 변경 사항 알림 (credential 에러 초기화용)
+    onChange?.(newFormData);
+  }, [formData, onChange]);
 
   // 폼 검증을 메모이제이션
   const validateForm = useCallback((): boolean => {
@@ -88,16 +97,16 @@ export function LoginForm({
   // 입력 필드 클래스명을 메모이제이션
   const inputClassNames = useMemo(() => ({
     email: `w-full h-13 px-4 border-[1px] rounded-lg focus:outline-none text-base placeholder:text-hintText text-black ${
-      errors.email
+      errors.email || hasCredentialError
         ? "border-red-500 focus:border-red-500"
         : "border-gray-200 focus:border-black"
     }`,
     password: `w-full h-13 px-4 pr-12 border-[1px] rounded-lg focus:outline-none text-base placeholder:text-hintText text-black ${
-      errors.password
+      errors.password || hasCredentialError
         ? "border-red-500 focus:border-red-500"
         : "border-gray-200 focus:border-black"
     }`
-  }), [errors.email, errors.password]);
+  }), [errors.email, errors.password, hasCredentialError]);
 
   return (
     <form onSubmit={handleSubmit}>

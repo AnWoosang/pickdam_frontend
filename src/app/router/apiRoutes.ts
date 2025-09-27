@@ -27,6 +27,7 @@ export const API_ROUTES = {
     COMMENT_DETAIL: (id: string) => `/community/comments/${id}`,
     COMMENT_LIKE: (id: string) => `/community/comments/${id}/like`,
     COMMENT_REPLIES: (id: string) => `/community/comments/${id}/replies`,
+    REPLY_DELETE: (commentId: string, replyId: string) => `/community/comments/${commentId}/replies/${replyId}`,
   },
   
   // 인증 API
@@ -38,6 +39,8 @@ export const API_ROUTES = {
     REFRESH: '/auth/refresh',
     VERIFY_EMAIL: '/auth/verify-email',
     RESEND_EMAIL: '/auth/resend-email',
+    FIND_PASSWORD: '/auth/find-password',
+    RESET_PASSWORD: '/auth/reset-password',
   },
   
   // 사용자 API

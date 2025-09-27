@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Button } from '@/shared/components/Button';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { useWritePostPage } from '@/domains/community/hooks/usePostWritePage';
 import { CategorySelector } from '@/domains/community/components/post/CategorySelector';
 import { PostEditor } from '@/domains/community/components/post/edit/PostEditor';
@@ -11,10 +12,13 @@ export function PostWritePage() {
     formData,
     errors,
     isSubmitting,
+    showCancelDialog,
     updateFormData,
     setErrors,
     handleCancel,
     handleSubmit,
+    handleConfirmCancel,
+    handleCloseCancelDialog,
   } = useWritePostPage();
 
   return (
@@ -63,6 +67,16 @@ export function PostWritePage() {
             </Button>
           </div>
         </form>
+
+        {/* 취소 확인 다이얼로그 */}
+        <ConfirmDialog
+          isOpen={showCancelDialog}
+          onClose={handleCloseCancelDialog}
+          onConfirm={handleConfirmCancel}
+          message="작성 중인 내용이 있습니다. 정말 취소하시겠습니까?"
+          confirmText="취소"
+          cancelText="계속 작성"
+        />
     </div>
   );
 }

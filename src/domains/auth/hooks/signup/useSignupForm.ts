@@ -165,7 +165,6 @@ export function useSignupForm() {
     const allErrors = runValidation();
     
     if (Object.keys(allErrors).length > 0) {
-      console.error('Validation errors:', allErrors);
       dispatch({ type: 'SET_ERROR', error: Object.values(allErrors)[0] });
       return;
     }
@@ -177,7 +176,6 @@ export function useSignupForm() {
       await signupMutation.mutateAsync(state.formData);
       // 성공 처리는 mutation 내부에서 자동으로 리다이렉트됨
     } catch (err) {
-      console.error('회원가입 실패:', err);
       dispatch({ 
         type: 'SET_ERROR', 
         error: err instanceof Error ? err.message : '회원가입에 실패했습니다.' 

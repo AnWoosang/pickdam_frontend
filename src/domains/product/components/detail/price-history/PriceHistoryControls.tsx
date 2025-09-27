@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/shared/components/Button';
 import { LowestPriceHistory } from '@/domains/product/types/product';
@@ -21,7 +21,7 @@ export function PriceHistoryControls({
   viewMode,
   selectedMonth,
   selectedWeekStart,
-  onViewModeChange,
+  onViewModeChange: _onViewModeChange,
   onMonthChange,
   onWeekChange
 }: PriceHistoryControlsProps) {
@@ -40,9 +40,6 @@ export function PriceHistoryControls({
 
 
   // UI 이벤트 핸들러들
-  const handleViewModeChange = (mode: ViewMode) => {
-    onViewModeChange(mode);
-  };
 
   const handlePrevMonth = () => {
     const newMonth = Math.max(selectedMonth - 1, navigationLimits.minMonth);

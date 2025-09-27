@@ -12,9 +12,9 @@ export function toReview(dto: ReviewResponseDto): Review {
   return {
     id: dto.id,
     productId: dto.productId,
-    userId: dto.userId,
-    userName: dto.userName,
-    profileImage: dto.profileImage,
+    memberId: dto.memberId,
+    nickname: dto.nickname,
+    profileImageUrl: dto.profileImageUrl,
     rating: dto.rating,
     sweetness: dto.sweetness || 0,
     menthol: dto.menthol || 0,
@@ -22,7 +22,7 @@ export function toReview(dto: ReviewResponseDto): Review {
     body: dto.body || 0,
     freshness: dto.freshness || 0,
     content: dto.content,
-    createdAt: dto.createdAt,
+    createdAt: new Date(dto.createdAt),
     images: dto.images?.map(toReviewImage) || [],
   };
 }

@@ -90,12 +90,8 @@ export function WishlistDropdown({
   };
 
   const handleRemoveSelectedItems = async () => {
-    try {
-      await handleRemoveSelected(selectedItems);
-      clearSelectedItems();
-    } catch (error) {
-      console.error('선택 삭제 실패:', error);
-    }
+    await handleRemoveSelected(selectedItems);
+    clearSelectedItems();
   };
 
 

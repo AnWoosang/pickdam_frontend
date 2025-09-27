@@ -5,6 +5,7 @@ import { PaginationResult } from '@/shared/types/pagination'
 import { Comment, CommentForm, CommentLikeInfo } from '@/domains/community/types/community';
 import {
   CommentWriteRequestDto,
+  UpdateCommentRequestDto,
   CommentResponseDto,
   ToggleCommentLikeResponseDto
 } from '@/domains/community/types/dto/communityDto';
@@ -14,15 +15,10 @@ import { toComment, toCommentLikeInfo } from '@/domains/community/types/dto/comm
 export const getComments = async (postId: string, options: {
   page?: number;
   limit?: number;
-  currentUserId?: string;
 } = {}): Promise<PaginationResult<Comment>> => {
-  const { page = 1, limit = 20, currentUserId } = options;
+  const { page = 1, limit = 20 } = options;
 
-  // currentUserId가 있으면 쿼리에 포함
-  let url = `${API_ROUTES.COMMUNITY.COMMENTS}?postId=${postId}&page=${page}&limit=${limit}`
-  if (currentUserId) {
-    url += `&currentUserId=${currentUserId}`
-  }
+  const url = `${API_ROUTES.COMMUNITY.COMMENTS}?postId=${postId}&page=${page}&limit=${limit}`
   const response = await apiClient.get<PaginatedResponse<CommentResponseDto>>(url);
 
   return {
@@ -38,25 +34,13 @@ export const getComments = async (postId: string, options: {
   };
 };
 
-// 댓글 작성 (댓글과 답글을 구분해서 처리)
+// 댓글 작성 (일반 댓글만)
 export const createComment = async (commentForm: CommentForm): Promise<Comment> => {
   const requestDto: CommentWriteRequestDto = {
     content: commentForm.content,
-    postId: commentForm.postId,
-    authorId: commentForm.authorId,
-    parentId: commentForm.parentId
+    postId: commentForm.postId
   };
 
-  // 답글인 경우 답글 생성 엔드포인트 사용
-  if (commentForm.parentId) {
-    const response = await apiClient.post<ApiResponse<{ comment: CommentResponseDto }>>(
-      API_ROUTES.COMMUNITY.COMMENT_DETAIL(commentForm.parentId),
-      requestDto
-    );
-    return toComment(response.data!.comment);
-  }
-
-  // 일반 댓글인 경우 기존 엔드포인트 사용
   const response = await apiClient.post<ApiResponse<{ comment: CommentResponseDto }>>(
     API_ROUTES.COMMUNITY.COMMENTS,
     requestDto
@@ -65,13 +49,26 @@ export const createComment = async (commentForm: CommentForm): Promise<Comment> 
   return toComment(response.data!.comment);
 };
 
-// 댓글 수정
-export const updateComment = async (commentId: string, commentForm: CommentForm): Promise<Comment> => {
+// 답글 작성 (답글만)
+export const createReply = async (commentForm: CommentForm): Promise<Comment> => {
   const requestDto: CommentWriteRequestDto = {
     content: commentForm.content,
     postId: commentForm.postId,
-    authorId: commentForm.authorId,
     parentId: commentForm.parentId
+  };
+
+  const response = await apiClient.post<ApiResponse<{ comment: CommentResponseDto }>>(
+    API_ROUTES.COMMUNITY.COMMENT_REPLIES(commentForm.parentId!),
+    requestDto
+  );
+
+  return toComment(response.data!.comment);
+};
+
+// 댓글 수정
+export const updateComment = async (commentId: string, commentForm: CommentForm): Promise<Comment> => {
+  const requestDto: UpdateCommentRequestDto = {
+    content: commentForm.content
   };
 
   const response = await apiClient.put<ApiResponse<{ comment: CommentResponseDto }>>(
@@ -82,20 +79,27 @@ export const updateComment = async (commentId: string, commentForm: CommentForm)
   return toComment(response.data!.comment);
 };
 
-// 댓글 삭제
-export const deleteComment = async (commentId: string, authorId: string): Promise<boolean> => {
+// 댓글 삭제 (부모 댓글 + 모든 답글 삭제)
+export const deleteComment = async (commentId: string): Promise<boolean> => {
   const response = await apiClient.delete<ApiResponse<{ success: boolean }>>(
-    API_ROUTES.COMMUNITY.COMMENT_DETAIL(commentId),
-    { data: { authorId } }
+    API_ROUTES.COMMUNITY.COMMENT_DETAIL(commentId)
+  );
+  return response.success || true;
+};
+
+// 답글 삭제 (답글 1개만 삭제)
+export const deleteReply = async (parentCommentId: string, replyId: string): Promise<boolean> => {
+  const response = await apiClient.delete<ApiResponse<{ success: boolean }>>(
+    API_ROUTES.COMMUNITY.REPLY_DELETE(parentCommentId, replyId)
   );
   return response.success || true;
 };
 
 // 댓글 좋아요 토글
-export const toggleCommentLike = async (commentId: string, memberId: string): Promise<CommentLikeInfo> => {
+export const toggleCommentLike = async (commentId: string): Promise<CommentLikeInfo> => {
   const response = await apiClient.post<ApiResponse<ToggleCommentLikeResponseDto>>(
     API_ROUTES.COMMUNITY.COMMENT_LIKE(commentId),
-    { memberId: memberId }
+    {}
   );
 
   return toCommentLikeInfo(response.data!);
@@ -105,15 +109,10 @@ export const toggleCommentLike = async (commentId: string, memberId: string): Pr
 export const getReplies = async (parentCommentId: string, options: {
   page?: number;
   limit?: number;
-  currentUserId?: string;
 } = {}): Promise<PaginationResult<Comment>> => {
-  const { page = 1, limit = 20, currentUserId } = options;
+  const { page = 1, limit = 20 } = options;
 
-  // currentUserId가 있으면 쿼리에 포함
-  let url = `${API_ROUTES.COMMUNITY.COMMENT_REPLIES(parentCommentId)}?page=${page}&limit=${limit}`
-  if (currentUserId) {
-    url += `&currentUserId=${currentUserId}`
-  }
+  const url = `${API_ROUTES.COMMUNITY.COMMENT_REPLIES(parentCommentId)}?page=${page}&limit=${limit}`
 
   const response = await apiClient.get<PaginatedResponse<CommentResponseDto>>(url);
 

@@ -9,8 +9,7 @@ export function formatKRW(price: number): string {
 }
 
 /// 날짜 포맷팅 (상대적 시간)
-export const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
+export const formatDate = (date: Date): string => {
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -26,8 +25,7 @@ export const formatDate = (dateString: string): string => {
 };
 
 /// 날짜 포맷팅 (절대적 시간)
-export const formatAbsoluteDate = (dateString: string): string => {
-  const date = new Date(dateString);
+export const formatAbsoluteDate = (date: Date): string => {
   return date.toLocaleDateString('ko-KR', {
     year: 'numeric',
     month: '2-digit',

@@ -6,6 +6,7 @@ import React, { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, Heart } from 'lucide-react';
 import { PostCategoryBadge } from '@/domains/community/components/post/PostCategoryBadge';
+import { Avatar } from '@/shared/components/Avatar';
 import { formatDate } from '@/shared/utils/Format';
 import { ROUTES } from '@/app/router/routes';
 import { stripHtml } from 'string-strip-html';
@@ -40,9 +41,16 @@ export const PostCard = React.memo(({
       onClick={handleClick}
       className="bg-white border border-gray-200 rounded-lg p-4 mb-4 transition-all hover:shadow-md cursor-pointer"
     >
-      <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
-        {post.title}
-      </h3>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-lg font-semibold text-gray-900 line-clamp-1 flex-1 mr-2">
+          {post.title}
+        </h3>
+        {post.category?.id && (
+          <PostCategoryBadge
+            categoryId={post.category.id}
+          />
+        )}
+      </div>
       
       {showContent && post.content && (
         <p className="text-gray-600 text-sm mb-3 line-clamp-2">
@@ -58,14 +66,16 @@ export const PostCard = React.memo(({
       
       <div className="flex items-center justify-between text-sm text-gray-500">
         <div className="flex items-center gap-2">
-          {post.category?.id && (
-            <PostCategoryBadge 
-              categoryId={post.category.id}
+          <div className="flex items-center gap-2">
+            <Avatar
+              src={post.profileImageUrl}
+              alt={`${post.authorNickname} 프로필 사진`}
+              size="xsmall"
             />
-          )}
-          <span>
-            {getAuthorName(post.authorNickname)}
-          </span>
+            <span>
+              {getAuthorName(post.authorNickname)}
+            </span>
+          </div>
           <span>{formatDate(post.createdAt)}</span>
         </div>
         

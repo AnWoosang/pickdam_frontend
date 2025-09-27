@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
+import { WishlistItemResponseDto } from '@/domains/user/types/dto/userDto'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; productId: string }> }
 ) {
-  try {const { id: memberId, productId } = await params
-
+  try {
+    const supabase = await createSupabaseClientWithCookie()
+    const { id: memberId, productId } = await params
 
     // 찜 상태 확인 - 단일 쿼리로 효율적으로 처리 (hard delete 방식)
-    const { data: wishlistItem, error } = await supabaseServer
+    const { data: wishlistItem, error } = await supabase
       .from('wishlist')
       .select('id, created_at')
       .eq('member_id', memberId)
@@ -25,10 +27,18 @@ export async function GET(
 
     const isWishlisted = !!wishlistItem
 
-    return NextResponse.json(createSuccessResponse({ 
+    // WishlistItemResponseDto 형태로 변환
+    const responseDto: WishlistItemResponseDto = {
+      id: wishlistItem?.id || '',
+      memberId: memberId,
+      productId: productId,
+      createdAt: wishlistItem?.created_at || '',
+      updatedAt: wishlistItem?.created_at || '' // 업데이트가 없으므로 created_at 사용
+    }
+
+    return NextResponse.json(createSuccessResponse({
       isWishlisted,
-      wishlistId: wishlistItem?.id || null,
-      wishlistCreatedAt: wishlistItem?.created_at || null
+      wishlistItem: isWishlisted ? responseDto : null
     }))
 
   } catch (error) {

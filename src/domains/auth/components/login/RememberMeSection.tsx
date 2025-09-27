@@ -46,7 +46,7 @@ export function RememberMeSection({
         <span className="text-gray text-sm font-medium">로그인 유지</span>
       </label>
       <Link
-        href={ROUTES.AUTH.RESET_PASSWORD}
+        href={ROUTES.AUTH.FIND_PASSWORD}
         className="text-sm text-gray hover:underline cursor-pointer"
         onClick={onClose}
       >

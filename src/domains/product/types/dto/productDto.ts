@@ -16,6 +16,8 @@ export interface ProductsRequestParamDto {
   sortOrder?: SortOrder;
 }
 
+export type IncrementViewRequestDto = Record<string, never>;
+
 // Product API Response DTOs
 export interface ProductResponseDto {
   id: string;

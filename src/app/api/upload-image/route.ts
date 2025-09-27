@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { StatusCodes } from 'http-status-codes';
-import { supabaseServer } from '@/infrastructure/api/supabaseServer';
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -10,24 +10,25 @@ import { ImageUploadResponseDto } from '@/domains/image/types/dto/imageDto';
 
 // 단일 파일 업로드 헬퍼 함수
 async function uploadSingleFile(file: File, index: number, imageType: string): Promise<ImageUploadResponseDto> {
-  
+  const supabase = await createSupabaseClientWithCookie();
+
   // 날짜 기반 경로 생성
   const currentDate = new Date();
   const year = currentDate.getFullYear();
   const month = String(currentDate.getMonth() + 1).padStart(2, '0');
   const day = String(currentDate.getDate()).padStart(2, '0');
-  
+
   // UUID 생성 (더 안전한 파일명)
   const uuid = crypto.randomUUID();
   const fileExt = file.name.split('.').pop();
-  
+
   const folderPath = `${imageType}/${year}/${month}/${day}`;
   const fileName = `${folderPath}/${uuid}.${fileExt}`;
-  
+
   // Supabase Storage에 업로드
   const bucketName = process.env.NEXT_PUBLIC_STORAGE_BUCKET_NAME || 'pickdam';
-  
-  const { data, error } = await supabaseServer.storage
+
+  const { data, error } = await supabase.storage
     .from(bucketName)
     .upload(fileName, file, {
       cacheControl: '3600',
@@ -39,7 +40,7 @@ async function uploadSingleFile(file: File, index: number, imageType: string): P
   }
 
   // 공개 URL 생성
-  const { data: { publicUrl } } = supabaseServer.storage
+  const { data: { publicUrl } } = supabase.storage
     .from(bucketName)
     .getPublicUrl(fileName);
 
@@ -57,10 +58,9 @@ async function uploadSingleFile(file: File, index: number, imageType: string): P
 
 export async function POST(request: NextRequest) {
   try {
-    
     const formData = await request.formData();
     const imageType = formData.get('type') as string;
-    
+
     // 항상 다중 파일로 처리 ('file' 단일 파일도 'files' 배열에 포함)
     const singleFile = formData.get('file') as File;
     const multipleFiles = formData.getAll('files') as File[];
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     const files: File[] = [];
     if (singleFile) files.push(singleFile);
     if (multipleFiles.length > 0) files.push(...multipleFiles);
-    
+
     if (files.length === 0) {
       const response = createSuccessResponse([]);
       return NextResponse.json(response, { status: 200 });

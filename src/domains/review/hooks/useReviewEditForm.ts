@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useCallback, useEffect } from 'react';
-import { useImageModifyManager } from '@/domains/image/hooks/useImageModifyManager';
-import { useImageInputHandlers } from '@/domains/image/hooks/useImageInputHandlers';
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useImageManager } from '@/domains/image/hooks/useImageManager';
 import { validateReviewForm } from '@/domains/review/validation/reviewValidation';
 import { Review } from '@/domains/review/types/review';
+import { IMAGE_STATUS } from '@/domains/image/types/Image';
 
 interface UseReviewEditFormOptions {
   review: Review;
-  onSubmit?: (updatedReview: Review) => Promise<void>;
-  onError?: (error: unknown) => void;
+  onError?: (error: string) => void;
 }
 
 interface ReviewEditFormData {
@@ -26,9 +25,20 @@ interface ReviewEditFormData {
 const DEFAULT_RATING = 5;
 const DEFAULT_DETAIL_RATING = 3;
 
-export function useReviewEditForm({ review, onSubmit, onError }: UseReviewEditFormOptions) {
+export function useReviewEditForm({ review }: Omit<UseReviewEditFormOptions, 'onError'>) {
   // 폼 데이터 상태
   const [formData, setFormData] = useState<ReviewEditFormData>({
+    content: '',
+    rating: DEFAULT_RATING,
+    sweetness: DEFAULT_DETAIL_RATING,
+    menthol: DEFAULT_DETAIL_RATING,
+    throatHit: DEFAULT_DETAIL_RATING,
+    body: DEFAULT_DETAIL_RATING,
+    freshness: DEFAULT_DETAIL_RATING,
+  });
+
+  // 원본 데이터 상태 (변경사항 비교용)
+  const [originalData, setOriginalData] = useState<ReviewEditFormData>({
     content: '',
     rating: DEFAULT_RATING,
     sweetness: DEFAULT_DETAIL_RATING,
@@ -42,22 +52,36 @@ export function useReviewEditForm({ review, onSubmit, onError }: UseReviewEditFo
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 이미지 업로드 관리
-  const uploadManager = useImageModifyManager({
-    contentType: 'review'
+  const initialImages = useMemo(() =>
+    review?.images?.map((img) => ({
+      id: `review-${review.id}-img-${img.imageOrder}`,
+      url: img.imageUrl,
+      fileName: `review-image-${img.imageOrder}`,
+      contentType: 'reviews' as const,
+      createdAt: new Date(),
+    })) || []
+  , [review?.id, review?.images]);
+
+  const uploadManager = useImageManager({
+    contentType: 'reviews',
+    mode: 'edit',
+    initialImages,
   });
 
   // 파일 핸들링
-  const fileHandlers = useImageInputHandlers({
-    maxImages: uploadManager.maxImages,
-    currentImageCount: uploadManager.currentImageCount,
-    onAddImages: (files: File[]) => uploadManager.addImages(files),
-    onError: (error: string) => onError?.(new Error(error)),
-  });
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    uploadManager.addImages(files);
+    // input 값 초기화
+    if (e.target) {
+      e.target.value = '';
+    }
+  }, [uploadManager]);
 
   // 리뷰 데이터로 초기화
   useEffect(() => {
     if (review) {
-      setFormData({
+      const initialData = {
         content: review.content || '',
         rating: review.rating || 5,
         sweetness: review.sweetness || 3,
@@ -65,22 +89,14 @@ export function useReviewEditForm({ review, onSubmit, onError }: UseReviewEditFo
         throatHit: review.throatHit || 3,
         body: review.body || 3,
         freshness: review.freshness || 3,
-      });
-      // 기존 이미지 초기화
-      if (review.images && review.images.length > 0) {
-        const existingImages = review.images.map((img) => ({
-          id: `review-${review.id}-img-${img.image_order}`, // ReviewImage.order 사용
-          url: img.image_url,
-          fileName: `review-image-${img.image_order}`,
-          filePath: img.image_url,
-          contentType: 'review' as const,
-          createdAt: new Date(),
-          isPreview: false
-        }));
-        uploadManager.initializeExistingImages(existingImages);
-      }
+      };
+
+      setFormData(initialData);
+      setOriginalData(initialData);
+
+      // 기존 이미지 초기화는 useImageManager에서 initialImages로 처리
     }
-  }, [review?.id]); // review.id만 의존성으로 설정
+  }, [review]); // review 전체를 의존성으로 설정
 
   // 필드 변경 핸들러
   const handleFieldChange = useCallback((field: keyof ReviewEditFormData, value: string | number) => {
@@ -89,6 +105,43 @@ export function useReviewEditForm({ review, onSubmit, onError }: UseReviewEditFo
       [field]: value
     }));
   }, []);
+
+  // 변경사항 확인
+  const hasChanges = useMemo(() => {
+    const formChanged = JSON.stringify(formData) !== JSON.stringify(originalData);
+
+    // 이미지 변경사항 확인
+    const currentImages = uploadManager.imageStates;
+    const originalImageCount = initialImages.length;
+    const currentImageCount = currentImages.length;
+
+    // 이미지 개수가 다르면 변경됨
+    if (originalImageCount !== currentImageCount) {
+      return true;
+    }
+
+    // 새로운 로컬 이미지가 있으면 변경됨 (상태가 LOCAL인 것들)
+    const hasNewLocalImages = currentImages.some(state =>
+      state.status === IMAGE_STATUS.LOCAL || !state.uploadedImage
+    );
+
+    if (hasNewLocalImages) {
+      return true;
+    }
+
+    // 기존 이미지 URL 비교
+    const currentImageUrls = currentImages
+      .filter(state => state.uploadedImage)
+      .map(state => state.uploadedImage!.url)
+      .sort();
+    const originalImageUrls = initialImages
+      .map(img => img.url)
+      .sort();
+
+    const imagesChanged = JSON.stringify(currentImageUrls) !== JSON.stringify(originalImageUrls);
+
+    return formChanged || imagesChanged;
+  }, [formData, originalData, uploadManager.imageStates, initialImages]);
 
   // 폼 검증
   const validateForm = useCallback(() => {
@@ -110,68 +163,63 @@ export function useReviewEditForm({ review, onSubmit, onError }: UseReviewEditFo
     if (!validationResult.isValid) {
       return {
         success: false,
-        errors: validationResult.errors,
-        type: 'validation' as const
+        type: 'validation' as const,
+        errors: validationResult.errors
       };
     }
 
     setIsSubmitting(true);
 
     try {
-      if (onSubmit) {
-        const imageUrls = await uploadManager.getFinalImageUrls();
+      const imageUrls = await uploadManager.commitImages();
 
-        const updateData: Review = {
-          id: review.id,
-          productId: review.productId,
-          userId: review.userId,
-          userName: review.userName,
-          profileImage: review.profileImage,
-          createdAt: review.createdAt,
-          content: formData.content,
-          rating: formData.rating,
-          sweetness: formData.sweetness,
-          menthol: formData.menthol,
-          throatHit: formData.throatHit,
-          body: formData.body,
-          freshness: formData.freshness,
-          images: imageUrls.map((url, index) => ({
-            image_url: url,
-            image_order: index + 1
-          }))
-        };
+      const updateData: Review = {
+        id: review.id,
+        productId: review.productId,
+        memberId: review.memberId,
+        nickname: review.nickname,
+        profileImageUrl: review.profileImageUrl,
+        createdAt: review.createdAt,
+        content: formData.content,
+        rating: formData.rating,
+        sweetness: formData.sweetness,
+        menthol: formData.menthol,
+        throatHit: formData.throatHit,
+        body: formData.body,
+        freshness: formData.freshness,
+        images: imageUrls.map((url, index) => ({
+          imageUrl: url,
+          imageOrder: index + 1
+        }))
+      };
 
-        await onSubmit(updateData);
-      }
-
+      setIsSubmitting(false);
       return {
         success: true,
-        type: 'submit' as const,
-        shouldClose: true
+        data: updateData
       };
-    } catch (error) {
+    } catch {
+      setIsSubmitting(false);
       return {
         success: false,
-        error,
         type: 'submit' as const,
-        message: error instanceof Error ? error.message : '리뷰 수정에 실패했습니다.'
+        message: '리뷰 수정에 실패했습니다.'
       };
-    } finally {
-      setIsSubmitting(false);
     }
-  }, [formData, uploadManager, onSubmit, validateForm]);
+  }, [formData, uploadManager, validateForm, review]);
 
   return {
     // 폼 데이터
     formData,
-    
+
     // 상태
     isSubmitting,
-    
+    hasChanges,
+
     // 이미지 관련
     uploadManager,
-    fileHandlers,
-    
+    handleImageUpload,
+
     // 핸들러들
     handleFieldChange,
     handleSubmit,

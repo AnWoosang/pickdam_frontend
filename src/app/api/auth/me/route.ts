@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/infrastructure/api/supabaseServerAuth'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
 import { UserResponseDto } from '@/domains/user/types/dto/userDto'
 
 export async function GET() {
   try {
-    const supabase = await createSupabaseServerClient()
-    
+    const supabase = await createSupabaseClientWithCookie()
+
     // 쿠키에서 세션 정보 가져오기
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     

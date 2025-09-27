@@ -33,18 +33,22 @@ export {
 export interface PostgresError {
   code: string
   message: string
-  details?: string
-  hint?: string
+  details: string
+  hint: string
 }
 
 // PostgreSQL 에러 타입 가드
 export function isPostgresError(error: unknown): error is PostgresError {
-  return typeof error === 'object' &&
-         error !== null &&
-         'code' in error &&
-         typeof (error as any).code === 'string' &&
-         'message' in error &&
-         typeof (error as any).message === 'string'
+  if (typeof error !== 'object' || error === null) return false;
+
+  const errorObj = error as Record<string, unknown>;
+
+  return 'code' in errorObj &&
+         typeof errorObj.code === 'string' &&
+         'message' in errorObj &&
+         typeof errorObj.message === 'string' &&
+         'details' in errorObj &&
+         'hint' in errorObj;
 }
 
 // 에러 심각도 레벨

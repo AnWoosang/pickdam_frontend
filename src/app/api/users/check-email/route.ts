@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { StatusCodes } from 'http-status-codes'
 import { validateEmail } from '@/shared/validation/common'
 import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 
 export async function POST(request: NextRequest) {
-  try {const { email } = await request.json()
+  try {
+    const supabase = await createSupabaseClientWithCookie()
+    const { email } = await request.json()
 
     if (!email) {
       const mappedError = mapApiError({ message: '이메일을 입력해주세요.', status: StatusCodes.BAD_REQUEST })
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     const trimmedEmail = email.trim().toLowerCase()
 
-    const { data, error } = await supabaseServer
+    const { data, error } = await supabase
       .from('member')
       .select('id')
       .eq('email', trimmedEmail)

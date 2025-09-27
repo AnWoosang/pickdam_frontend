@@ -1,5 +1,5 @@
 // 사용자 기본 타입 정의
-import {LoginProvider,Role} from '@/domains/auth/types/auth';
+import {Role} from '@/domains/auth/types/auth';
 
 export enum Gender {
   MALE = 'MALE',
@@ -44,7 +44,6 @@ export const WITHDRAW_REASONS = {
   lackOfUse: '사용 빈도 낮음',
   privacyConcerns: '개인정보 보호 우려',
   betterAlternatives: '더 나은 대안 발견',
-  temporaryBreak: '일시적 휴식',
   userRequest: '사용자 요청',
   other: '기타'
 } as const;
@@ -54,7 +53,6 @@ export const WITHDRAW_REASON_LABELS: Record<keyof typeof WITHDRAW_REASONS, strin
   lackOfUse: '사용 빈도 낮음',
   privacyConcerns: '개인정보 보호 우려',
   betterAlternatives: '더 나은 대안 발견',
-  temporaryBreak: '일시적 휴식',
   userRequest: '사용자 요청',
   other: '기타'
 };

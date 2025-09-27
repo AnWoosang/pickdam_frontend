@@ -18,15 +18,16 @@ interface CommentCardProps {
   rootCommentId?: string; // 최상위 댓글 ID (대댓글에서 사용)
 }
 
-export const CommentCard = React.memo(({ 
-  comment, 
-  onUpdate, 
-  postId, 
+export const CommentCard = React.memo(({
+  comment,
+  onUpdate,
+  postId,
   isReply = false,
   rootCommentId
 }: CommentCardProps) => {
   // UI 상태들을 컴포넌트에서 직접 관리
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   // 비즈니스 로직만 훅에서 가져옴
   const {
@@ -46,30 +47,13 @@ export const CommentCard = React.memo(({
 
   // UI 핸들러들
   const handleEdit = useCallback((content: string) => {
-    updateComment({
-      content,
-      onSuccess: () => {
-        onUpdate();
-      },
-      onError: (error) => {
-        console.error('댓글 수정 실패:', error);
-        alert('댓글 수정에 실패했습니다.');
-      }
-    });
-  }, [updateComment, onUpdate]);
+    updateComment(content);
+  }, [updateComment]);
 
   const handleDelete = useCallback(() => {
-    deleteComment({
-      onSuccess: () => {
-        setShowDeleteDialog(false);
-        onUpdate();
-      },
-      onError: (error) => {
-        console.error('댓글 삭제 실패:', error);
-        alert('댓글 삭제에 실패했습니다.');
-      }
-    });
-  }, [deleteComment, onUpdate]);
+    deleteComment();
+    setShowDeleteDialog(false);
+  }, [deleteComment]);
 
 
 
@@ -81,6 +65,10 @@ export const CommentCard = React.memo(({
     setShowDeleteDialog(false);
   }, []);
 
+  const handleEditingChange = useCallback((editing: boolean) => {
+    setIsEditing(editing);
+  }, []);
+
   return (
     <div className="py-4">
       <CommentHeader
@@ -90,9 +78,10 @@ export const CommentCard = React.memo(({
         onDelete={handleShowDeleteDialog}
         isUpdating={isUpdating}
         isDeleting={isDeleting}
+        onEditingChange={handleEditingChange}
       />
-      
-      <CommentContent content={comment.content} />
+
+      {!isEditing && <CommentContent content={comment.content} />}
       
       <CommentLikeButton
         comment={comment}
@@ -123,8 +112,6 @@ export const CommentCard = React.memo(({
           message="댓글을 삭제하시겠습니까?"
           confirmText="삭제"
           cancelText="취소"
-          confirmButtonColor="red"
-          icon="🗑️"
         />
       )}
     </div>

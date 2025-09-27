@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { StatusCodes } from 'http-status-codes'
 import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
+import { ToggleWishlistResponseDto } from '@/domains/product/types/dto/productDto'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; productId: string }> }
 ) {
-  try {const { id, productId } = await params
-    
+  try {
+    const supabase = await createSupabaseClientWithCookie()
+    const { id, productId } = await params
+
     if (!productId) {
       const mappedError = mapApiError({ message: 'Product ID is required', status: StatusCodes.BAD_REQUEST })
       const errorResponse = createErrorResponse(mappedError)
@@ -16,7 +19,7 @@ export async function POST(
     }
 
     // 새로운 RPC 함수로 위시리스트 토글
-    const { data, error } = await supabaseServer.rpc('toggle_product_wishlist', {
+    const { data, error } = await supabase.rpc('toggle_product_wishlist', {
       p_product_id: productId,
       p_member_id: id
     })
@@ -27,11 +30,14 @@ export async function POST(
       return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
 
-    return NextResponse.json(createSuccessResponse({ 
+    // ToggleWishlistResponseDto 형태로 변환
+    const responseDto: ToggleWishlistResponseDto = {
       success: data.success,
       isWishlisted: data.wishlisted,
-      newWishlistCount: data.wishlist_count
-    }), { status: 201 })
+      newFavoriteCount: data.wishlist_count
+    }
+
+    return NextResponse.json(createSuccessResponse(responseDto), { status: 201 })
     
   } catch (error) {
     const mappedError = mapApiError(error)
@@ -45,8 +51,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; productId: string }> }
 ) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
     const { id, productId } = await params
-    
+
     if (!productId) {
       const mappedError = mapApiError({ message: 'Product ID is required', status: StatusCodes.BAD_REQUEST })
       const errorResponse = createErrorResponse(mappedError)
@@ -54,7 +61,7 @@ export async function DELETE(
     }
 
     // 새로운 RPC 함수로 위시리스트 토글 (DELETE도 같은 함수 사용)
-    const { data, error } = await supabaseServer.rpc('toggle_product_wishlist', {
+    const { error } = await supabase.rpc('toggle_product_wishlist', {
       p_product_id: productId,
       p_member_id: id
     })

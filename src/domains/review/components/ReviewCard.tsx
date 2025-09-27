@@ -9,10 +9,10 @@ import { Review } from '@/domains/review/types/review';
 import { useImageViewer } from '@/domains/image/hooks/useImageViewer';
 import { ImageViewerModal } from '@/shared/components/ImageViewerModal';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
+import { formatAbsoluteDate } from '@/shared/utils/Format';
 
 // 상수 정의
 const RATING_STARS = [1, 2, 3, 4, 5] as const;
-const CONTENT_PREVIEW_LENGTH = 200;
 
 interface ReviewCardProps {
   review: Review;
@@ -20,7 +20,6 @@ interface ReviewCardProps {
   onDelete?: (reviewId: string) => void;
   showEditButton?: boolean;
   showDeleteButton?: boolean;
-  formatDate?: (dateString: string) => string;
 }
 
 export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
@@ -29,7 +28,6 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
   onDelete,
   showEditButton = false,
   showDeleteButton = false,
-  formatDate
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -49,18 +47,6 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
 
   const displayContent = review.content;
 
-  const defaultFormatDate = React.useCallback((dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }, []);
-
-  const formatDateFn = formatDate || defaultFormatDate;
 
   const handleEditClick = React.useCallback(() => {
     if (onEdit) {
@@ -105,12 +91,12 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
           <Avatar
-            src={review.profileImage}
-            alt={review.userName}
+            src={review.profileImageUrl}
+            alt={review.nickname}
             size="medium"
           />
           <div>
-            <h4 className="font-medium text-gray-900">{review.userName}</h4>
+            <h4 className="font-medium text-gray-900">{review.nickname}</h4>
             <div className="flex items-center space-x-2">
               <div className="flex items-center">
                 {RATING_STARS.map((star) => (
@@ -125,7 +111,7 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
                 ))}
               </div>
               <span className="text-sm text-gray-500">
-                {formatDateFn(review.createdAt)}
+                {formatAbsoluteDate(review.createdAt)}
               </span>
             </div>
           </div>
@@ -194,7 +180,7 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
       {/* 이미지 */}
       {imageUrls.length > 0 && (
         <div className="flex gap-2 flex-wrap">
-          {review.images!.slice(0, 4).map((image, index) => (
+          {review.images!.filter(image => image.imageUrl && image.imageUrl.trim() !== '').slice(0, 4).map((image, index) => (
             <div
               key={index}
               className="relative w-20 h-20 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-gray-200"
@@ -233,10 +219,9 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
         isOpen={showDeleteConfirm}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
-        message="이 리뷰를 삭제하시겠습니까? 삭제된 리뷰는 복구할 수 없습니다."
+        message={`이 리뷰를 삭제하시겠습니까?\n삭제된 리뷰는 복구할 수 없습니다.`}
         confirmText="삭제"
         cancelText="취소"
-        confirmButtonColor="red"
       />
     </div>
   );

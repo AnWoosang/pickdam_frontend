@@ -8,6 +8,17 @@ import { UserResponseDto } from '@/domains/user/types/dto/userDto';
 // LOGIN DTO
 // =============================================
 
+export interface LoginRequestDto {
+  email: string;
+  password: string;
+}
+
+export interface VerifyEmailRequestDto {
+  tokenHash?: string;
+  token?: string;
+  type?: 'email' | 'recovery';
+}
+
 export interface SessionResponseDto {
   accessToken: string;
   refreshToken: string;
@@ -47,5 +58,10 @@ export interface SignupResponseDto {
 export interface ResendEmailRequestDto {
   email: string;
   type: 'signup' | 'email_change';
+}
+
+// 비밀번호 찾기 API 요청 DTO
+export interface FindPasswordRequestDto {
+  email: string;
 }
 

@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Edit3 } from 'lucide-react';
 import { Button } from '@/shared/components/Button';
 import { PostEditor } from '@/domains/community/components/post/edit/PostEditor';
 import { CategorySelector } from '@/domains/community/components/post/CategorySelector';
@@ -19,8 +18,9 @@ export function PostEditPage() {
     errors,
     isSubmitting,
     isLoading,
+    hasChanges,
     updateFormData,
-    setFormErrors,
+    setErrors,
     handleSubmit: submitForm,
   } = usePostEditPage(postId);
 
@@ -72,8 +72,9 @@ export function PostEditPage() {
           <CategorySelector
             value={formData.categoryId || ''}
             onChange={({ categoryId }: { categoryId: string }) => updateFormData({ categoryId })}
-            onErrorChange={({ category }: { category?: string }) => category !== undefined && setFormErrors({ category })}
+            onErrorChange={({ category }: { category?: string }) => category !== undefined && setErrors({ category })}
             error={errors.category}
+            allowCurrentNotice={true}
           />
 
           {/* 제목 및 내용 입력 */}
@@ -81,7 +82,7 @@ export function PostEditPage() {
             title={formData.title}
             content={formData.content || ''}
             onChange={updateFormData}
-            onErrorChange={(errorUpdates: { title?: string; content?: string }) => setFormErrors(errorUpdates)}
+            onErrorChange={(errorUpdates: { title?: string; content?: string }) => setErrors(prev => ({ ...prev, ...errorUpdates }))}
             titleError={errors.title}
             contentError={errors.content}
           />
@@ -99,7 +100,7 @@ export function PostEditPage() {
             <Button
               type="submit"
               variant="primary"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !hasChanges}
             >
               {isSubmitting ? '수정중...' : '수정완료'}
             </Button>

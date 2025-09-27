@@ -16,7 +16,7 @@ export function ProductListPage() {
     isLoading,
     totalCount,
     totalPages,
-    hasError,
+    queryError,
     handleProductClick,
     handleSearch,
     handleSortChange,
@@ -74,7 +74,7 @@ export function ProductListPage() {
       <ProductGrid
         products={paginatedProducts}
         isLoading={isLoading}
-        hasError={hasError}
+        hasError={queryError}
         currentPage={currentPage}
         totalPages={totalPages}
         onProductClick={handleProductClick}

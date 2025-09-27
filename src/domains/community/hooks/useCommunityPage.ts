@@ -1,13 +1,11 @@
 "use client";
 
-import { useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import toast from 'react-hot-toast';
 import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 import { PostSort, isValidCategoryId, PostCategoryId } from '@/domains/community/types/community';
 import { usePostsQuery } from '@/domains/community/hooks/usePostQueries';
 import { SearchFilterType } from '@/shared/components/SearchBar';
-import { BusinessError, createBusinessError } from '@/shared/error/BusinessError';
 
 // CommunityPage 전용 타입들
 
@@ -95,27 +93,8 @@ export const useCommunityPage = () => {
     sortBy: state.sortBy,
   }), [state, mapSearchType]);
 
-  // 에러 핸들러
-  const createErrorHandler = useCallback((defaultMessage: string) => 
-    (error: unknown): BusinessError => {
-      if (error instanceof BusinessError) return error;
-      if (error instanceof Error) return createBusinessError.dataProcessing(defaultMessage, error.message);
-      return createBusinessError.dataProcessing(defaultMessage);
-    }, 
-    []
-  );
-
   // 데이터 조회 및 계산된 값들
   const { data, isLoading, error } = usePostsQuery(queryParams);
-  
-  // 에러 처리
-  useEffect(() => {
-    if (error) {
-      const processedError = createErrorHandler('게시글 목록을 불러오는데 실패했습니다.')(error);
-      console.error('Posts query error:', processedError);
-      toast.error(processedError.message);
-    }
-  }, [error, createErrorHandler]);
 
   const { posts, totalCount, totalPages } = useMemo(() => ({
     posts: data?.data || [],
@@ -201,7 +180,7 @@ export const useCommunityPage = () => {
     totalCount,
     totalPages,
     isLoading,
-    hasError: !!error,
+    queryError: !!error,
     
     // 권한
     canCreatePost,

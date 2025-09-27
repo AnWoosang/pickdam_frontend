@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/infrastructure/api/supabaseServer';
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 import { createPaginatedResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils';
 import { MyCommentResponseDto } from '@/domains/user/types/dto/mypageDto';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {const { id: userId } = await params;
-  const { searchParams } = new URL(request.url);
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const limit = parseInt(searchParams.get('limit') || '10', 10);
-  const offset = (page - 1) * limit;
-
+) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
+    const { id: userId } = await params;
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '10', 10);
+    const offset = (page - 1) * limit;
     // 총 개수 조회
-    const { count, error: countError } = await supabaseServer
+    const { count, error: countError } = await supabase
       .from('comment')
       .select('*', { count: 'exact', head: true })
       .eq('author_id', userId)
@@ -25,7 +26,7 @@ export async function GET(
     }
 
     // 댓글 목록 조회 (게시글 정보 포함)
-    const { data: comments, error: commentsError } = await supabaseServer
+    const { data: comments, error: commentsError } = await supabase
       .from('comment')
       .select(`
         id,
@@ -55,8 +56,8 @@ export async function GET(
 
     // 데이터 변환
     const transformedComments: MyCommentResponseDto[] = comments?.map(comment => {
-      const author = Array.isArray(comment.author) ? comment.author[0] : comment.author as any;
-      const post = Array.isArray(comment.post) ? comment.post[0] : comment.post as any;
+      const author = Array.isArray(comment.author) ? comment.author[0] : comment.author as Record<string, unknown>;
+      const post = Array.isArray(comment.post) ? comment.post[0] : comment.post as Record<string, unknown>;
 
       return {
         id: comment.id,

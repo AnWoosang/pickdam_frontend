@@ -6,14 +6,11 @@ import { useLogin } from './useAuthQueries';
 import { useResendEmail } from './useResendEmail';
 import { BusinessError } from '@/shared/error/BusinessError';
 
-interface LoginResult {
-  success: boolean;
-  error?: {
-    message: string;
-    code?: string;
-    email?: string; // for unverified email case
-    details?: string;
-  };
+interface LoginCallbacks {
+  onSuccess?: () => void;
+  onEmailNotVerified?: (email: string) => void;
+  onInvalidCredentials?: () => void;
+  onError?: (message: string) => void;
 }
 
 interface ResendResult {
@@ -25,47 +22,38 @@ interface UseLoginModalReturn {
   // Loading states
   isLoading: boolean;
   isResending: boolean;
-  
+
   // Actions
-  handleLogin: (formData: LoginForm) => Promise<LoginResult>;
+  handleLogin: (formData: LoginForm) => Promise<void>;
   handleResendEmail: (email: string) => Promise<ResendResult>;
 }
 
-export function useLoginModal(): UseLoginModalReturn {
+export function useLoginModal(callbacks?: LoginCallbacks): UseLoginModalReturn {
   const loginMutation = useLogin();
   const { resendEmail, isResending, resendMessage } = useResendEmail();
 
   // 로그인 처리 (순수 비즈니스 로직만)
-  const handleLogin = useCallback(async (formData: LoginForm): Promise<LoginResult> => {
+  const handleLogin = useCallback(async (formData: LoginForm): Promise<void> => {
     try {
       await loginMutation.mutateAsync(formData);
-      return { success: true };
+      // 성공 시 콜백 호출
+      callbacks?.onSuccess?.();
     } catch (error) {
-      // BusinessError 처리
       if (error instanceof BusinessError) {
-        return {
-          success: false,
-          error: {
-            message: error.message,
-            code: error.code,
-            email: error.code === 'EMAIL_NOT_VERIFIED' ? formData.email : undefined,
-            details: error.details,
-          }
-        };
-      }
-      
-      // 기타 Error 처리 (fallback)
-      const errorMessage = error instanceof Error ? error.message : '로그인에 실패했습니다.';
-      return {
-        success: false,
-        error: {
-          message: errorMessage,
-          code: 'UNKNOWN_ERROR',
-          email: undefined
+        // 에러 코드별로 적절한 콜백 호출
+        if (error.code === 'EMAIL_NOT_VERIFIED') {
+          callbacks?.onEmailNotVerified?.(formData.email);
+        } else if (error.code === 'INVALID_CREDENTIALS') {
+          callbacks?.onInvalidCredentials?.();
+        } else {
+          callbacks?.onError?.(error.message);
         }
-      };
+        return;
+      }
+
+      throw error;
     }
-  }, [loginMutation]);
+  }, [loginMutation, callbacks]);
 
   // 이메일 재전송 처리
   const handleResendEmail = useCallback(async (email: string): Promise<ResendResult> => {

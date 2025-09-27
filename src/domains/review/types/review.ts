@@ -4,8 +4,8 @@
 export interface Review {
   id: string;
   productId: string;
-  userId: string;
-  userName: string;
+  memberId: string;
+  nickname: string;
   rating: number;
   sweetness: number;
   menthol: number;
@@ -13,9 +13,9 @@ export interface Review {
   body: number;
   freshness: number;
   content: string;
-  createdAt: string;
+  createdAt: Date;
   images: ReviewImage[];
-  profileImage?: string;
+  profileImageUrl?: string;
 }
 
 // 리뷰 평가 정보

@@ -30,8 +30,8 @@ export function toMyPost(dto: MyPostResponseDto): MyPost {
     content: dto.content,
     authorNickname: dto.authorNickname,
     authorId: dto.authorId,
-    createdAt: dto.createdAt,
-    updatedAt: dto.updatedAt,
+    createdAt: new Date(dto.createdAt),
+    updatedAt: new Date(dto.updatedAt),
     likeCount: dto.likeCount,
     commentCount: dto.commentCount,
     isLiked: dto.isLiked,
@@ -48,8 +48,8 @@ export function toMyComment(dto: MyCommentResponseDto): MyComment {
     postId: dto.postId,
     postTitle: dto.postTitle,
     content: dto.content,
-    createdAt: dto.createdAt,
-    updatedAt: dto.updatedAt,
+    createdAt: new Date(dto.createdAt),
+    updatedAt: new Date(dto.updatedAt),
     likeCount: dto.likeCount,
     parentCommentId: dto.parentCommentId,
     author: dto.author,
@@ -62,9 +62,9 @@ export function toMyComment(dto: MyCommentResponseDto): MyComment {
 export function toMyReview(dto: MyReviewResponseDto): Review {
   return {
     id: dto.id,
-    userId: dto.userId,
-    userName: dto.userName,
-    profileImage: dto.profileImage,
+    memberId: dto.userId,
+    nickname: dto.userName,
+    profileImageUrl: dto.profileImage,
     rating: dto.rating,
     sweetness: dto.sweetness || 0,
     menthol: dto.menthol || 0,
@@ -72,8 +72,8 @@ export function toMyReview(dto: MyReviewResponseDto): Review {
     body: dto.body || 0,
     freshness: dto.freshness || 0,
     content: dto.content,
-    createdAt: dto.createdAt,
-    images: dto.imageUrls?.map((url, index) => ({ image_url: url, image_order: index + 1 })) || [],
+    createdAt: new Date(dto.createdAt),
+    images: dto.imageUrls?.map((url, index) => ({ imageUrl: url, imageOrder: index + 1 })) || [],
     productId: dto.productId || ''
   };
 }

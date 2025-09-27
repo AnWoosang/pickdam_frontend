@@ -3,9 +3,8 @@
 import { Comment } from '@/domains/community/types/community';
 import { useRepliesQuery } from '@/domains/community/hooks/comment/useCommentQueries';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from '@/shared/components/Button';
-import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
 
 interface CommentCardProps {
   comment: Comment;
@@ -31,7 +30,6 @@ export const CommentReplyList = React.memo(({
   CommentCard
 }: CommentReplyListProps) => {
   const [showReplies, setShowReplies] = useState(false);
-  const { user } = useAuthUtils();
 
   // React Query로 답글 데이터 가져오기 (showReplies가 true일 때만 활성화)
   const {
@@ -41,23 +39,16 @@ export const CommentReplyList = React.memo(({
     comment.id,
     {
       page: 1,
-      limit: 50,
-      currentUserId: user?.id
+      limit: 50
     },
     { enabled: showReplies && !isReply }
   );
 
   const replies = repliesData?.data || [];
 
-  // 디버깅을 위한 로그
-  useEffect(() => {
-    console.log('[DEBUG CommentReplyList] Comment ID:', comment.id, 'showReplies:', showReplies, 'replies count:', replies.length, 'isLoading:', isLoadingReplies);
-  }, [comment.id, showReplies, replies.length, isLoadingReplies]);
-
   const handleToggleReplies = useCallback(() => {
-    console.log('[DEBUG CommentReplyList] Toggling replies for comment:', comment.id, 'current showReplies:', showReplies);
     setShowReplies(!showReplies);
-  }, [comment.id, showReplies]);
+  }, [showReplies]);
 
   return (
     <>

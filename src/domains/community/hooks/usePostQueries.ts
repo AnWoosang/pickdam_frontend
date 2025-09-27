@@ -63,11 +63,11 @@ export const useCreatePostMutation = () => {
           }
         }
       )
-      
+
       // 생성된 게시글을 상세 캐시에도 저장
-      queryClient.setQueryData(postQueryKeys.detail(post.id), { 
-        ...post, 
-        comments: [] 
+      queryClient.setQueryData(postQueryKeys.detail(post.id), {
+        ...post,
+        comments: []
       })
     }
   })
@@ -108,8 +108,8 @@ export const useDeletePostMutation = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, authorId }: { id: string; authorId: string }): Promise<boolean> => {
-      return postApi.deletePost(id, authorId);
+    mutationFn: ({ id }: { id: string }): Promise<boolean> => {
+      return postApi.deletePost(id);
     },
     onSuccess: (success: boolean, { id }) => {
       if (success) {
@@ -142,8 +142,8 @@ export const useTogglePostLikeMutation = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, memberId }: { id: string; memberId: string }) => 
-      postApi.togglePostLike(id, memberId),
+    mutationFn: ({ id }: { id: string }) =>
+      postApi.togglePostLike(id),
     onSuccess: (response: PostLikeInfo, { id }) => {
       // 게시글 상세 캐시에서 좋아요 상태 업데이트
         queryClient.setQueryData(postQueryKeys.detail(id), (old: unknown) => {

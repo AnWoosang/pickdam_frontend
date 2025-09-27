@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { StatusCodes } from 'http-status-codes'
 import {
   createPaginatedResponse,
   createSuccessResponse,
   createErrorResponse,
   mapApiError
 } from '@/infrastructure/api/supabaseResponseUtils'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
+import { PostResponseDto, WritePostRequestDto } from '@/domains/community/types/dto/communityDto';
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
     const { searchParams } = new URL(request.url)
-    
+
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
     const category = searchParams.get('category')
@@ -19,13 +20,13 @@ export async function GET(request: NextRequest) {
     const searchType = searchParams.get('searchType') // 검색 타입 파라미터 추가
     const sortByParam = searchParams.get('sortBy') || 'created_at'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
-    
+
     // 허용되는 정렬 컬럼 검증
     const validSortColumns = ['created_at', 'view_count', 'like_count'];
     const sortBy = validSortColumns.includes(sortByParam) ? sortByParam : 'created_at'
-    
+
     // member 뷰를 사용하여 posts 조회
-    let query = supabaseServer
+    let query = supabase
       .from('post')
       .select(`
         *,
@@ -70,15 +71,34 @@ export async function GET(request: NextRequest) {
     query = query.range(offset, offset + limit - 1)
     
     const { data: posts, error, count } = await query
-    
+
     if (error) {
       const mappedError = mapApiError(error)
       const errorResponse = createErrorResponse(mappedError)
       return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
-    
+
+    // DB 데이터를 PostResponseDto 형태로 변환
+    const formattedPosts: PostResponseDto[] = (posts || []).map(post => ({
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      authorId: post.author_id,
+      category: post.category,
+      viewCount: post.view_count,
+      likeCount: post.like_count,
+      commentCount: post.comment_count,
+      createdAt: post.created_at,
+      updatedAt: post.updated_at,
+      isLiked: post.is_liked || false,
+      author: {
+        nickname: post.author.nickname,
+        profileImageUrl: post.author.profile_image_url
+      }
+    }));
+
     return NextResponse.json(createPaginatedResponse(
-      posts || [],
+      formattedPosts,
       {
         total: count || 0,
         page: page,
@@ -98,16 +118,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, content, categoryId, authorId } = await request.json()
+    const supabase = await createSupabaseClientWithCookie()
+    const requestData: WritePostRequestDto = await request.json()
 
     // 게시글 생성 (author 정보도 함께 조회)
-    const { data: postResult, error: postError } = await supabaseServer
+    const { data: postResult, error: postError } = await supabase
       .from('post')
       .insert({
-        title,
-        content,
-        category: categoryId,
-        author_id: authorId
+        title: requestData.title,
+        content: requestData.content,
+        category: requestData.categoryId,
+        author_id: requestData.authorId
       })
       .select(`
         *,
@@ -124,7 +145,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
 
-    return NextResponse.json(createSuccessResponse({ post: postResult }), { status: 201 })
+    // DB 데이터를 PostResponseDto 형태로 변환
+    const formattedPost: PostResponseDto = {
+      id: postResult.id,
+      title: postResult.title,
+      content: postResult.content,
+      authorId: postResult.author_id,
+      category: postResult.category,
+      viewCount: postResult.view_count || 0,
+      likeCount: postResult.like_count || 0,
+      commentCount: postResult.comment_count || 0,
+      createdAt: postResult.created_at,
+      updatedAt: postResult.updated_at,
+      isLiked: false, // 새로 생성된 게시글은 좋아요하지 않은 상태
+      author: {
+        nickname: postResult.author.nickname,
+        profileImageUrl: postResult.author.profile_image_url
+      }
+    };
+
+    return NextResponse.json(createSuccessResponse({ post: formattedPost }), { status: 201 })
 
   } catch (error) {
     const mappedError = mapApiError(error)

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
-import { createSupabaseServerClient } from '@/infrastructure/api/supabaseServerAuth'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 
 export async function POST(_request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient()
+    const supabase = await createSupabaseClientWithCookie()
     const { error } = await supabase.auth.signOut()
 
     if (error) {

@@ -12,6 +12,7 @@ import { Review } from '@/domains/review/types/review';
 import { useReviewEditForm } from '@/domains/review/hooks/useReviewEditForm';
 import { useImageViewer } from '@/domains/image/hooks/useImageViewer';
 import { getValidationErrorMessage, type ReviewValidationErrors } from '@/domains/review/validation/reviewValidation';
+import { ALLOWED_MIME_TYPES } from '@/domains/image/validation/image';
 import { toast } from 'react-hot-toast';
 
 // 평점 옵션
@@ -45,16 +46,13 @@ export const ReviewEditModal = React.memo<ReviewEditModalProps>(function ReviewE
   const {
     formData,
     isSubmitting,
+    hasChanges,
     uploadManager,
-    fileHandlers,
+    handleImageUpload,
     handleFieldChange,
-    handleSubmit,
+    validateForm,
   } = useReviewEditForm({
-    review,
-    onSubmit: onSave,
-    onError: (error) => {
-      console.error('리뷰 수정 오류:', error);
-    }
+    review
   });
 
   const imageViewer = useImageViewer();
@@ -78,23 +76,46 @@ export const ReviewEditModal = React.memo<ReviewEditModalProps>(function ReviewE
   // 성공 처리
   const handleSuccess = React.useCallback(() => {
     setValidationErrors({});
-    toast.success('리뷰가 수정되었습니다!');
     onClose();
   }, [onClose]);
 
   const handleSave = React.useCallback(async () => {
-    const result = await handleSubmit();
+    const validationResult = validateForm();
 
-    if (!result.success) {
-      if (result.type === 'validation' && result.errors) {
-        handleValidationError(result.errors);
-      } else if (result.type === 'submit' && result.message) {
-        handleSubmitError(result.message);
-      }
-    } else if (result.success) {
-      handleSuccess();
+    if (!validationResult.isValid) {
+      handleValidationError(validationResult.errors);
+      return;
     }
-  }, [handleSubmit, handleValidationError, handleSubmitError, handleSuccess]);
+
+    try {
+      const imageUrls = await uploadManager.commitImages();
+
+      const updateData: Review = {
+        id: review.id,
+        productId: review.productId,
+        memberId: review.memberId,
+        nickname: review.nickname,
+        profileImageUrl: review.profileImageUrl,
+        createdAt: review.createdAt,
+        content: formData.content,
+        rating: formData.rating,
+        sweetness: formData.sweetness,
+        menthol: formData.menthol,
+        throatHit: formData.throatHit,
+        body: formData.body,
+        freshness: formData.freshness,
+        images: imageUrls.map((url, index) => ({
+          imageUrl: url,
+          imageOrder: index + 1
+        }))
+      };
+
+      await onSave(updateData);
+      handleSuccess();
+    } catch {
+      handleSubmitError('리뷰 수정에 실패했습니다.');
+    }
+  }, [uploadManager, review, formData, onSave, handleValidationError, handleSubmitError, handleSuccess, validateForm]);
 
   const handleClose = React.useCallback(() => {
     onClose();
@@ -196,11 +217,6 @@ export const ReviewEditModal = React.memo<ReviewEditModalProps>(function ReviewE
           <TextEditor
             content={formData.content}
             onContentChange={handleContentChange}
-            onPaste={fileHandlers.handlePaste}
-            onDragOver={fileHandlers.handleDragOver}
-            onDragLeave={fileHandlers.handleDragLeave}
-            onDrop={fileHandlers.handleDrop}
-            isDragOver={fileHandlers.isDragOver}
             placeholder="리뷰 내용을 입력해주세요..."
             rows={8}
             maxLength={1000}
@@ -219,13 +235,13 @@ export const ReviewEditModal = React.memo<ReviewEditModalProps>(function ReviewE
           </label>
           
           {/* 이미지 미리보기 */}
-          {uploadManager.activeImages.length > 0 && (
+          {uploadManager.imageStates.length > 0 && (
             <div className="flex flex-wrap gap-3 mb-4">
-              {uploadManager.activeImages.map((imageState, index: number) => (
+              {uploadManager.imageStates.map((imageState, index: number) => (
                 <div key={imageState.id} className="relative w-20 h-20">
                   <div
                     className="relative w-full h-full rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-gray-200"
-                    onClick={() => imageViewer.openViewer(uploadManager.allImagePreviewUrls, index)}
+                    onClick={() => imageViewer.openViewer(uploadManager.imageStates.map(state => state.previewUrl), index)}
                   >
                     <Image
                       src={imageState.previewUrl}
@@ -247,15 +263,15 @@ export const ReviewEditModal = React.memo<ReviewEditModalProps>(function ReviewE
           )}
 
           {/* 이미지 업로드 버튼 */}
-          {uploadManager.activeImages.length < uploadManager.maxImages && (
+          {uploadManager.imageStates.length < 5 && (
             <div>
               <input
                 ref={uploadManager.fileInputRef}
                 type="file"
                 id="image-upload-edit"
                 multiple
-                accept="image/*"
-                onChange={fileHandlers.handleImageUpload}
+                accept={ALLOWED_MIME_TYPES.join(',')}
+                onChange={handleImageUpload}
                 className="hidden"
                 disabled={uploadManager.isUploading}
               />
@@ -280,7 +296,7 @@ export const ReviewEditModal = React.memo<ReviewEditModalProps>(function ReviewE
                 )}
               </label>
               <p className="text-xs text-gray-500 mt-1">
-                최대 {uploadManager.maxImages}장까지 업로드 가능 (JPG, PNG) · 자동 압축 및 최적화
+                최대 5장까지 업로드 가능 (JPG, PNG) · 자동 압축 및 최적화
               </p>
             </div>
           )}
@@ -298,7 +314,7 @@ export const ReviewEditModal = React.memo<ReviewEditModalProps>(function ReviewE
           <Button
             variant="primary"
             onClick={handleSave}
-            disabled={isLoading}
+            disabled={isLoading || !hasChanges}
             isLoading={isLoading}
           >
             {isLoading ? '수정 중...' : '수정하기'}

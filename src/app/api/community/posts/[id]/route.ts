@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { StatusCodes } from 'http-status-codes'
 import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
-import { PostResponseDto } from '@/domains/community/types/dto/communityDto'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
+import { PostResponseDto, UpdatePostRequestDto } from '@/domains/community/types/dto/communityDto'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
     const { id } = await params
-    const { searchParams } = new URL(request.url)
-    const currentUserId = searchParams.get('currentUserId')
 
-    const { data: rawPost, error } = await supabaseServer
+    const { data: rawPost, error } = await supabase
       .from('post')
       .select(`
         *,
@@ -35,9 +33,10 @@ export async function GET(
       return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
 
-    // 현재 사용자의 좋아요 상태 확인
-    const isLiked = currentUserId ?
-      rawPost.likes?.some((like: any) => like.member_id === currentUserId) || false :
+    // 현재 사용자의 좋아요 상태 확인 (토큰에서 사용자 ID 가져오기)
+    const { data: { user } } = await supabase.auth.getUser()
+    const isLiked = user ?
+      rawPost.likes?.some((like: { member_id: string }) => like.member_id === user.id) || false :
       false;
 
     // PostResponseDto 형태로 변환
@@ -73,11 +72,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
     const { id } = await params
-    const { title, content, categoryId, authorId } = await request.json()
-    const { searchParams } = new URL(request.url)
-    const currentUserId = searchParams.get('currentUserId')
-
+    const requestData: UpdatePostRequestDto = await request.json()
 
     const updateData: {
       title: string;
@@ -85,21 +82,20 @@ export async function PUT(
       updated_at: string;
       category?: string;
     } = {
-      title,
-      content,
+      title: requestData.title,
+      content: requestData.content,
       updated_at: new Date().toISOString()
     }
 
     // categoryId가 제공되고 유효한 경우에만 업데이트
-    if (categoryId && categoryId.trim() !== '') {
-      updateData.category = categoryId;
+    if (requestData.categoryId && requestData.categoryId.trim() !== '') {
+      updateData.category = requestData.categoryId;
     }
 
-    const { data: rawPost, error } = await supabaseServer
+    const { data: rawPost, error } = await supabase
       .from('post')
       .update(updateData)
       .eq('id', id)
-      .eq('author_id', authorId)
       .is('deleted_at', null)
       .select(`
         *,
@@ -113,16 +109,17 @@ export async function PUT(
       `)
       .single()
     
-    
+
     if (error) {
       const mappedError = mapApiError(error)
       const errorResponse = createErrorResponse(mappedError)
       return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
 
-    // 현재 사용자의 좋아요 상태 확인
-    const isLiked = currentUserId ?
-      rawPost.likes?.some((like: any) => like.member_id === currentUserId) || false :
+    // 현재 사용자의 좋아요 상태 확인 (토큰에서 사용자 ID 가져오기)
+    const { data: { user } } = await supabase.auth.getUser()
+    const isLiked = user ?
+      rawPost.likes?.some((like: { member_id: string }) => like.member_id === user.id) || false :
       false;
 
     // PostResponseDto 형태로 변환
@@ -158,16 +155,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
     const { id } = await params
-    const { authorId } = await request.json()
-    
-    
-    // Soft delete + db trigger (관련 댓글 모두 soft delete , post_image hard delete, post_like, comment_like hard delete)
-    const { error } = await supabaseServer
+
+    // RLS가 작성자 권한을 자동으로 확인
+    const { error } = await supabase
       .from('post')
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', id)
-      .eq('author_id', authorId)
       .is('deleted_at', null)
     
     if (error) {

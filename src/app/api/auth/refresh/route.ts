@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/infrastructure/api/supabaseServerAuth'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
 import { UserSessionResponseDto, SessionResponseDto } from '@/domains/auth/types/dto/authDto'
 import { UserResponseDto } from '@/domains/user/types/dto/userDto'
 
 export async function POST() {
   try {
-    const supabase = await createSupabaseServerClient()
+    const supabase = await createSupabaseClientWithCookie()
 
     // 현재 세션 갱신 시도
     const { data: { session }, error: refreshError } = await supabase.auth.refreshSession()

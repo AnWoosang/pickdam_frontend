@@ -10,7 +10,7 @@ export interface ProductListDataState {
   isLoading: boolean;
   totalCount: number;
   totalPages: number;
-  hasError: boolean;
+  queryError: boolean;
   errorMessage: string | null;
 }
 
@@ -64,7 +64,7 @@ export function useProductListData({
     isLoading,
     totalCount: data?.pagination?.total || 0,
     totalPages,
-    hasError: !!error,
+    queryError: !!error,
     errorMessage: error?.message || null,
   };
 }

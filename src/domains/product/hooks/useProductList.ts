@@ -10,7 +10,7 @@ export function useProductList() {
   // 기존 훅들 사용
   const filters = useProductListFilters();
   
-  const { products, isLoading, totalCount, totalPages, hasError, errorMessage } = useProductListData({
+  const { products, isLoading, totalCount, totalPages, queryError, errorMessage } = useProductListData({
     searchQuery: filters.searchQuery,
     selectedCategories: filters.selectedCategories,
     selectedInhaleTypes: filters.selectedInhaleTypes,
@@ -29,10 +29,10 @@ export function useProductList() {
 
   // 에러 처리: toast로 에러 메시지 표시
   useEffect(() => {
-    if (hasError && errorMessage) {
+    if (queryError && errorMessage) {
       toast.error(errorMessage);
     }
-  }, [hasError, errorMessage]);
+  }, [queryError, errorMessage]);
 
   // 통합된 인터페이스 반환
   return {
@@ -42,7 +42,7 @@ export function useProductList() {
     isLoading,
     totalCount,
     totalPages,
-    hasError,
+    queryError,
     errorMessage,
     
     // 핸들러들

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
-import { CreateReviewRequestDto } from '@/domains/review/types/dto/reviewDto'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
+import { CreateReviewRequestDto, ReviewResponseDto } from '@/domains/review/types/dto/reviewDto'
 
 export async function PUT(
   request: NextRequest,
@@ -10,20 +10,23 @@ export async function PUT(
   try {
     const { id } = await params
     const requestData: CreateReviewRequestDto = await request.json()
-    const { images, throatHit, ...otherUpdates } = requestData
 
     // RPC 함수 호출로 원자적 업데이트 (order 포함)
-    const { data: result, error: rpcError } = await supabaseServer
+    const supabase = await createSupabaseClientWithCookie()
+    const { data: result, error: rpcError } = await supabase
       .rpc('update_review_with_images', {
         p_review_id: id,
-        p_content: otherUpdates.content,
-        p_rating: otherUpdates.rating,
-        p_sweetness: otherUpdates.sweetness,
-        p_menthol: otherUpdates.menthol,
-        p_throat_hit: throatHit,
-        p_body: otherUpdates.body,
-        p_freshness: otherUpdates.freshness,
-        p_images: images || null
+        p_content: requestData.content,
+        p_rating: requestData.rating,
+        p_sweetness: requestData.sweetness,
+        p_menthol: requestData.menthol,
+        p_throat_hit: requestData.throatHit,
+        p_body: requestData.body,
+        p_freshness: requestData.freshness,
+        p_images: requestData.images?.map(img => ({
+          image_url: img.imageUrl,
+          image_order: img.imageOrder
+        })) || null
       })
 
     if (rpcError) {
@@ -43,12 +46,12 @@ export async function PUT(
     }
 
     // RPC에서 반환된 데이터를 ReviewResponseDto 형태로 변환
-    const reviewResponse = {
+    const reviewResponse: ReviewResponseDto = {
       id: result.data.id,
       productId: result.data.productId || "", // productId가 없다면 빈 문자열로 기본값 설정
-      userId: result.data.userId,
-      userName: result.data.userName,
-      profileImage: result.data.profileImage,
+      memberId: result.data.userId,
+      nickname: result.data.userName,
+      profileImageUrl: result.data.profileImage,
       rating: result.data.rating,
       sweetness: result.data.sweetness,
       menthol: result.data.menthol,
@@ -57,7 +60,10 @@ export async function PUT(
       freshness: result.data.freshness,
       content: result.data.content,
       createdAt: result.data.createdAt,
-      images: result.data.images || []
+      images: (result.data.images || []).map((img: { image_url: string; image_order: number }) => ({
+        imageUrl: img.image_url,
+        imageOrder: img.image_order
+      }))
     };
 
     return NextResponse.json(createSuccessResponse(reviewResponse))
@@ -77,7 +83,8 @@ export async function DELETE(
     const { id } = await params
     
     // Soft delete - CASCADE + Trigger가 자동으로 관련 이미지 정리
-    const { error } = await supabaseServer
+    const supabase = await createSupabaseClientWithCookie()
+    const { error } = await supabase
       .from('review')
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', id)

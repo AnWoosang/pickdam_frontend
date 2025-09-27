@@ -4,36 +4,50 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { authApi } from '../api/authApi';
 import {
   LoginForm,
+  FindPasswordForm,
+  ResetPasswordForm,
 } from '@/domains/auth/types/auth'
 import { Role } from '@/domains/auth/types/auth';
+import { User } from '@/domains/user/types/user';
 import { queryClient } from '@/app/providers/QueryProvider';
 import { authKeys } from '@/domains/auth/constants/authQueryKeys';
+import { BusinessError } from '@/shared/error/BusinessError';
+import { isProtectedRoute } from '@/app/router/auth-config';
 
 // 인증 상태 관리의 주요 소스 (React Query)
 export const useAuth = () => {
-  return useQuery({
+  const query = useQuery<User | null>({
     queryKey: authKeys.user(),
-    queryFn: authApi.getCurrentUser,
-    staleTime: 1000 * 60 * 10, // 10분간 fresh
-    gcTime: 1000 * 60 * 60, // 1시간간 메모리에 보관
-    retry: (failureCount, error: any) => {
-      // 401, 403 에러는 재시도하지 않음 (토큰 만료/권한 없음)
-      if (error?.status === 400 || error?.status === 401 || error?.status === 403) {
-        return false;
+    queryFn: async () => {
+      try {
+        return await authApi.getCurrentUser();
+      } catch (error) {
+        // 비보호 라우트에서는 인증 에러를 null로 처리
+        if (error instanceof BusinessError &&
+            typeof window !== 'undefined' &&
+            !isProtectedRoute(window.location.pathname)) {
+          return null;
+        }
+        throw error;
       }
-      return failureCount < 3;
-    }
-  })
+    },
+    staleTime: 1000 * 60 * 30, // 5분간 fresh 유지
+    gcTime: 1000 * 60 * 45,
+    retry: false, // 재시도 완전 비활성화
+  });
+
+  return query;
 }
 
 // 권한 체크 유틸리티 함수들
 export const useAuthUtils = () => {
-  const { data: user } = useAuth();
+  const { data: user, isLoading, error } = useAuth();
 
   return {
-    user,
+    user: user as User | null,
     isAuthenticated: !!user,
-    isLoading: false, // useAuth().isLoading 사용
+    isLoading,
+    error,
     hasRole: (role: Role) => user?.role === role,
     isAdmin: () => user?.role === Role.ADMIN,
     isSeller: () => user?.role === Role.SELLER,
@@ -47,9 +61,14 @@ export const useAuthUtils = () => {
 export const useLogin = () => {
   return useMutation({
     mutationFn: (data: LoginForm) => authApi.loginWithEmail(data),
-    onSuccess: (response) => {
-      // React Query 캐시에 사용자 정보 저장
-      queryClient.setQueryData(authKeys.user(), response.user)
+    onSuccess: (sessionInfo) => {
+      // 캐시에 사용자 정보 저장
+      queryClient.setQueryData(authKeys.user(), sessionInfo.user);
+
+      // 현재 페이지로 리다이렉트 (새로고침으로 동기화 문제 해결)
+      if (typeof window !== 'undefined') {
+        window.location.href = window.location.pathname + window.location.search;
+      }
     }
   })
 }
@@ -59,13 +78,9 @@ export const useLogout = () => {
   return useMutation({
     mutationFn: authApi.logout,
     onSuccess: () => {
-      console.log('Logout successful')
+      queryClient.setQueryData(authKeys.user(), null);
+      queryClient.removeQueries({ queryKey: authKeys.all });
 
-      // React Query 캐시 클리어
-      queryClient.setQueryData(authKeys.user(), null)
-      queryClient.removeQueries({ queryKey: authKeys.all })
-
-      // 홈으로 리다이렉트
       if (typeof window !== 'undefined') {
         window.location.href = '/';
       }
@@ -77,9 +92,33 @@ export const useLogout = () => {
 export const useRefreshSession = () => {
   return useMutation({
     mutationFn: authApi.refreshSession,
-    onSuccess: (response) => {
+    onSuccess: (sessionInfo) => {
       // React Query 캐시에 사용자 정보 저장
-      queryClient.setQueryData(authKeys.user(), response.user)
+      queryClient.setQueryData(authKeys.user(), sessionInfo.user);
     }
+  })
+}
+
+// 비밀번호 찾기 Mutation
+export const useFindPassword = (options?: {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}) => {
+  return useMutation({
+    mutationFn: (data: FindPasswordForm) => authApi.findPassword(data),
+    onSuccess: options?.onSuccess,
+    onError: options?.onError,
+  })
+}
+
+// 비밀번호 재설정 Mutation
+export const useResetPassword = (options?: {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}) => {
+  return useMutation({
+    mutationFn: (data: ResetPasswordForm) => authApi.resetPassword(data),
+    onSuccess: options?.onSuccess,
+    onError: options?.onError,
   })
 }

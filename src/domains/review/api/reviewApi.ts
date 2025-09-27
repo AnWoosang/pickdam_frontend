@@ -62,6 +62,7 @@ export const reviewApi = {
     };
 
 
+
     const response = await apiClient.post<ApiResponse<ReviewResponseDto>>(
       API_ROUTES.PRODUCTS.REVIEWS(params.productId),
       requestDto
@@ -75,7 +76,7 @@ export const reviewApi = {
     // Review를 CreateReviewRequestDto로 변환
     const requestDto: CreateReviewRequestDto = {
       productId: review.productId,
-      memberId: review.userId,
+      memberId: review.memberId,
       content: review.content,
       rating: review.rating,
       sweetness: review.sweetness,

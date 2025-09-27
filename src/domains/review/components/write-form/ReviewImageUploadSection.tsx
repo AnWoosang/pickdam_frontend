@@ -4,45 +4,56 @@ import { Upload, X } from 'lucide-react';
 import { Button } from '@/shared/components/Button';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { useImageViewer } from '@/domains/image/hooks/useImageViewer';
-import { useNewImageManager } from '@/domains/image/hooks/useNewImageManager';
-import { Image as ImageType } from '@/domains/image/types/Image';
-
-const ACCEPTED_IMAGE_TYPES = 'image/jpeg,image/jpg,image/png,image/webp,image/gif';
+import { useImageManager } from '@/domains/image/hooks/useImageManager';
+import { IMAGE_CONFIG } from '@/domains/image/types/Image';
+import { ALLOWED_MIME_TYPES } from '@/domains/image/validation/image';
 
 interface ImageUploadManager {
-  commitUploads: () => Promise<ImageType[]>;
+  commitUploads: () => Promise<string[]>;
   resetImages: () => void;
   isUploading: boolean;
 }
 
 interface ReviewImageUploadProps {
   onImagesChange?: (imageUrls: string[]) => void;
-  onUploadError?: (error: string) => void;
   onGetUploadManager?: (manager: ImageUploadManager) => void;
 }
 
-export const ReviewImageUpload = React.memo(function ReviewImageUpload({ onImagesChange, onUploadError, onGetUploadManager }: ReviewImageUploadProps) {
+export const ReviewImageUpload = React.memo(function ReviewImageUpload({ onImagesChange, onGetUploadManager }: ReviewImageUploadProps) {
   const imageViewer = useImageViewer();
-  
-  // 직접 이미지 매니저 사용
-  const uploadManager = useNewImageManager({
-    contentType: 'review',
-    onUploadError: React.useCallback((error: string) => {
-      onUploadError?.(error);
-    }, [onUploadError]),
+
+  // 통합된 이미지 매니저 사용
+  const uploadManager = useImageManager({
+    contentType: 'reviews',
+    mode: 'create',
   });
+
+  // imageStates에서 필요한 데이터 계산
+  const imageUrls = React.useMemo(() =>
+    uploadManager.imageStates
+      .filter(state => state.uploadedImage)
+      .map(state => state.uploadedImage!.url),
+    [uploadManager.imageStates]
+  );
+
+  const imagePreviewUrls = React.useMemo(() =>
+    uploadManager.imageStates.map(state => state.previewUrl),
+    [uploadManager.imageStates]
+  );
+
+  const maxImages = IMAGE_CONFIG.reviews.maxFiles;
 
   // 상위 컴포넌트에 현재 상태 직접 전달
   React.useEffect(() => {
-    onImagesChange?.(uploadManager.imageUrls);
-  }, [uploadManager.imageUrls, onImagesChange]);
+    onImagesChange?.(imageUrls);
+  }, [imageUrls, onImagesChange]);
 
   // 업로드 매니저 객체를 메모이제이션
   const managerObject = React.useMemo(() => ({
-    commitUploads: uploadManager.commitUploads,
+    commitUploads: uploadManager.commitImages,
     resetImages: uploadManager.resetImages,
     isUploading: uploadManager.isUploading,
-  }), [uploadManager.commitUploads, uploadManager.resetImages, uploadManager.isUploading]);
+  }), [uploadManager.commitImages, uploadManager.resetImages, uploadManager.isUploading]);
 
   React.useEffect(() => {
     onGetUploadManager?.(managerObject);
@@ -52,14 +63,21 @@ export const ReviewImageUpload = React.memo(function ReviewImageUpload({ onImage
   const handleFileChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     uploadManager.addImages(files);
+    // input 값 초기화
+    if (e.target) {
+      e.target.value = '';
+    }
   }, [uploadManager]);
 
   const handleImageClick = React.useCallback((index: number) => {
-    imageViewer.openViewer(uploadManager.imagePreviewUrls, index);
-  }, [imageViewer, uploadManager.imagePreviewUrls]);
+    imageViewer.openViewer(imagePreviewUrls, index);
+  }, [imageViewer, imagePreviewUrls]);
 
   const handleRemoveImage = React.useCallback((index: number) => {
-    uploadManager.removeImage(index);
+    const imageState = uploadManager.imageStates[index];
+    if (imageState) {
+      uploadManager.removeImage(imageState.id);
+    }
   }, [uploadManager]);
 
   return (
@@ -69,9 +87,9 @@ export const ReviewImageUpload = React.memo(function ReviewImageUpload({ onImage
       </label>
       
       {/* 이미지 미리보기 - blob URL 사용으로 즉시 표시 */}
-      {uploadManager.imagePreviewUrls.length > 0 && (
+      {imagePreviewUrls.length > 0 && (
         <div className="flex flex-wrap gap-3 mb-4">
-          {uploadManager.imagePreviewUrls.map((previewUrl, index) => (
+          {imagePreviewUrls.map((previewUrl, index) => (
             <div key={index} className="relative w-20 h-20">
               <div
                 className="relative w-full h-full rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-gray-200"
@@ -97,14 +115,14 @@ export const ReviewImageUpload = React.memo(function ReviewImageUpload({ onImage
       )}
 
       {/* 이미지 업로드 버튼 */}
-      {uploadManager.imagePreviewUrls.length < uploadManager.maxImages && (
+      {imagePreviewUrls.length < maxImages && (
         <div>
           <input
             ref={uploadManager.fileInputRef}
             type="file"
             id="image-upload"
             multiple
-            accept={ACCEPTED_IMAGE_TYPES}
+            accept={ALLOWED_MIME_TYPES.join(',')}
             onChange={handleFileChange}
             className="hidden"
             disabled={uploadManager.isUploading}
@@ -130,7 +148,7 @@ export const ReviewImageUpload = React.memo(function ReviewImageUpload({ onImage
             )}
           </label>
           <p className="text-xs text-gray-500 mt-1">
-            최대 {uploadManager.maxImages}장까지 업로드 가능 (JPG, PNG) · 자동 압축 및 최적화
+            최대 {maxImages}장까지 업로드 가능 (JPG, PNG, JPEG, GIF)
           </p>
         </div>
       )}

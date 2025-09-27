@@ -67,6 +67,37 @@ export function createErrorResponse(error: MappedError): ApiResponse {
  * Auth 에러 매핑 함수 (Built-in 유틸리티 활용)
  */
 function mapAuthApiError(error: AuthApiError): MappedError {
+  // 이메일 미인증 에러 특별 처리
+  if (error.message && error.message.includes('Email not confirmed')) {
+    return {
+      statusCode: StatusCodes.FORBIDDEN,
+      errorCode: 'EMAIL_NOT_VERIFIED' as ApiErrorCode,
+      message: 'Email verification required',
+      details: error.message
+    }
+  }
+
+  // 잘못된 로그인 정보 에러 처리
+  if (error.message && error.message.includes('Invalid login credentials')) {
+    return {
+      statusCode: StatusCodes.BAD_REQUEST,
+      errorCode: ApiErrorCode.INVALID_CREDENTIALS,
+      message: '이메일 또는 비밀번호가 올바르지 않습니다.',
+      details: error.message
+    }
+  }
+
+  // 동일한 비밀번호 에러 처리
+  if (error.code === 'same_password' ||
+      (error.message && error.message.includes('New password should be different from the old password'))) {
+    return {
+      statusCode: StatusCodes.BAD_REQUEST,
+      errorCode: ApiErrorCode.SAME_PASSWORD,
+      message: error.message,
+      details: error.message
+    }
+  }
+
   // Auth 에러는 원본 정보 그대로 사용
   return {
     statusCode: error.status,
@@ -130,29 +161,43 @@ function mapPostgresCodeToHttpStatus(pgCode: string): number {
 }
 
 function mapPostgresError(error: PostgresError): MappedError {
-  // PostgreSQL/PostgREST 에러를 ApiErrorCode로 매핑
-  let errorCode: ApiErrorCode
+  // RPC 에러 메시지 기반 우선 처리
+  const message = error.message || '';
+  let statusCode = mapPostgresCodeToHttpStatus(error.code);
+  let errorCode: ApiErrorCode;
 
-  switch (error.code) {
-    case 'PGRST116': // No rows returned
-      errorCode = ApiErrorCode.NOT_FOUND
-      break
-    case 'PGRST117': // More than one row returned
-      errorCode = ApiErrorCode.CONFLICT
-      break
-    case '23505': // unique_violation
-      errorCode = ApiErrorCode.ALREADY_EXISTS
-      break
-    case '23503': // foreign_key_violation
-    case '23502': // not_null_violation
-      errorCode = ApiErrorCode.INVALID_INPUT
-      break
-    default:
-      errorCode = ApiErrorCode.DATABASE_ERROR
+  if (message.includes('Unauthorized') || message.includes('User not logged in')) {
+    statusCode = StatusCodes.UNAUTHORIZED;
+    errorCode = ApiErrorCode.UNAUTHORIZED;
+  } else if (message.includes('Forbidden') || message.includes('You can only')) {
+    statusCode = StatusCodes.FORBIDDEN;
+    errorCode = ApiErrorCode.FORBIDDEN;
+  } else if (message.includes('not found') || message.includes('already deleted')) {
+    statusCode = StatusCodes.NOT_FOUND;
+    errorCode = ApiErrorCode.NOT_FOUND;
+  } else {
+    // 기존 PostgreSQL 에러 코드 매핑
+    switch (error.code) {
+      case 'PGRST116': // No rows returned
+        errorCode = ApiErrorCode.NOT_FOUND
+        break
+      case 'PGRST117': // More than one row returned
+        errorCode = ApiErrorCode.CONFLICT
+        break
+      case '23505': // unique_violation
+        errorCode = ApiErrorCode.ALREADY_EXISTS
+        break
+      case '23503': // foreign_key_violation
+      case '23502': // not_null_violation
+        errorCode = ApiErrorCode.INVALID_INPUT
+        break
+      default:
+        errorCode = ApiErrorCode.DATABASE_ERROR
+    }
   }
 
   return {
-    statusCode: mapPostgresCodeToHttpStatus(error.code),
+    statusCode: statusCode,
     errorCode: errorCode,
     message: error.message,
     details: error.details
@@ -164,7 +209,17 @@ function mapPostgresError(error: PostgresError): MappedError {
  */
 function mapByHttpStatus(error: unknown): MappedError {
   const errorObj = error as { status?: number; statusCode?: number; message?: string; code?: string };
-  const status = errorObj.status || errorObj.statusCode || StatusCodes.INTERNAL_SERVER_ERROR
+  let status = errorObj.status || errorObj.statusCode || StatusCodes.INTERNAL_SERVER_ERROR
+
+  // RPC 에러 메시지 기반 상태 코드 매핑
+  const message = errorObj.message || '';
+  if (message.includes('Unauthorized') || message.includes('User not logged in')) {
+    status = StatusCodes.UNAUTHORIZED;
+  } else if (message.includes('Forbidden') || message.includes('You can only')) {
+    status = StatusCodes.FORBIDDEN;
+  } else if (message.includes('not found') || message.includes('already deleted')) {
+    status = StatusCodes.NOT_FOUND;
+  }
 
   // 커스텀 코드 우선 처리
   if (errorObj.code === 'EMAIL_NOT_VERIFIED') {
@@ -226,26 +281,14 @@ export function mapApiError(error: unknown): MappedError {
     // console.error('API Error:', error)
   }
 
-  // 1. PostgreSQL 에러 - 최우선 처리
-  if (isPostgresError(error)) {
-    return mapPostgresError(error)
-  }
-
-
   // 특별한 Auth 에러 케이스들
   if (isAuthSessionMissingError(error)) {
-    console.log(error)
     return {
       statusCode: error.status,
       errorCode: ApiErrorCode.SESSION_MISSING,
       message: error.message,
       details: error.message
     }
-  }
-
-  // 2. Auth 에러 - Built-in 유틸리티 활용
-  if (isAuthApiError(error)) {
-    return mapAuthApiError(error)
   }
 
   if (isAuthWeakPasswordError(error)) {
@@ -257,11 +300,17 @@ export function mapApiError(error: unknown): MappedError {
     }
   }
 
-  // 3. Storage 에러 - Built-in 유틸리티 활용
+  if (isAuthApiError(error)) {
+    return mapAuthApiError(error)
+  }
+
+  if (isPostgresError(error)) {
+    return mapPostgresError(error)
+  }
+
   if (isStorageError(error)) {
     return mapStorageApiError(error)
   }
 
-  // 4. 일반 에러 - HTTP 상태 코드로 처리
   return mapByHttpStatus(error)
 }

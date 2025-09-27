@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
 import { ROUTES } from '@/app/router/routes'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { supabaseAdmin } from "@/infrastructure/api/supabaseAdmin";
 import { ResendEmailRequestDto } from '@/domains/auth/types/dto/authDto'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, type }: ResendEmailRequestDto = await request.json()
-    
-    const { error } = await supabaseServer.auth.resend({
-      type: type || 'signup',
-      email: email,
+    const requestData: ResendEmailRequestDto = await request.json()
+
+    const { error } = await supabaseAdmin.auth.resend({
+      type: requestData.type || 'signup',
+      email: requestData.email,
       options: {
         emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}${ROUTES.AUTH.VERIFY}`
       }

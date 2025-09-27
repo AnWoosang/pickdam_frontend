@@ -31,11 +31,9 @@ export const CommentReplyWrite = React.memo(({
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const { user } = useAuthUtils();
-  const { requireAuth } = useUIStore();
+  const { showToast } = useUIStore();
 
   const handleToggleReplyForm = useCallback(() => {
-    if (!requireAuth()) return;
-    
     if (!showReplyForm) {
       const mentionText = `@${comment.author.nickname} `;
       setReplyContent(mentionText);
@@ -44,13 +42,9 @@ export const CommentReplyWrite = React.memo(({
       setShowReplyForm(false);
       setReplyContent('');
     }
-  }, [showReplyForm, comment.author.nickname, requireAuth]);
+  }, [showReplyForm, comment.author.nickname]);
 
   const handleReply = useCallback(() => {
-    if (!replyContent.trim()) {
-      alert('내용을 입력해주세요.');
-      return;
-    }
     
     onCreateReply({
       content: replyContent.trim(),
@@ -60,12 +54,11 @@ export const CommentReplyWrite = React.memo(({
         setShowReplyForm(false);
         onUpdate();
       },
-      onError: (error) => {
-        console.error('대댓글 작성 실패:', error);
-        alert('대댓글 작성에 실패했습니다.');
+      onError: () => {
+        showToast('답글 작성에 실패했습니다.', 'error');
       }
     });
-  }, [replyContent, onCreateReply, rootCommentId, comment.id, onUpdate]);
+  }, [replyContent, onCreateReply, rootCommentId, comment.id, onUpdate, showToast]);
 
   const handleCancelReply = useCallback(() => {
     setShowReplyForm(false);

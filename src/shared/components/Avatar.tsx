@@ -33,7 +33,7 @@ export function Avatar({
     large: 'w-8 h-8'
   };
 
-  const baseClasses = `${sizeClasses[size]} bg-primary-light rounded-full flex items-center justify-center overflow-hidden border border-gray-200 ${className}`;
+  const baseClasses = `${sizeClasses[size]} bg-primary-light rounded-full flex items-center justify-center overflow-hidden border border-gray-200 relative ${className}`;
 
   // 프로필 사진이 있는 경우
   if (src) {
@@ -43,7 +43,7 @@ export function Avatar({
           src={src}
           alt={alt}
           fill
-          className="object-cover"
+          className="object-cover rounded-full"
           sizes={sizeClasses[size].replace('w-', '').replace('h-', '').split(' ')[0]}
         />
       </div>

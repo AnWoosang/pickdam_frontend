@@ -1,20 +1,12 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
 import { BusinessError, createBusinessError } from '@/shared/error/BusinessError'
-import { ApiErrorCode, API_ERROR_MESSAGES } from '@/shared/error/errorCodes'
 import { useUIStore } from '@/domains/auth/store/authStore'
 import { isProtectedRoute } from '@/app/router/auth-config'
 import { queryClient } from '@/app/providers/QueryProvider'
 import { authKeys } from '@/domains/auth/constants/authQueryKeys'
-import toast from 'react-hot-toast'
 
 // Axios 인스턴스 생성 - 상대 경로 사용으로 CORS 문제 해결
-const baseURL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-domain.com/api' 
-  : '/api';
-
-if (typeof window !== 'undefined') {
-  console.log('Window location:', window.location.href);
-}
+const baseURL = '/api';
 
 const axiosClient: AxiosInstance = axios.create({
   baseURL,
@@ -29,7 +21,7 @@ const handleUnauthorizedError = async (errorData: any): Promise<BusinessError> =
   // 보호된 라우트에서만 로그인 모달 표시
   if (typeof window !== 'undefined' && isProtectedRoute(window.location.pathname)) {
     useUIStore.getState().openLoginModal();
-    toast.error('로그인이 필요한 서비스입니다.');
+    useUIStore.getState().showToast('로그인이 필요한 서비스입니다.', 'error');
   }
 
   // React Query 캐시에서 사용자 정보 제거
@@ -62,21 +54,18 @@ const handleTokenRefresh = async (originalError: AxiosError): Promise<any> => {
       } else {
         throw new Error('토큰 갱신 실패');
       }
-    } catch (refreshError) {
+    } catch {
       // 토큰 갱신 실패 → handleUnauthorizedError 호출
-      console.log('❌ [axiosClient] 토큰 갱신 실패, 권한 없음 처리');
       const errorData = (originalError.response?.data as any)?.error;
       return await handleUnauthorizedError(errorData);
     }
   } else {
-    // Remember Me가 없으면 바로 handleUnauthorizedError 호출
-    console.log('🔒 [axiosClient] Remember Me 비활성화, 권한 없음 처리');
     const errorData = (originalError.response?.data as any)?.error;
     return await handleUnauthorizedError(errorData);
   }
 };
 
-const handleApiError = async (error: AxiosError): Promise<BusinessError> => {
+const handleApiError = async (error: AxiosError): Promise<BusinessError | never> => {
   if (error.response?.data && !(error.response.data as any).success && (error.response.data as any).error) {
     const errorData = (error.response.data as any).error;
 
@@ -84,29 +73,36 @@ const handleApiError = async (error: AxiosError): Promise<BusinessError> => {
     if (errorData.statusCode === 401 || errorData.statusCode === 403) {
       return await handleTokenRefresh(error);
     }
+
     else {
       // 다른 에러들은 기존처럼 처리
-      return createBusinessError.fromMappedError(errorData);
+      throw createBusinessError.fromMappedError(errorData);
     }
   } else {
     let statusCode: number;
+    let userMessage: string;
 
-    if (error.code === 'ECONNABORTED' || error.code === 'ECONNREFUSED') {
-      // 서버 연결/응답 문제
-      statusCode = 500;
-    } else if (error.code === 'ENOTFOUND') {
-      // DNS/인프라 문제
-      statusCode = 503;
-    } else if (error.code === 'ERR_NETWORK' || !error.response) {
+    if (error.code === 'ERR_NETWORK' || !error.response) {
       // 네트워크 연결 문제
       statusCode = 0;
+      userMessage = '인터넷 연결을 확인하고 다시 시도해주세요.';
     } else {
-      statusCode = error.response?.status || 500;
+      // 모든 서버/시스템 에러는 일시적인 문제로 처리
+      if (error.code === 'ECONNABORTED' || error.code === 'ECONNREFUSED') {
+        statusCode = 500;
+      } else if (error.code === 'ENOTFOUND') {
+        statusCode = 503;
+      } else {
+        statusCode = error.response?.status || 500;
+      }
+      userMessage = '일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
     }
 
-    return new BusinessError(
+    // 모든 네트워크/시스템 에러는 토스트로만 처리
+    useUIStore.getState().showToast(userMessage, 'error');
+    throw new BusinessError(
       error.code || 'UNKNOWN_ERROR',
-      error.message || '알 수 없는 오류가 발생했습니다.',
+      userMessage,
       statusCode,
       `원본 에러 정보: ${JSON.stringify({ name: error.name })}`
     );
@@ -116,43 +112,21 @@ const handleApiError = async (error: AxiosError): Promise<BusinessError> => {
 // 요청 인터셉터
 axiosClient.interceptors.request.use(
   (config) => {
-    // 요청 전 처리
-    console.log(`🚀 [axiosClient] API Request: ${config.method?.toUpperCase()} ${config.url}`)
-
-    // 요청 데이터 로그 추가
-    if (config.data) {
-      console.log('📝 [axiosClient] Request Data:', config.data);
-    }
-    
-    // 쿠키 기반 인증을 사용하므로 withCredentials 설정
     config.withCredentials = true
-
     return config
   },
   (error) => {
-    console.error('Request interceptor error:', error)
     return Promise.reject(error)
   }
 )
 
-
 // 응답 인터셉터
 axiosClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    // 응답 데이터 로깅
-    console.log(`🔔 [axiosClient] API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`)
-    console.log('🔔 [axiosClient] Status:', response.status)
-    console.log('🔔 [axiosClient] Data:', response.data)
     return response
   },
   async (error: AxiosError) => {
-    const result = await handleApiError(error);
-
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('🔄 [axiosClient] API Error:', error);
-    }
-
-    throw result;
+    await handleApiError(error);
   }
 )
 

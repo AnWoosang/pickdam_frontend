@@ -6,6 +6,7 @@ export interface PasswordStrength {
   text: string;
   color: string;
   requirements: string[];
+  score: number;
 }
 
 // 이메일 validation

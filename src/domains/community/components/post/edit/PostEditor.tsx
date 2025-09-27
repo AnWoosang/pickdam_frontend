@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { useQuill } from '@/domains/community/hooks/useQuill';
 import 'react-quill/dist/quill.snow.css';
 
-const ReactQuill = dynamic(() => import('react-quill'), {
+const ReactQuill = dynamic(() => import('react-quill-new'), {
   ssr: false,
   loading: () => <div className="min-h-[300px] border border-gray-300 rounded-lg p-4">에디터 로딩 중...</div>
 });
@@ -50,7 +50,7 @@ export function PostEditor({
   };
 
   // Use Quill hook
-  const { quillRef, textLength, modules, handleChange } = useQuill({
+  const { textLength, modules, handleChange } = useQuill({
     content,
     onChange: handleContentChange
   });
@@ -101,7 +101,6 @@ export function PostEditor({
           >
             {/* ReactQuill 컴포넌트 */}
             <ReactQuill
-              ref={quillRef}
               theme="snow"
               modules={modules}
               value={content}

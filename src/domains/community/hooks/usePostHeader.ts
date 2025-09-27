@@ -1,13 +1,10 @@
 "use client";
 
 import { Post } from '@/domains/community/types/community';
-import { useUpdatePostMutation } from '@/domains/community/hooks/usePostQueries';
-import { DEFAULT_CATEGORY_ID } from '@/domains/community/types/community';
 
 import { useCallback } from 'react';
-import toast from 'react-hot-toast';
 import { User } from '@/domains/user/types/user';
-import { BusinessError, createBusinessError } from '@/shared/error/BusinessError';
+import { useUIStore } from '@/domains/auth/store/authStore';
 
 interface UsePostHeaderProps {
   post: Post;
@@ -16,50 +13,10 @@ interface UsePostHeaderProps {
 }
 
 export const usePostHeader = ({ post, user, onPostDelete }: UsePostHeaderProps) => {
-  // 뮤테이션
-  const updatePostMutation = useUpdatePostMutation();
-  
-  // 에러 핸들러
-  const createErrorHandler = useCallback((defaultMessage: string) => 
-    (error: unknown): BusinessError => {
-      if (error instanceof BusinessError) return error;
-      if (error instanceof Error) return createBusinessError.dataProcessing(defaultMessage, error.message);
-      return createBusinessError.dataProcessing(defaultMessage);
-    }, 
-    []
-  );
-  
+  const { showToast } = useUIStore();
+
   // 작성자 확인
   const isOwner = user && (user.id === post.authorId);
-
-  // 편집 저장 핸들러
-  const handleSaveEdit = useCallback((updatedData: { title: string; content: string }, onSuccess?: () => void) => {
-    if (!user) {
-      const authError = createBusinessError.unauthorized('로그인이 필요합니다.');
-      toast.error(authError.message);
-      return;
-    }
-
-    updatePostMutation.mutate({
-      id: post.id,
-      form: {
-        title: updatedData.title,
-        content: updatedData.content,
-        categoryId: post.category?.id || DEFAULT_CATEGORY_ID,
-        authorId: user.id
-      }
-    }, {
-      onSuccess: () => {
-        toast.success('게시글이 수정되었습니다.');
-        onSuccess?.();
-      },
-      onError: (error) => {
-        const processedError = createErrorHandler('게시글 수정에 실패했습니다.')(error);
-        console.error('PostHeader mutation error:', processedError);
-        toast.error(processedError.message);
-      }
-    });
-  }, [user, post.id, post.category?.id, updatePostMutation, createErrorHandler]);
 
   // 삭제 확인 핸들러
   const handleConfirmDelete = useCallback(() => {
@@ -81,33 +38,29 @@ export const usePostHeader = ({ post, user, onPostDelete }: UsePostHeaderProps) 
         if (error instanceof Error && error.name === 'AbortError') {
           return;
         }
-        // 공유 실패 시 클립보드로 대체
-        const shareError = createErrorHandler('공유에 실패했습니다.')(error);
-        console.error('Share failed:', shareError);
+        // 공유 실패 시 클립보드로 대체하고 에러 throw
+        throw new Error('공유에 실패했습니다.');
       }
     }
 
     // 클립보드 복사
     try {
       await navigator.clipboard.writeText(url);
-      toast.success('링크가 클립보드에 복사되었습니다.');
-    } catch (error) {
-      const clipboardError = createErrorHandler('클립보드 복사에 실패했습니다.')(error);
-      console.error('Clipboard copy failed:', clipboardError);
+      showToast('링크가 클립보드에 복사되었습니다.', 'success');
+    } catch {
       // 클립보드 실패 시 수동 복사
-      prompt('다음 링크를 복사하세요:', url);
+      const userCopied = prompt('다음 링크를 복사하세요:', url);
+      if (userCopied !== null) {
+        showToast('링크를 수동으로 복사해주세요.', 'info');
+      }
+      throw new Error('클립보드 복사에 실패했습니다.');
     }
-  }, [post?.title, createErrorHandler]);
+  }, [post?.title, showToast]);
 
   return {
     // 상태
     isOwner,
-    
-    // 뮤테이션 상태
-    isSubmitting: updatePostMutation.isPending,
-    
     // 핸들러
-    handleSaveEdit,
     handleConfirmDelete,
     handleShare,
   };

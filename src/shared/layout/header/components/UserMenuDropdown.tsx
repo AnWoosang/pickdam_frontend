@@ -27,13 +27,8 @@ export function UserMenuDropdown({
   const logoutMutation = useLogout();
 
   const handleLogout = async () => {
-    try {
-      await logoutMutation.mutateAsync();
-      onToggle(); // 드롭다운 닫기
-    } catch (error) {
-      console.error('로그아웃 실패:', error);
-      onToggle(); // 실패해도 드롭다운 닫기
-    }
+    await logoutMutation.mutateAsync();
+    onToggle(); // 드롭다운 닫기
   };
 
   const handleMypageClick = () => {

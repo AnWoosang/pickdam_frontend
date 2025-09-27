@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { AlertCircle, User } from 'lucide-react';
 import { GENDER_LABELS } from '@/domains/user/types/user';
-import { LoginModal } from '@/domains/auth/components/LoginModal';
 import { Button } from '@/shared/components/Button';
+import { useUIStore } from '@/domains/auth/store/authStore';
 import { TermsModal } from '@/shared/components/TermsModal';
 import { TERMS_DATA, TermsType } from '@/shared/constants/terms';
 import { useSignupForm } from '../../hooks/signup/useSignupForm';
@@ -31,9 +31,8 @@ export function SignupPage({ className = '' }: SignupPageProps) {
   } = useSignupForm();
 
   // UI 상태 관리 (UI 로직)
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const { openLoginModal } = useUIStore();
   const [activeTermsModal, setActiveTermsModal] = useState<TermsType | null>(null);
-
 
   return (
     <div className={`max-w-md mx-auto ${className}`}>
@@ -194,7 +193,7 @@ export function SignupPage({ className = '' }: SignupPageProps) {
               type="button"
               variant="ghost"
               size="small"
-              onClick={() => setIsLoginModalOpen(true)}
+              onClick={openLoginModal}
               className="font-medium text-primary hover:underline p-0 h-auto"
             >
               로그인
@@ -202,12 +201,6 @@ export function SignupPage({ className = '' }: SignupPageProps) {
           </p>
         </div>
       </div>
-      
-      {/* 로그인 모달 */}
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-      />
       
       {/* 약관 모달 */}
       {activeTermsModal && (

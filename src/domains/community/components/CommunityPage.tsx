@@ -27,7 +27,7 @@ export function CommunityPage() {
     totalCount,
     totalPages,
     isLoading,
-    hasError,
+    queryError,
     canCreatePost,
     
     // 핸들러들
@@ -102,14 +102,15 @@ export function CommunityPage() {
       {isLoading && <LoadingSpinner />}
 
       {/* 에러 상태 */}
-      {hasError && (
+      {queryError && (
         <ErrorMessage 
-          message="게시글을 불러오는데 실패했습니다."
+          message="게시글을 불러오는데 실패했습니다. 잠시 후 다시 실행해주세요."
+          onRetry={() => window.location.reload()}
         />
       )}
 
       {/* 게시글 목록 */}
-      {!hasError && (
+      {!queryError && (
         <div className="space-y-4">
           {posts.length > 0 ? (
             posts.map((post: Post, index: number) => (
@@ -129,7 +130,7 @@ export function CommunityPage() {
       )}
 
       {/* 페이지네이션 */}
-      {!hasError && !isLoading && totalPages > 1 && (
+      {!queryError && !isLoading && totalPages > 1 && (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}

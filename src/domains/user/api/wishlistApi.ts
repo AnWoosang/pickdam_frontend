@@ -5,6 +5,7 @@ import { API_ROUTES } from '@/app/router/apiRoutes'
 import { PaginationResult } from '@/shared/types/pagination'
 import { PaginatedResponse, ApiResponse } from '@/shared/api/types'
 import { ProductResponseDto, ToggleWishlistResponseDto } from '@/domains/product/types/dto/productDto';
+import { ToggleWishlistRequestDto, RemoveMultipleWishlistRequestDto } from '@/domains/user/types/dto/userDto';
 import { toProduct } from '@/domains/product/types/dto/productMapper';
 import { toWishlistLikeInfo } from '@/domains/user/types/dto/userMapper';
 
@@ -25,8 +26,11 @@ export const getWishlistProducts = async (
 
 // 찜 상태 토글 (추가/제거)
 export const toggleWishlist = async (userId: string, productId: string): Promise<WishlistLikeInfo> => {
+  const requestDto: ToggleWishlistRequestDto = {};
+
   const response = await apiClient.post<ApiResponse<ToggleWishlistResponseDto>>(
-    API_ROUTES.USERS.WISHLIST_TOGGLE(userId, productId)
+    API_ROUTES.USERS.WISHLIST_TOGGLE(userId, productId),
+    requestDto
   );
 
   return toWishlistLikeInfo(response.data!);
@@ -34,8 +38,12 @@ export const toggleWishlist = async (userId: string, productId: string): Promise
 
 // 찜 목록에서 여러 상품 일괄 삭제
 export const removeMultipleFromWishlist = async (userId: string, productIds: string[]): Promise<void> => {
+  const requestDto: RemoveMultipleWishlistRequestDto = {
+    productIds: productIds
+  };
+
   await apiClient.delete(API_ROUTES.USERS.WISHLIST(userId), {
-    data: { productIds }
+    data: requestDto
   });
 }
 

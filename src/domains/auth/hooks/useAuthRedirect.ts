@@ -2,11 +2,11 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { authStore } from '../store/authStore';
+import { useAuthUtils } from './useAuthQueries';
 
 // 인증 상태 확인 및 리다이렉트 처리를 위한 커스텀 훅
 export function useAuthRedirect() {
-  const { isAuthenticated, isLoading } = authStore();
+  const { isAuthenticated, isLoading } = useAuthUtils();
   const router = useRouter();
 
   useEffect(() => {

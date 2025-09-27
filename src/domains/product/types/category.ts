@@ -106,7 +106,7 @@ export const getProductCategoriesForMain = (mainCategory: MainCategory): Product
 
 export const getMainCategoryByProductCategory = (productCategory: ProductCategory): MainCategory => {
   const config = CATEGORY_CONFIG.find(c => c.productCategories.includes(productCategory));
-  return config?.id || MainCategory.ACCESSORY;
+  return config?.id || MainCategory.OTHER;
 };
 
 // 서브카테고리 관련 헬퍼 함수들

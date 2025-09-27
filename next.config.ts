@@ -3,6 +3,9 @@ import withBundleAnalyzer from '@next/bundle-analyzer';
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 개발 환경에서는 React Strict Mode 비활성화 (중복 요청 방지)
+  reactStrictMode: process.env.NODE_ENV !== 'development',
+
   // 소스맵 완전 비활성화 (성능 향상)
   productionBrowserSourceMaps: false,
   

@@ -16,6 +16,7 @@ export const ROUTES = {
     CALLBACK: '/auth/callback',
     VERIFY: '/auth/verify',
     VERIFY_EMAIL: '/auth/verify-email',
+    FIND_PASSWORD: '/auth/find-password',
     RESET_PASSWORD: '/auth/reset-password',
   },
   

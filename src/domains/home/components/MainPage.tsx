@@ -1,22 +1,15 @@
 "use client";
 
-import { useEffect } from 'react';
 import { ProductSlider } from '@/domains/home/components/ProductSlider';
 import { PromoBanner } from '@/domains/home/components/PromoBanner';
 import { Container } from '@/shared/layout/Container';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { ErrorMessage } from '@/shared/components/ErrorMessage';
 import { useHomePage } from '@/domains/home/hooks/useHomePage';
-import { perf } from '@/shared/utils/performance';
 
 export function MainPage() {
   // 성능 추적 시작
-  useEffect(() => {
-    perf.start('MainPage-Mount');
-    return () => perf.end('MainPage-Mount');
-  }, []);
-
-  const { bestSellers, popularProducts, isLoading, hasError, errorMessage, onRetry } = useHomePage();
+  const { bestSellers, popularProducts, isLoading, queryError } = useHomePage();
 
   // 로딩 상태
   if (isLoading) {
@@ -30,13 +23,13 @@ export function MainPage() {
   }
 
   // 에러 상태
-  if (hasError) {
+  if (queryError) {
     return (
       <Container>
         <div className="flex justify-center items-center min-h-96">
-          <ErrorMessage 
-            message={errorMessage || "홈 데이터를 불러오는데 실패했습니다."}
-            onRetry={onRetry}
+          <ErrorMessage
+            message="데이터를 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요."
+            onRetry={() => window.location.reload()}
           />
         </div>
       </Container>

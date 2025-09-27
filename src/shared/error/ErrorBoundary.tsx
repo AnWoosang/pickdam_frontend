@@ -38,9 +38,6 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
           Sentry.captureException(error);
         });
       });
-    } else {
-      // 개발 환경에서는 콘솔에만 출력
-      console.error('Error Boundary caught an error:', error, errorInfo);
     }
   }
 

@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/infrastructure/api/supabaseServer';
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 import { createPaginatedResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils';
 import { MyPostResponseDto } from '@/domains/user/types/dto/mypageDto';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {const { id: userId } = await params;
-  const { searchParams } = new URL(request.url);
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const limit = parseInt(searchParams.get('limit') || '10', 10);
-  const offset = (page - 1) * limit;
-
+) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
+    const { id: userId } = await params;
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '10', 10);
+    const offset = (page - 1) * limit;
     // 총 개수 조회
-    const { count, error: countError } = await supabaseServer
+    const { count, error: countError } = await supabase
       .from('post')
       .select('*', { count: 'exact', head: true })
       .eq('author_id', userId)
@@ -25,7 +26,7 @@ export async function GET(
     }
 
     // 게시글 목록 조회
-    const { data: posts, error: postsError } = await supabaseServer
+    const { data: posts, error: postsError } = await supabase
       .from('post')
       .select(`
         id,
@@ -54,7 +55,7 @@ export async function GET(
 
     // 데이터 변환 (MyPost DTO 형식으로)
     const transformedPosts: MyPostResponseDto[] = posts?.map(post => {
-      const author = Array.isArray(post.author) ? post.author[0] : post.author as any;
+      const author = Array.isArray(post.author) ? post.author[0] : post.author as Record<string, unknown>;
 
       return {
         id: post.id,

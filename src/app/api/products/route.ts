@@ -5,12 +5,13 @@ import {
   createErrorResponse,
   mapApiError
 } from '@/infrastructure/api/supabaseResponseUtils'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
     const { searchParams } = new URL(request.url)
-    
+
     // 쿼리 파라미터 파싱
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
@@ -33,9 +34,9 @@ export async function GET(request: NextRequest) {
     } as const;
 
     const dbSortBy = SORT_FIELD_MAP[sortBy] || sortBy;
-    
+
     // 기본 쿼리 구성 (count 옵션 추가)
-    let query = supabaseServer
+    let query = supabase
       .from('product')
       .select('*', { count: 'exact' })
       .eq('is_available', true)
@@ -101,7 +102,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
-    const productDtos: ProductResponseDto[] = (products || []).map((item: any) => ({
+    const productDtos: ProductResponseDto[] = (products || []).map((item: Record<string, unknown>) => ({
       id: item.id,
       name: item.name,
       price: item.price,

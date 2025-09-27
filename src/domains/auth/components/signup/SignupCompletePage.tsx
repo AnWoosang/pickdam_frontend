@@ -99,7 +99,6 @@ export function SignupCompletePage({ email }: SignupCompletePageProps) {
           <div className="space-y-3">
             <Button
               onClick={() => {
-                console.log('🖱️ 버튼 클릭됨!');
                 handleResendEmail();
               }}
               variant="secondary"

@@ -4,7 +4,7 @@ import React from 'react';
 import { Heart, Share2 } from 'lucide-react';
 import { Product } from '@/domains/product/types/product';
 import { Button } from '@/shared/components/Button';
-import { ImageGallery } from '@/shared/components/ImageGallery';
+import { ImageGallery } from '../ImageGallery';
 import { useProductImageGallery } from '@/domains/product/hooks/useProductImageGallery';
 
 interface ProductImageGalleryProps {

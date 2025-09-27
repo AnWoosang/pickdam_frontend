@@ -2,11 +2,10 @@
 
 import React from 'react';
 import { ROUTES } from '@/app/router/routes';
-import { NicknameEditModal } from '@/domains/user/components/mypage/NicknameEditModal';
-import { AccountDeletionModal } from '@/domains/user/components/mypage/AccountDeletionModal';
+import { ProfileEditModal } from '@/domains/user/components/mypage/ProfileEditModal';
+import { WithdrawModal } from '@/domains/user/components/WithdrawModal';
 import { ProfileCard } from '@/domains/user/components/mypage/ProfileCard';
 import { MenuItem } from '@/domains/user/components/mypage/MenuItem';
-import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { useMypage } from '@/domains/user/hooks/mypage/useMypage';
 
 // 마이페이지 메뉴 아이템
@@ -51,13 +50,6 @@ const mypageMenuItems: MypageMenuItem[] = [
     href: '#',
     isAction: true,
   },
-  {
-    id: 'logout',
-    label: '로그아웃',
-    icon: 'LogOut',
-    href: '#',
-    isAction: true,
-  },
 ];
 
 export function Mypage({ className = '' }: MypageProps) {
@@ -67,18 +59,13 @@ export function Mypage({ className = '' }: MypageProps) {
     isLoggingOut,
     isNicknameModalOpen,
     isAccountDeletionModalOpen,
-    showLogoutDialog,
     statsLoading,
     stats,
-    handleLogout,
-    handleLogoutConfirm,
     handleNicknameEdit,
-    handleNicknameSave,
     closeNicknameModal,
     handleAccountDeletion,
     handleAccountDeletionConfirm,
     closeAccountDeletionModal,
-    setShowLogoutDialog,
   } = useMypage();
 
   // 배지 수치 계산 함수
@@ -120,7 +107,7 @@ export function Mypage({ className = '' }: MypageProps) {
       {/* 사용자 프로필 카드 */}
       <ProfileCard
         user={user}
-        onNicknameEdit={handleNicknameEdit}
+        onProfileEdit={handleNicknameEdit}
       />
 
       {/* 메뉴 그리드 */}
@@ -131,40 +118,30 @@ export function Mypage({ className = '' }: MypageProps) {
             item={item} 
             badgeCount={getBadgeCount(item.id)}
             isLoading={statsLoading}
-            onAction={item.id === 'account-deletion' ? handleAccountDeletion : item.id === 'logout' ? handleLogout : undefined}
+            onAction={item.id === 'account-deletion' ? handleAccountDeletion : undefined}
           />
         ))}
       </div>
 
 
-      {/* 닉네임 수정 모달 */}
-      <NicknameEditModal
+      {/* 프로필 수정 모달 */}
+      <ProfileEditModal
         isOpen={isNicknameModalOpen}
         onClose={closeNicknameModal}
-        onSave={handleNicknameSave}
         currentNickname={user.nickname}
+        currentProfileImageUrl={user.profileImageUrl}
+        currentName={user.name}
         isLoading={isLoading}
       />
 
       {/* 회원탈퇴 모달 */}
-      <AccountDeletionModal
+      <WithdrawModal
         isOpen={isAccountDeletionModalOpen}
         onClose={closeAccountDeletionModal}
-        onConfirm={handleAccountDeletionConfirm}
+        onWithdraw={handleAccountDeletionConfirm}
         isLoading={isLoggingOut}
       />
 
-      {/* 로그아웃 확인 다이얼로그 */}
-      <ConfirmDialog
-        isOpen={showLogoutDialog}
-        onClose={() => setShowLogoutDialog(false)}
-        onConfirm={handleLogoutConfirm}
-        message="정말 로그아웃 하시겠습니까?"
-        confirmText="로그아웃"
-        cancelText="취소"
-        confirmButtonColor="red"
-        icon="🚪"
-      />
     </div>
   );
 }

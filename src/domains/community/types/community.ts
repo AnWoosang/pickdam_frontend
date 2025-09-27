@@ -46,8 +46,8 @@ export interface Post {
   content?: string;
   authorNickname: string; // 닉네임
   authorId: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   viewCount: number;
   likeCount: number;
   commentCount: number;
@@ -79,7 +79,6 @@ export interface PostForm {
 export interface CommentForm {
   content: string;
   postId?: string; // 수정 시에는 필요없음
-  authorId: string;
   parentId?: string;
 }
 
@@ -90,8 +89,8 @@ export interface Comment {
   content: string;
   author: { nickname: string; profileImageUrl?: string }; // 작성자 정보
   authorId: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   likeCount: number;
   isLiked?: boolean;
   replyCount?: number;

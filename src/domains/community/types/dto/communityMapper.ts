@@ -19,8 +19,8 @@ export function toPost(dto: PostResponseDto): Post {
     content: dto.content,
     authorNickname: dto.author.nickname,
     authorId: dto.authorId,
-    createdAt: dto.createdAt,
-    updatedAt: dto.updatedAt,
+    createdAt: new Date(dto.createdAt),
+    updatedAt: new Date(dto.updatedAt),
     viewCount: dto.viewCount,
     likeCount: dto.likeCount,
     commentCount: dto.commentCount,
@@ -56,8 +56,8 @@ export function toComment(dto: CommentResponseDto): Comment {
       profileImageUrl: dto.author.profileImageUrl
     },
     authorId: dto.authorId,
-    createdAt: dto.createdAt,
-    updatedAt: dto.updatedAt,
+    createdAt: new Date(dto.createdAt),
+    updatedAt: new Date(dto.updatedAt),
     likeCount: dto.likeCount,
     isLiked: dto.isLiked ?? false,
     replyCount: dto.replyCount && dto.replyCount > 0 ? dto.replyCount : undefined

@@ -16,7 +16,6 @@ interface PriceHistoryHeaderProps {
 
 export function PriceHistoryHeader({ 
   filteredHistory, 
-  viewMode
 }: PriceHistoryHeaderProps) {
   // 가격 변동률 계산
   const priceChange = useMemo((): PriceChangeInfo | null => {

@@ -8,7 +8,8 @@ import {
   toLowestPriceHistory
 } from '@/domains/product/types/dto/productMapper';
 import {
-  ProductsRequestParamDto
+  ProductsRequestParamDto,
+  IncrementViewRequestDto
 } from '@/domains/product/types/dto/productDto';
 import {
   ProductResponseDto,
@@ -62,7 +63,8 @@ export const productApi = {
 
   // 상품 조회수 증가 (간소화)
   async incrementProductViews(productId: string): Promise<number> {
-    const response = await apiClient.post<IncrementViewResponseDto>(API_ROUTES.PRODUCTS.VIEW(productId), {});
+    const requestDto: IncrementViewRequestDto = {};
+    const response = await apiClient.post<IncrementViewResponseDto>(API_ROUTES.PRODUCTS.VIEW(productId), requestDto);
     return response.newViewCount;
   },
 

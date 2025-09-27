@@ -71,10 +71,21 @@ export interface ResendEmailForm {
   type?: 'signup' | 'email_change';
 }
 
+// 비밀번호 찾기 폼 타입
+export interface FindPasswordForm {
+  email: string;
+}
+
+// 비밀번호 재설정 폼 타입
+export interface ResetPasswordForm {
+  password: string;
+  confirmPassword: string;
+}
+
 // ========== EMAIL VERIFICATION TYPES ==========
 
 export interface EmailVerificationParams {
-  tokenHash?: string
+  tokenHash?: string 
   token?: string
   accessToken?: string
   refreshToken?: string

@@ -6,8 +6,10 @@ import {
   getComments,
   getReplies,
   createComment,
+  createReply,
   updateComment,
   deleteComment,
+  deleteReply,
   toggleCommentLike
 } from '@/domains/community/api/commentsApi';
 import { PaginationResult } from '@/shared/types/pagination';
@@ -16,7 +18,6 @@ import { PaginationResult } from '@/shared/types/pagination';
 export const useCommentsQuery = (postId: string, options: {
   page?: number;
   limit?: number;
-  currentUserId?: string;
 } = {}, queryOptions?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: commentQueryKeys.list(postId, options),
@@ -24,12 +25,12 @@ export const useCommentsQuery = (postId: string, options: {
       return await getComments(postId, options)
     },
     enabled: queryOptions?.enabled !== undefined ? queryOptions.enabled : !!postId,
-    staleTime: 1 * 60 * 1000, // 1분
-    gcTime: 3 * 60 * 1000, // 3분
+    staleTime: 30 * 60 * 1000, // 1분
+    gcTime: 45 * 60 * 1000, // 3분
   })
 }
 
-// 댓글 작성 Mutation Hook
+// 댓글 작성 Mutation Hook (일반 댓글만)
 export const useCreateCommentMutation = () => {
   const queryClient = useQueryClient()
 
@@ -38,86 +39,107 @@ export const useCreateCommentMutation = () => {
       return await createComment(data)
     },
     onSuccess: (newComment, data) => {
-      // 답글인 경우와 일반 댓글인 경우 구분
-      if (data.parentId) {
-        // 답글인 경우: 부모 댓글의 replyCount 업데이트
-        queryClient.setQueriesData(
-          {
-            queryKey: commentQueryKeys.lists(),
-            predicate: (query) => {
-              const [, , queryPostId] = query.queryKey
-              return queryPostId === data.postId
-            }
-          },
-          (oldData: unknown) => {
-            if (!oldData) return oldData
-            const cachedData = oldData as PaginationResult<Comment>
-            return {
-              ...cachedData,
-              data: cachedData.data.map(comment =>
-                comment.id === data.parentId
-                  ? { ...comment, replyCount: (comment.replyCount || 0) + 1 }
-                  : comment
-              )
+      // 일반 댓글인 경우: 댓글 목록의 맨 앞에 추가
+      queryClient.setQueriesData(
+        {
+          queryKey: commentQueryKeys.lists(),
+          predicate: (query) => {
+            const [, , queryPostId] = query.queryKey
+            return queryPostId === data.postId
+          }
+        },
+        (oldData: unknown) => {
+          if (!oldData) return oldData
+          const cachedData = oldData as PaginationResult<Comment>
+          return {
+            ...cachedData,
+            data: [newComment, ...cachedData.data],
+            pagination: {
+              ...cachedData.pagination,
+              total: cachedData.pagination.total + 1
             }
           }
-        )
-
-        // 답글 목록 캐시에 새 답글 즉시 추가 (빠른 UI 반영)
-        queryClient.setQueriesData(
-          {
-            queryKey: commentQueryKeys.replies(data.parentId)
-          },
-          (oldData: unknown) => {
-            if (!oldData) {
-              return oldData;
-            }
-            const cachedData = oldData as PaginationResult<Comment>
-            return {
-              ...cachedData,
-              data: [...cachedData.data, newComment],
-              pagination: {
-                ...cachedData.pagination,
-                total: cachedData.pagination.total + 1
-              }
-            }
-          }
-        )
-      } else {
-        // 일반 댓글인 경우: 댓글 목록의 맨 앞에 추가
-        queryClient.setQueriesData(
-          {
-            queryKey: commentQueryKeys.lists(),
-            predicate: (query) => {
-              const [, , queryPostId] = query.queryKey
-              return queryPostId === data.postId
-            }
-          },
-          (oldData: unknown) => {
-            if (!oldData) return oldData
-            const cachedData = oldData as PaginationResult<Comment>
-            return {
-              ...cachedData,
-              data: [newComment, ...cachedData.data],
-              pagination: {
-                ...cachedData.pagination,
-                total: cachedData.pagination.total + 1
-              }
-            }
-          }
-        )
-
-        // 게시글 상세 캐시에서 댓글 수 +1 업데이트
-        if (data.postId) {
-          queryClient.setQueryData(postQueryKeys.detail(data.postId), (old: unknown) => {
-            if (!old) return old
-            const oldPost = old as PostDetail
-            return {
-              ...oldPost,
-              commentCount: oldPost.commentCount + 1
-            }
-          })
         }
+      )
+
+      // 게시글 상세 캐시에서 댓글 수 +1 업데이트
+      if (data.postId) {
+        queryClient.setQueryData(postQueryKeys.detail(data.postId), (old: unknown) => {
+          if (!old) return old
+          const oldPost = old as PostDetail
+          return {
+            ...oldPost,
+            commentCount: oldPost.commentCount + 1
+          }
+        })
+      }
+    },
+  })
+}
+
+// 답글 작성 Mutation Hook
+export const useCreateReplyMutation = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (data: CommentForm): Promise<Comment> => {
+      return await createReply(data)
+    },
+    onSuccess: (newReply, data) => {
+      // 부모 댓글의 replyCount 업데이트
+      queryClient.setQueriesData(
+        {
+          queryKey: commentQueryKeys.lists(),
+          predicate: (query) => {
+            const [, , queryPostId] = query.queryKey
+            return queryPostId === data.postId
+          }
+        },
+        (oldData: unknown) => {
+          if (!oldData) return oldData
+          const cachedData = oldData as PaginationResult<Comment>
+          return {
+            ...cachedData,
+            data: cachedData.data.map(comment =>
+              comment.id === data.parentId
+                ? { ...comment, replyCount: (comment.replyCount || 0) + 1 }
+                : comment
+            )
+          }
+        }
+      )
+
+      // 답글 목록 캐시에 새 답글 즉시 추가 (빠른 UI 반영)
+      queryClient.setQueriesData(
+        {
+          queryKey: commentQueryKeys.replies(data.parentId!)
+        },
+        (oldData: unknown) => {
+          if (!oldData) {
+            return oldData;
+          }
+          const cachedData = oldData as PaginationResult<Comment>
+          return {
+            ...cachedData,
+            data: [...cachedData.data, newReply],
+            pagination: {
+              ...cachedData.pagination,
+              total: cachedData.pagination.total + 1
+            }
+          }
+        }
+      )
+
+      // 게시글 상세 캐시에서 댓글 수 +1 업데이트 (답글도 댓글 수에 포함)
+      if (data.postId) {
+        queryClient.setQueryData(postQueryKeys.detail(data.postId), (old: unknown) => {
+          if (!old) return old
+          const oldPost = old as PostDetail
+          return {
+            ...oldPost,
+            commentCount: oldPost.commentCount + 1
+          }
+        })
       }
     },
   })
@@ -134,7 +156,7 @@ export const useUpdateCommentMutation = () => {
     onSuccess: (updatedComment) => {
       // 댓글 목록 캐시에서 해당 댓글 업데이트
       queryClient.setQueriesData(
-        { 
+        {
           queryKey: commentQueryKeys.lists(),
           predicate: (query) => {
             const [, , queryPostId] = query.queryKey
@@ -146,12 +168,29 @@ export const useUpdateCommentMutation = () => {
           const data = oldData as PaginationResult<Comment>
           return {
             ...data,
-            data: data.data.map(comment => 
+            data: data.data.map(comment =>
               comment.id === updatedComment.id ? updatedComment : comment
             )
           }
         }
       )
+
+      // 답글인 경우 답글 목록 캐시도 업데이트
+      if (updatedComment.parentId) {
+        queryClient.setQueriesData(
+          { queryKey: commentQueryKeys.replies(updatedComment.parentId) },
+          (oldData: unknown) => {
+            if (!oldData) return oldData
+            const data = oldData as PaginationResult<Comment>
+            return {
+              ...data,
+              data: data.data.map(reply =>
+                reply.id === updatedComment.id ? updatedComment : reply
+              )
+            }
+          }
+        )
+      }
     },
   })
 }
@@ -161,8 +200,8 @@ export const useDeleteCommentMutation = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ commentId, authorId }: { commentId: string; authorId: string }) =>
-      deleteComment(commentId, authorId),
+    mutationFn: ({ commentId }: { commentId: string }) =>
+      deleteComment(commentId),
     onSuccess: (success, { commentId }) => {
       if (success) {
         let deletedCommentPostId: string | null = null;
@@ -208,13 +247,81 @@ export const useDeleteCommentMutation = () => {
   })
 }
 
+// 답글 삭제 Mutation Hook
+export const useDeleteReplyMutation = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ parentCommentId, replyId }: { parentCommentId: string; replyId: string }) =>
+      deleteReply(parentCommentId, replyId),
+    onSuccess: (success, { parentCommentId, replyId }) => {
+      if (success) {
+        let deletedReplyPostId: string | null = null;
+
+        // 답글 목록 캐시에서 해당 답글 제거
+        queryClient.setQueriesData(
+          { queryKey: commentQueryKeys.replies(parentCommentId) },
+          (oldData: unknown) => {
+            if (!oldData) return oldData
+            const data = oldData as PaginationResult<Comment>
+
+            // 삭제할 답글의 postId를 찾기
+            const deletedReply = data.data.find(reply => reply.id === replyId);
+            if (deletedReply) {
+              deletedReplyPostId = deletedReply.postId;
+            }
+
+            return {
+              ...data,
+              data: data.data.filter(reply => reply.id !== replyId),
+              pagination: {
+                ...data.pagination,
+                total: Math.max(0, data.pagination.total - 1)
+              }
+            }
+          }
+        )
+
+        // 부모 댓글의 replyCount 감소
+        queryClient.setQueriesData(
+          { queryKey: commentQueryKeys.lists() },
+          (oldData: unknown) => {
+            if (!oldData) return oldData
+            const data = oldData as PaginationResult<Comment>
+            return {
+              ...data,
+              data: data.data.map(comment =>
+                comment.id === parentCommentId
+                  ? { ...comment, replyCount: Math.max(0, (comment.replyCount || 0) - 1) }
+                  : comment
+              )
+            }
+          }
+        )
+
+        // 게시글 상세 캐시에서 댓글 수 -1 업데이트
+        if (deletedReplyPostId) {
+          queryClient.setQueryData(postQueryKeys.detail(deletedReplyPostId), (old: unknown) => {
+            if (!old) return old
+            const oldPost = old as PostDetail
+            return {
+              ...oldPost,
+              commentCount: Math.max(0, oldPost.commentCount - 1)
+            }
+          })
+        }
+      }
+    },
+  })
+}
+
 // 댓글 좋아요 토글 Mutation Hook
 export const useToggleCommentLikeMutation = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ commentId, memberId }: { commentId: string; memberId: string }) =>
-      toggleCommentLike(commentId, memberId),
+    mutationFn: ({ commentId }: { commentId: string }) =>
+      toggleCommentLike(commentId),
     onSuccess: (result: CommentLikeInfo, { commentId }) => {
       // 댓글 목록 캐시에서 해당 댓글의 좋아요 상태 업데이트
       queryClient.setQueriesData(
@@ -240,7 +347,6 @@ export const useToggleCommentLikeMutation = () => {
 export const useRepliesQuery = (parentCommentId: string, options: {
   page?: number;
   limit?: number;
-  currentUserId?: string;
 } = {}, queryOptions?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: commentQueryKeys.replies(parentCommentId),

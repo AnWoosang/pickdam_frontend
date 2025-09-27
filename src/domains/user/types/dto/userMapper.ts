@@ -10,8 +10,8 @@ export interface WishlistItem {
   id: string;
   memberId: string;
   productId: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 
@@ -31,8 +31,8 @@ export function toWishlistItem(dto: WishlistItemResponseDto): WishlistItem {
     id: dto.id,
     memberId: dto.memberId,
     productId: dto.productId,
-    createdAt: dto.createdAt,
-    updatedAt: dto.updatedAt
+    createdAt: new Date(dto.createdAt),
+    updatedAt: new Date(dto.updatedAt)
   };
 }
 

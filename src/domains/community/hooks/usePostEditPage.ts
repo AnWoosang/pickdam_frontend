@@ -3,8 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
-import { Post, PostForm } from '@/domains/community/types/community';
+import { PostForm } from '@/domains/community/types/community';
 import { usePostQuery, useUpdatePostMutation } from '@/domains/community/hooks/usePostQueries';
+import { ROUTES } from '@/app/router/routes';
+import { validatePost } from '@/domains/community/validation/post';
+import { useUIStore } from '@/domains/auth/store/authStore';
 
 interface FormErrors {
   title?: string;
@@ -15,18 +18,19 @@ interface FormErrors {
 export function usePostEditPage(postId: string) {
   const router = useRouter();
   const { user } = useAuthUtils();
+  const { showToast } = useUIStore();
   const [formData, setFormData] = useState<Omit<PostForm, 'authorId'>>({
     title: '',
     content: '',
     categoryId: '',
   });
+  const [hasFormChanges, setHasFormChanges] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
 
   // 게시글 상세 정보 가져오기
   const {
     data: post,
     isLoading,
-    error
   } = usePostQuery(postId);
 
   // 게시글 수정 mutation
@@ -40,36 +44,24 @@ export function usePostEditPage(postId: string) {
         content: post.content || '',
         categoryId: post.category?.id || '',
       });
+      setHasFormChanges(false);
     }
   }, [post]);
 
   const updateFormData = (updates: Partial<Omit<PostForm, 'authorId'>>) => {
     setFormData(prev => ({ ...prev, ...updates }));
-  };
-
-  const setFormErrors = (errorUpdates: Partial<FormErrors>) => {
-    setErrors(prev => ({ ...prev, ...errorUpdates }));
+    setHasFormChanges(true);
   };
 
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
+    const validationResult = validatePost({
+      title: formData.title,
+      content: formData.content,
+      categoryId: formData.categoryId
+    });
 
-    if (!formData.title.trim()) {
-      newErrors.title = '제목을 입력해주세요.';
-    } else if (formData.title.length > 99) {
-      newErrors.title = '제목은 99자 이하로 입력해주세요.';
-    }
-
-    if (!formData.content.trim()) {
-      newErrors.content = '내용을 입력해주세요.';
-    }
-
-    if (!formData.categoryId) {
-      newErrors.category = '카테고리를 선택해주세요.';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(validationResult.errors);
+    return validationResult.isValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -77,23 +69,23 @@ export function usePostEditPage(postId: string) {
 
     if (!validateForm()) return;
 
-    try {
-      // 게시글 업데이트
-      await updatePostMutation.mutateAsync({
-        id: postId,
-        form: {
-          title: formData.title,
-          content: formData.content,
-          categoryId: formData.categoryId!,
-          authorId: user?.id || ''
-        }
-      });
-
-      // 게시글 상세 페이지로 이동
-      router.push(`/community/${postId}`);
-    } catch (error) {
-      console.error('게시글 수정 실패:', error);
-    }
+    updatePostMutation.mutate({
+      id: postId,
+      form: {
+        title: formData.title,
+        content: formData.content,
+        categoryId: formData.categoryId!,
+        authorId: user?.id || ''
+      }
+    }, {
+      onSuccess: () => {
+        showToast('게시글이 수정되었습니다.', 'success');
+        router.push(ROUTES.COMMUNITY.DETAIL(postId));
+      },
+      onError: () => {
+        showToast('게시글 수정에 실패했습니다.', 'error');
+      }
+    });
   };
 
   return {
@@ -102,8 +94,9 @@ export function usePostEditPage(postId: string) {
     errors,
     isSubmitting: updatePostMutation.isPending,
     isLoading,
+    hasChanges: hasFormChanges,
     updateFormData,
-    setFormErrors,
+    setErrors,
     handleSubmit,
   };
 }

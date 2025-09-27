@@ -3,13 +3,14 @@
 import { useCallback, useMemo } from 'react';
 import {
   useCreateCommentMutation,
+  useCreateReplyMutation,
   useUpdateCommentMutation,
-  useDeleteCommentMutation
+  useDeleteCommentMutation,
+  useDeleteReplyMutation
 } from '@/domains/community/hooks/comment/useCommentQueries';
 import { Comment } from '@/domains/community/types/community';
-import { BusinessError } from '@/shared/error/BusinessError';
 import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
-import toast from 'react-hot-toast';
+import { useUIStore } from '@/domains/auth/store/authStore';
 
 interface UseCommentCardProps {
   comment: Comment;
@@ -17,13 +18,16 @@ interface UseCommentCardProps {
   onUpdate: () => void;
 }
 
-export const useCommentCard = ({ comment, postId }: UseCommentCardProps) => {
+export const useCommentCard = ({ comment, postId, onUpdate }: UseCommentCardProps) => {
   const { user } = useAuthUtils();
+  const { showToast } = useUIStore();
 
   // React Query Mutations
   const createCommentMutation = useCreateCommentMutation();
+  const createReplyMutation = useCreateReplyMutation();
   const updateCommentMutation = useUpdateCommentMutation();
   const deleteCommentMutation = useDeleteCommentMutation();
+  const deleteReplyMutation = useDeleteReplyMutation();
 
   // 권한 확인
   const isOwner = useMemo(() => 
@@ -31,60 +35,58 @@ export const useCommentCard = ({ comment, postId }: UseCommentCardProps) => {
     [user, comment.authorId]
   );
 
-  // 공통 에러 핸들러
-  const createErrorHandler = useCallback((defaultMessage: string) => 
-    (error: unknown) => {
-      if (error instanceof BusinessError) return error;
-      if (error instanceof Error) return error;
-      return new BusinessError('COMMENT_OPERATION_ERROR', defaultMessage);
-    }, 
-    []
-  );
 
 
-  const updateComment = useCallback(({
-    content,
-    onSuccess,
-    onError
-  }: {
-    content: string;
-    onSuccess?: () => void;
-    onError?: (error: Error) => void;
-  }) => {
+  const updateComment = useCallback((content: string) => {
     updateCommentMutation.mutate({
       commentId: comment.id,
-      data: { content, authorId: user!.id }
+      data: {
+        content,
+        postId: comment.postId,
+        parentId: comment.parentId
+      }
     }, {
       onSuccess: () => {
-        toast.success('댓글이 수정되었습니다.');
-        onSuccess?.();
+        showToast('댓글이 수정되었습니다.', 'success');
+        onUpdate();
       },
-      onError: (error) => {
-        onError?.(createErrorHandler('댓글 수정에 실패했습니다.')(error));
+      onError: () => {
+        showToast('댓글 수정에 실패했습니다.', 'error');
       }
     });
-  }, [comment.id, user, updateCommentMutation, createErrorHandler]);
+  }, [comment.id, comment.postId, comment.parentId, updateCommentMutation, showToast, onUpdate]);
 
-  const deleteComment = useCallback(({
-    onSuccess,
-    onError
-  }: {
-    onSuccess?: () => void;
-    onError?: (error: Error) => void;
-  }) => {
-    deleteCommentMutation.mutate({
-      commentId: comment.id,
-      authorId: user!.id
-    }, {
-      onSuccess: () => {
-        toast.success('댓글이 삭제되었습니다.');
-        onSuccess?.();
-      },
-      onError: (error) => {
-        onError?.(createErrorHandler('댓글 삭제에 실패했습니다.')(error));
-      }
-    });
-  }, [comment.id, user, deleteCommentMutation, createErrorHandler]);
+  const deleteComment = useCallback(() => {
+    // 답글인지 댓글인지 구분해서 처리
+    if (comment.parentId) {
+      // 답글 삭제
+      deleteReplyMutation.mutate({
+        parentCommentId: comment.parentId,
+        replyId: comment.id
+      }, {
+        onSuccess: () => {
+          showToast('답글이 삭제되었습니다.', 'success');
+          onUpdate();
+        },
+        onError: () => {
+          showToast('답글 삭제에 실패했습니다.', 'error');
+        }
+      });
+    } else {
+      // 댓글 삭제 (모든 답글도 함께 삭제)
+      deleteCommentMutation.mutate({
+        commentId: comment.id
+      }, {
+        onSuccess: () => {
+          showToast('댓글이 삭제되었습니다.', 'success');
+          onUpdate();
+        },
+        onError: () => {
+          showToast('댓글 삭제에 실패했습니다.', 'error');
+        }
+      });
+    }
+  }, [comment.id, comment.parentId, deleteCommentMutation, deleteReplyMutation, showToast, onUpdate]);
 
   const createReply = useCallback(({
     content,
@@ -100,19 +102,19 @@ export const useCommentCard = ({ comment, postId }: UseCommentCardProps) => {
     const requestData = {
       content,
       postId,
-      parentId,
-      authorId: user!.id
+      parentId
     };
 
-    createCommentMutation.mutate(requestData, {
+    createReplyMutation.mutate(requestData, {
       onSuccess: (newReply) => {
         onSuccess?.(newReply);
       },
       onError: (error) => {
-        onError?.(createErrorHandler('대댓글 작성에 실패했습니다.')(error));
+        showToast('대댓글 작성에 실패했습니다.', 'error');
+        onError?.(error as Error);
       }
     });
-  }, [postId, user, createCommentMutation, createErrorHandler]);
+  }, [postId, createReplyMutation, showToast]);
 
   return {
     // 데이터 상태
@@ -124,8 +126,8 @@ export const useCommentCard = ({ comment, postId }: UseCommentCardProps) => {
     createReply,
     
     // 로딩 상태
-    isCreating: createCommentMutation.isPending,
+    isCreating: createCommentMutation.isPending || createReplyMutation.isPending,
     isUpdating: updateCommentMutation.isPending,
-    isDeleting: deleteCommentMutation.isPending
+    isDeleting: deleteCommentMutation.isPending || deleteReplyMutation.isPending
   };
 };

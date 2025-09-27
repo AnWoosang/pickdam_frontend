@@ -41,7 +41,6 @@ export function ImageGallery({
   if (!images.length) return null;
 
   const handleImageClick = (index: number) => {
-    console.log('ImageGallery click:', { images, index });
     imageViewer.openViewer(images, index);
   };
 

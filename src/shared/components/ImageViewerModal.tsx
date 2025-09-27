@@ -51,8 +51,6 @@ export function ImageViewerModal({
     return null;
   }
 
-  console.log('ImageViewerModal render:', { isOpen, images, currentIndex });
-
   return (
     <BaseModal
       isOpen={isOpen}
@@ -102,8 +100,6 @@ export function ImageViewerModal({
                 width={800}
                 height={600}
                 className="object-contain max-w-full max-h-full w-auto h-auto border border-gray-300 rounded-lg shadow-lg"
-                onLoad={() => console.log('Image loaded successfully')}
-                onError={(e) => console.error('Image load error:', e)}
               />
             </Zoom>
           </div>

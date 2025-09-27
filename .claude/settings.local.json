@@ -110,7 +110,10 @@
       "Bash(do echo \"=== Test $i ===\")",
       "WebFetch(domain:quilljs.com)",
       "Bash(convert:*)",
-      "WebFetch(domain:stackoverflow.com)"
+      "WebFetch(domain:stackoverflow.com)",
+      "Bash(git branch:*)",
+      "WebFetch(domain:tanstack.com)",
+      "WebFetch(domain:developers.kakao.com)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

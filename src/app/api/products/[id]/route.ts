@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 import {
   ProductResponseDto,
   ProductDetailResponseDto,
@@ -14,10 +14,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
     const { id } = await params
-    
+
     // RPC 함수로 모든 데이터 한번에 가져오기
-    const { data: rpcResult, error: rpcError } = await supabaseServer
+    const { data: rpcResult, error: rpcError } = await supabase
       .rpc('get_product_detail', { p_product_id: id })
     
     if (rpcError) {

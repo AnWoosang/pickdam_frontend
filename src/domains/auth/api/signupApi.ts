@@ -9,7 +9,7 @@ import { LoginProvider, Role } from '@/domains/auth/types/auth';
 // 회원가입 API
 export const signupApi = {
   // 회원가입 요청
-  register: async (form: SignupForm): Promise<void> => {
+  async register(form: SignupForm): Promise<void> {
     const requestDto: SignupRequestDto = {
       email: form.email.toLowerCase().trim(),
       password: form.password,

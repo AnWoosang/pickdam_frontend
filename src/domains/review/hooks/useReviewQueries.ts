@@ -2,13 +2,13 @@
 
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { reviewApi } from '../api/reviewApi'
-import { productKeys } from '@/domains/product/constants/productQueryKeys'
+import { reviewKeys } from '@/domains/review/constants/reviewQueryKeys'
 import { ReviewForm, Review } from '@/domains/review/types/review';
 
 // 리뷰 목록 조회 Query (모든 리뷰 가져와서 클라이언트에서 정렬/필터링)
 export const useProductReviews = (productId: string) => {
   return useQuery({
-    queryKey: productKeys.reviews(productId),
+    queryKey: reviewKeys.reviews(productId),
     queryFn: async () => {
       const response = await reviewApi.getProductReviews(
         productId,
@@ -33,15 +33,21 @@ export const useCreateReview = () => {
     }) => {
       return reviewApi.createReview(params);
     },
-    onSuccess: (_, variables) => {
-      // 해당 상품의 리뷰 목록 캐시 무효화
-      queryClient.invalidateQueries({ 
-        queryKey: productKeys.reviews(variables.productId) 
-      })
-      
-      // 상품 상세 정보도 업데이트 (평점, 리뷰 수 등)
-      queryClient.invalidateQueries({ 
-        queryKey: productKeys.product(variables.productId) 
+    onSuccess: (newReview, variables) => {
+      // 성공 시 캐시에 새 리뷰 직접 추가 (중복 방지)
+      queryClient.setQueryData<Review[]>(reviewKeys.reviews(variables.productId), (old) => {
+        if (!old || !Array.isArray(old)) return [newReview];
+
+        // 이미 같은 ID의 리뷰가 있는지 확인
+        const existingIndex = old.findIndex(review => review.id === newReview.id);
+        if (existingIndex !== -1) {
+          // 이미 있으면 기존 것을 새 데이터로 교체
+          const updated = [...old];
+          updated[existingIndex] = newReview;
+          return updated;
+        }
+        // 없으면 맨 위에 추가
+        return [newReview, ...old];
       })
     }
   })
@@ -57,38 +63,15 @@ export const useUpdateReview = () => {
     }) => {
       return reviewApi.updateReview(updates);
     },
-    onMutate: async ({ updates }) => {
-      // 진행 중인 쿼리 취소
-      await queryClient.cancelQueries({ queryKey: productKeys.reviews(updates.productId) })
-
-      // 이전 데이터 백업
-      const previousReviews = queryClient.getQueryData<Review[]>(productKeys.reviews(updates.productId))
-
-      return { previousReviews }
-    },
-    onError: (error, { updates }, context) => {
-      // 에러 시 이전 데이터로 롤백
-      if (context?.previousReviews) {
-        queryClient.setQueryData(productKeys.reviews(updates.productId), context.previousReviews)
-      }
-    },
-    onSuccess: (data, { updates }) => {
-      // 캐시 직접 업데이트 - 서버 응답 데이터 사용
-      queryClient.setQueryData<Review[]>(productKeys.reviews(updates.productId), (old) => {
+    onSuccess: (updatedReview, { updates }) => {
+      // 성공 시 캐시에서 해당 리뷰 업데이트
+      queryClient.setQueryData<Review[]>(reviewKeys.reviews(updates.productId), (old) => {
         if (!old || !Array.isArray(old)) return old;
 
-        const updatedData = old.map((review: Review) =>
-          review.id === updates.id ? { ...review, ...updates } : review
+        return old.map((review: Review) =>
+          review.id === updatedReview.id ? updatedReview : review
         );
-
-        return updatedData;
       });
-    },
-    onSettled: (_, __, { updates }) => {
-      // 상품 상세 정보만 업데이트 (평점, 리뷰 수 등)
-      queryClient.invalidateQueries({
-        queryKey: productKeys.product(updates.productId)
-      })
     }
   })
 }
@@ -98,17 +81,13 @@ export const useDeleteReview = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ reviewId }: { reviewId: string; productId: string }) => 
+    mutationFn: ({ reviewId }: { reviewId: string; productId: string }) =>
       reviewApi.deleteReview(reviewId),
-    onSuccess: (_, { productId }) => {
-      // 해당 상품의 리뷰 목록 캐시 무효화
-      queryClient.invalidateQueries({ 
-        queryKey: productKeys.reviews(productId) 
-      })
-      
-      // 상품 상세 정보도 업데이트 (평점, 리뷰 수 등)
-      queryClient.invalidateQueries({ 
-        queryKey: productKeys.product(productId) 
+    onSuccess: (_, { reviewId, productId }) => {
+      // 성공 시 캐시에서 해당 리뷰 제거
+      queryClient.setQueryData<Review[]>(reviewKeys.reviews(productId), (old) => {
+        if (!old || !Array.isArray(old)) return old;
+        return old.filter(review => review.id !== reviewId);
       })
     }
   })

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
 import { StatusCodes } from 'http-status-codes'
 import { ToggleCommentLikeResponseDto } from '@/domains/community/types/dto/communityDto'
@@ -8,14 +8,14 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {const { memberId } = await request.json()
+  try {
+    const supabase = await createSupabaseClientWithCookie()
     const { id: commentId } = await params
-        
-    // Use RPC function for like toggle
-    const { data: result, error } = await supabaseServer
+
+    // RPC 함수가 auth.uid()를 사용하여 사용자 확인
+    const { data: result, error } = await supabase
       .rpc('toggle_comment_like', {
-        p_comment_id: commentId,
-        p_member_id: memberId
+        p_comment_id: commentId
       })
     
     if (error) {

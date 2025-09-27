@@ -95,10 +95,6 @@ export function RecentProductsDropdown({
                 {/* 상품 카드 그리드 */}
                 <div className="grid grid-cols-3 gap-3 mb-3">
                   {getCurrentProducts(recentViewedProducts, recentPage).map((product, index) => {
-                    // 디버깅: product.id 확인
-                    if (!product?.id) {
-                      console.warn('Recent product missing id:', product, 'index:', index);
-                    }
                     return (
                     <div key={`recent-${product?.id || index}-${index}`} className="scale-80 transform origin-center relative">
                       <ProductCard 

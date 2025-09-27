@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect } from 'react';
+import { Button } from './Button';
 
 export interface ConfirmDialogProps {
   isOpen: boolean;
@@ -9,9 +10,11 @@ export interface ConfirmDialogProps {
   message: string;
   confirmText?: string;
   cancelText?: string;
-  confirmButtonColor?: 'red' | 'primary';
+  confirmVariant?: 'destructive' | 'warning' | 'primary';
   width?: string;
-  icon?: string;
+  icon?: React.ReactNode;
+  isLoading?: boolean;
+  title?: string;
 }
 
 export function ConfirmDialog({
@@ -19,15 +22,17 @@ export function ConfirmDialog({
   onClose,
   onConfirm,
   message,
-  confirmText = '확인',
-  cancelText = '취소',
-  confirmButtonColor = 'red',
+  confirmText = '예',
+  cancelText = '아니오',
+  confirmVariant = 'destructive',
   width = 'w-90',
-  icon = '⚠️'
+  icon,
+  isLoading = false,
+  title
 }: ConfirmDialogProps) {
-  // 키보드 이벤트 핸들러
+  // 키보드 이벤트 핸들러 (로딩 중일 때는 비활성화)
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || isLoading) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
         onConfirm();
@@ -38,32 +43,36 @@ export function ConfirmDialog({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onConfirm, onClose]);
+  }, [isOpen, onConfirm, onClose, isLoading]);
 
   if (!isOpen) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
+    if (e.target === e.currentTarget && !isLoading) {
       onClose();
     }
   };
 
-  const confirmButtonClasses = confirmButtonColor === 'red' 
-    ? 'bg-warning hover:bg-warningLight' 
-    : 'bg-primary hover:bg-primary/90';
-
   return (
-    <div 
-      className="fixed inset-0 flex items-center justify-center z-50" 
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50"
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
       onClick={handleBackdropClick}
     >
-      <div className={`bg-white rounded-lg p-6 ${width} mx-4`}>
-        <div className="text-center">
-          <div className="mb-4">
-            <span className="text-4xl">{icon}</span>
+      <div className={`bg-white rounded-lg ${width} mx-4`}>
+        {/* 헤더 영역 */}
+        {(title || icon) && (
+          <div className="px-6 pt-6 pb-4 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              {icon && <div className="flex-shrink-0">{icon}</div>}
+              {title && <h3 className="text-lg font-semibold text-gray-900">{title}</h3>}
+            </div>
           </div>
-          <div className="text-[16px] font-medium text-black mb-6">
+        )}
+
+        {/* 내용 영역 */}
+        <div className="p-6">
+          <div className="text-gray-700 mb-6">
             {message.split('\n').map((line, index) => (
               <React.Fragment key={index}>
                 {line}
@@ -71,20 +80,29 @@ export function ConfirmDialog({
               </React.Fragment>
             ))}
           </div>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2.5 text-[15px] text-gray-700 font-bold bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer border border-gray-300"
-          >
-            {cancelText}
-          </button>
-          <button
-            onClick={onConfirm}
-            className={`flex-1 px-4 py-2.5 text-[15px] text-white font-bold ${confirmButtonClasses} rounded-lg transition-colors cursor-pointer`}
-          >
-            {confirmText}
-          </button>
+
+          {/* 버튼 영역 */}
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+              disabled={isLoading}
+              className="flex-1"
+            >
+              {cancelText}
+            </Button>
+            <Button
+              type="button"
+              variant={confirmVariant}
+              onClick={onConfirm}
+              disabled={isLoading}
+              isLoading={isLoading}
+              className="flex-1"
+            >
+              {confirmText}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

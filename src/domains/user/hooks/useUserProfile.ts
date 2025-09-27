@@ -2,6 +2,11 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useNicknameCheck } from '@/shared/hooks/useNicknameCheck';
+import { useUIStore } from '@/domains/auth/store/authStore';
+import { useImageUploadQuery } from '@/domains/image/hooks/useImageUploadQueries';
+import { useUpdateProfile } from './mypage/useMyPageQueries';
+import { useAuthUtils } from '@/domains/auth/hooks/useAuthQueries';
+import { validateImages } from '@/domains/image/validation/image';
 
 // 에러 메시지 상수
 const ERROR_MESSAGES = {
@@ -12,12 +17,12 @@ const ERROR_MESSAGES = {
   DEFAULT: '닉네임 변경에 실패했습니다. 다시 시도해주세요.'
 } as const;
 
-interface UseNicknameEditProps {
+interface UseProfileEditProps {
   currentNickname: string;
-  onSave: (nickname: string) => Promise<void>;
+  onSave: (nickname: string) => void;
 }
 
-export function useNicknameEdit({ currentNickname, onSave }: UseNicknameEditProps) {
+export function useProfileEdit({ currentNickname, onSave }: UseProfileEditProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string>('');
   
@@ -27,7 +32,8 @@ export function useNicknameEdit({ currentNickname, onSave }: UseNicknameEditProp
     nicknameStatus,
     error: validationError,
     isChecking,
-    handleNicknameChange
+    handleNicknameChange,
+    handleCheckDuplicate
   } = useNicknameCheck();
 
   // 초기값 설정
@@ -41,7 +47,7 @@ export function useNicknameEdit({ currentNickname, onSave }: UseNicknameEditProp
     handleNicknameChange(currentNickname);
   }, [currentNickname, handleNicknameChange]);
   
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(() => {
     // 현재 닉네임과 동일한 경우
     if (nickname.trim() === currentNickname) {
       setSaveError(ERROR_MESSAGES.SAME_NICKNAME);
@@ -56,28 +62,10 @@ export function useNicknameEdit({ currentNickname, onSave }: UseNicknameEditProp
 
     setIsSaving(true);
     setSaveError('');
-    
-    try {
-      await onSave(nickname.trim());
-      resetNickname();
-    } catch (error: unknown) {
-      console.error('닉네임 수정 실패:', error);
-      // 서버에서 반환하는 에러 메시지 처리 (타입 안전성 개선)
-      if (error && typeof error === 'object' && 'message' in error) {
-        const errorMessage = (error as { message: string }).message;
-        if (errorMessage.includes('once per month') || errorMessage.includes('한 달') || errorMessage.includes('한달')) {
-          setSaveError(ERROR_MESSAGES.MONTHLY_LIMIT);
-        } else if (errorMessage.includes('duplicate') || errorMessage.includes('중복')) {
-          setSaveError(ERROR_MESSAGES.DUPLICATE);
-        } else {
-          setSaveError(errorMessage || ERROR_MESSAGES.DEFAULT);
-        }
-      } else {
-        setSaveError(ERROR_MESSAGES.DEFAULT);
-      }
-    } finally {
-      setIsSaving(false);
-    }
+
+    onSave(nickname.trim());
+    resetNickname();
+    setIsSaving(false);
   }, [nickname, nicknameStatus, validationError, onSave, resetNickname, currentNickname]);
 
   // 계산된 값들 (로딩 상태 개선)
@@ -93,7 +81,200 @@ export function useNicknameEdit({ currentNickname, onSave }: UseNicknameEditProp
     isNicknameChanged,
     canSave,
     handleNicknameChange,
+    handleCheckDuplicate,
     handleSave,
     resetNickname
+  };
+}
+
+// 프로필 수정 모달용 통합 훅
+interface UseProfileModalProps {
+  currentNickname: string;
+  currentProfileImageUrl?: string;
+  onSuccess?: () => void;
+}
+
+export function useProfileModal({
+  currentNickname,
+  currentProfileImageUrl,
+  onSuccess
+}: UseProfileModalProps) {
+  const { showToast } = useUIStore();
+  const { user } = useAuthUtils();
+  const updateProfileMutation = useUpdateProfile();
+
+  // 이미지 관련 상태
+  const [profileImageUrl, setProfileImageUrl] = useState(currentProfileImageUrl || '');
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string>('');
+
+  // 이미지 업로드 뮤테이션
+  const imageUploadMutation = useImageUploadQuery();
+
+  // 닉네임 편집 훅
+  const nicknameEdit = useProfileEdit({
+    currentNickname,
+    onSave: (newNickname: string) => {
+      handleProfileSave(newNickname);
+    }
+  });
+
+  // 통합 저장 로직
+  const handleProfileSave = useCallback((newNickname: string) => {
+    if (!user?.id) {
+      showToast('로그인이 필요합니다', 'error');
+      return;
+    }
+
+    // 이미지 파일이 선택된 경우 먼저 업로드
+    if (selectedImageFile) {
+      imageUploadMutation.mutate({
+        files: [selectedImageFile],
+        contentType: 'profile'
+      }, {
+        onSuccess: (uploadedImages) => {
+          const finalImageUrl = uploadedImages[0]?.url || profileImageUrl;
+          const updateData = {
+            nickname: newNickname.trim(),
+            profileImageUrl: finalImageUrl
+          };
+
+          updateProfileMutation.mutate({
+            userId: user.id,
+            updates: updateData
+          }, {
+            onSuccess: () => {
+              showToast('프로필이 성공적으로 업데이트되었습니다', 'success');
+              onSuccess?.();
+            },
+            onError: () => {
+              showToast('프로필 업데이트에 실패했습니다', 'error');
+            }
+          });
+        },
+        onError: () => {
+          showToast('이미지 업로드에 실패했습니다', 'error');
+        }
+      });
+    } else {
+      // 이미지가 없는 경우 바로 저장
+      const updateData: { nickname?: string; profileImageUrl?: string } = {};
+
+      if (newNickname.trim() !== currentNickname) {
+        updateData.nickname = newNickname.trim();
+      }
+
+      if (profileImageUrl && profileImageUrl !== currentProfileImageUrl) {
+        updateData.profileImageUrl = profileImageUrl;
+      }
+
+      // 변경사항이 있는 경우에만 업데이트
+      if (Object.keys(updateData).length > 0) {
+        updateProfileMutation.mutate({
+          userId: user.id,
+          updates: updateData
+        }, {
+          onSuccess: () => {
+            showToast('프로필이 성공적으로 업데이트되었습니다', 'success');
+            onSuccess?.();
+          },
+          onError: () => {
+            showToast('프로필 업데이트에 실패했습니다', 'error');
+          }
+        });
+      } else {
+        onSuccess?.();
+      }
+    }
+  }, [
+    user?.id,
+    selectedImageFile,
+    imageUploadMutation,
+    profileImageUrl,
+    currentNickname,
+    currentProfileImageUrl,
+    updateProfileMutation,
+    showToast,
+    onSuccess
+  ]);
+
+  // 이미지 선택 핸들러
+  const handleImageSelect = useCallback((file: File) => {
+    // 이미지 파일 검증
+    const validationResult = validateImages({ files: [file], contentType: 'profile' });
+    if (!validationResult.isValid) {
+      showToast(validationResult.errors[0], 'error');
+      return;
+    }
+
+    setSelectedImageFile(file);
+
+    // 이전 미리보기 URL 정리
+    if (previewImageUrl) {
+      URL.revokeObjectURL(previewImageUrl);
+    }
+
+    const newPreviewUrl = URL.createObjectURL(file);
+    setPreviewImageUrl(newPreviewUrl);
+  }, [previewImageUrl, showToast]);
+
+  // 모달 초기화
+  const resetModal = useCallback(() => {
+    nicknameEdit.resetNickname();
+    setProfileImageUrl(currentProfileImageUrl || '');
+    setSelectedImageFile(null);
+
+    if (previewImageUrl) {
+      URL.revokeObjectURL(previewImageUrl);
+      setPreviewImageUrl('');
+    }
+  }, [nicknameEdit, currentProfileImageUrl, previewImageUrl]);
+
+  // 메모리 정리
+  const cleanup = useCallback(() => {
+    if (previewImageUrl) {
+      URL.revokeObjectURL(previewImageUrl);
+    }
+  }, [previewImageUrl]);
+
+  // 통합 저장 핸들러 (닉네임 변경 여부에 따른 로직)
+  const handleSave = useCallback(() => {
+    const trimmedNickname = nicknameEdit.nickname.trim();
+
+    // 닉네임이 변경되지 않은 경우 바로 저장
+    if (trimmedNickname === currentNickname) {
+      handleProfileSave(trimmedNickname);
+      return;
+    }
+
+    // 닉네임이 변경된 경우 중복확인 체크
+    if (nicknameEdit.nicknameCheckStatus !== 'available') {
+      showToast('닉네임 중복확인이 필요합니다', 'error');
+      return;
+    }
+
+    // 중복확인이 완료된 경우 저장
+    nicknameEdit.handleSave();
+  }, [nicknameEdit, currentNickname, handleProfileSave, showToast]);
+
+  return {
+    // 닉네임 관련
+    ...nicknameEdit,
+
+    // 이미지 관련
+    profileImageUrl,
+    selectedImageFile,
+    previewImageUrl,
+    currentDisplayImageUrl: previewImageUrl || profileImageUrl,
+    isUploading: imageUploadMutation.isPending,
+
+    // 핸들러
+    handleImageSelect,
+    handleSave,
+    resetModal,
+    cleanup,
+
+    // 상태
+    isSaving: nicknameEdit.isSaving || imageUploadMutation.isPending || updateProfileMutation.isPending,
   };
 }

@@ -6,16 +6,13 @@ import { usePostLikeButton } from '@/domains/community/hooks/usePostLikeButton';
 import React from 'react';
 import { Button } from '@/shared/components/Button';
 import { IoHeart, IoHeartOutline } from 'react-icons/io5';
-import { User } from '@/domains/user/types/user';
 
 interface PostLikeButtonProps {
   post: Post;
-  currentUser?: User | null;
 }
 
 export const PostLikeButton = React.memo(({
-  post,
-  currentUser
+  post
 }: PostLikeButtonProps) => {
   const {
     isLiked,
@@ -23,7 +20,7 @@ export const PostLikeButton = React.memo(({
     isLoading,
     canLike,
     handleLikeToggle
-  } = usePostLikeButton({ post, currentUser });
+  } = usePostLikeButton({ post });
 
   return (
     <Button

@@ -21,6 +21,14 @@ export interface WritePostRequestDto {
   authorId: string;
 }
 
+export interface UpdatePostRequestDto {
+  title: string;
+  content: string;
+  categoryId?: string;
+}
+
+// DeletePostRequestDto와 ToggleLikeRequestDto 제거됨 - 토큰 기반 인증 사용
+
 // Post API Response DTOs
 export interface PostResponseDto {
   id: string;
@@ -57,9 +65,14 @@ export interface ToggleLikeResponseDto {
 export interface CommentWriteRequestDto {
   content: string;
   postId?: string;
-  authorId: string;
   parentId?: string;
 }
+
+export interface UpdateCommentRequestDto {
+  content: string;
+}
+
+// ToggleCommentLikeRequestDto 제거됨 - 토큰 기반 인증 사용
 
 export interface CommentResponseDto {
   id: string;

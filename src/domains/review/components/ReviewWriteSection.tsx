@@ -2,8 +2,12 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/shared/components/Button';
-import { ReviewWriteForm } from './write-form/ReviewWriteForm';
 import { useReviewWriteSection } from '../hooks/useReviewWriteSection';
+import { ReviewFormHeader } from './write-form/ReviewFormHeader';
+import { ReviewRatingSection } from './write-form/ReviewRatingSection';
+import { ReviewContentSection } from './write-form/ReviewContentSection';
+import { ReviewImageUpload } from './write-form/ReviewImageUploadSection';
+import { ReviewFormFooter } from './write-form/ReviewFormFooter';
 
 interface ReviewWriteSectionProps {
   productId: string; // 필수로 변경
@@ -13,7 +17,7 @@ interface ReviewWriteSectionProps {
 
 export const ReviewWriteSection = React.memo<ReviewWriteSectionProps>(function ReviewWriteSection({ productId, className = '', onReviewCreated }) {
   const [isWriting, setIsWriting] = useState(false);
-  
+
   // 콜백들을 컴포넌트 상단에서 정의
   const handleReviewCreated = React.useCallback(() => {
     setIsWriting(false); // 리뷰 작성 완료 후 UI 상태 초기화
@@ -22,13 +26,21 @@ export const ReviewWriteSection = React.memo<ReviewWriteSectionProps>(function R
 
   const handleStartWriting = React.useCallback(() => setIsWriting(true), []);
   const handleCancelWriting = React.useCallback(() => setIsWriting(false), []);
-  
+
   const {
     canWrite,
-    submitReview,
+    formData,
+    validationErrors,
+    isSubmitting,
+    handleRatingChange,
+    handleContentChange,
+    handleSubmit,
+    handleCancel,
+    setImageUploadManager,
   } = useReviewWriteSection({
     productId,
     onReviewCreated: handleReviewCreated,
+    onCancel: handleCancelWriting
   });
 
   if (!isWriting) {
@@ -54,10 +66,33 @@ export const ReviewWriteSection = React.memo<ReviewWriteSectionProps>(function R
 
   return (
     <div className={className}>
-      <ReviewWriteForm
-        onCancel={handleCancelWriting}
-        onSubmit={submitReview}
-      />
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <ReviewFormHeader onCancel={handleCancel} />
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <ReviewRatingSection
+            formData={formData}
+            validationErrors={validationErrors}
+            onRatingChange={handleRatingChange}
+          />
+
+          <ReviewContentSection
+            formData={formData}
+            validationErrors={validationErrors}
+            onContentChange={handleContentChange}
+          />
+
+          <ReviewImageUpload
+            onGetUploadManager={setImageUploadManager}
+          />
+
+          <ReviewFormFooter
+            isSubmitting={isSubmitting}
+            isUploading={false}
+            onCancel={handleCancel}
+          />
+        </form>
+      </div>
     </div>
   );
 });

@@ -1,24 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/infrastructure/api/supabaseServerAuth'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 import {
   createSuccessResponse,
   createErrorResponse,
   mapApiError,
 } from '@/infrastructure/api/supabaseResponseUtils'
-import { UserSessionResponseDto, SessionResponseDto } from '@/domains/auth/types/dto/authDto'
+import { LoginRequestDto, UserSessionResponseDto, SessionResponseDto } from '@/domains/auth/types/dto/authDto'
 import { UserResponseDto } from '@/domains/user/types/dto/userDto'
-
-interface LoginRequestDto {
-  email: string;
-  password: string;
-}
 
 export async function POST(request: NextRequest) {
   try {
     const { email, password }: LoginRequestDto = await request.json()
 
-    const supabase = await createSupabaseServerClient()
-    
+    const supabase = await createSupabaseClientWithCookie()
+
     // Supabase Auth로 로그인 시도
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
@@ -34,15 +29,15 @@ export async function POST(request: NextRequest) {
     
     // 🔥 Auth 테이블에서 삭제된 사용자 체크
     if (authData.user.deleted_at != null) {
-      const mappedError = mapApiError({ 
+      const mappedError = mapApiError({
         status: 400,
-        message: 'User account has been deleted' 
+        message: 'User account has been deleted'
       })
       const errorResponse = createErrorResponse(mappedError)
-      
+
       return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
-    
+
     // auth 메타데이터에서 사용자 정보 추출
     const userMetadata = authData.user.user_metadata || {}
 

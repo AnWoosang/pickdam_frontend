@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSuccessResponse, createErrorResponse, mapApiError } from '@/infrastructure/api/supabaseResponseUtils'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
+import { IncrementViewResponseDto } from '@/domains/product/types/dto/productDto'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {const { id } = await params
-    
+  try {
+    const supabase = await createSupabaseClientWithCookie()
+    const { id } = await params
+
     // 간소화된 RPC 함수 사용하여 조회수 증가
-    const { data, error } = await supabaseServer.rpc('increment_product_view_simple', {
+    const { data, error } = await supabase.rpc('increment_product_view_simple', {
       p_product_id: id
     })
     
@@ -19,10 +22,14 @@ export async function POST(
       return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
-    return NextResponse.json(createSuccessResponse({
+    // IncrementViewResponseDto 형태로 변환
+    const responseDto: IncrementViewResponseDto = {
       success: data.success,
+      incremented: true,
       newViewCount: data.view_count
-    }))
+    }
+
+    return NextResponse.json(createSuccessResponse(responseDto))
     
   } catch (error) {
     const mappedError = mapApiError(error)

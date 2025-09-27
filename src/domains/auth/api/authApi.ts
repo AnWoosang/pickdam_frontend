@@ -1,23 +1,23 @@
-import { LoginForm, SessionInfo, EmailVerificationParams, ResendEmailForm } from '@/domains/auth/types/auth';
+import { LoginForm, SessionInfo, EmailVerificationParams, ResendEmailForm, FindPasswordForm, ResetPasswordForm } from '@/domains/auth/types/auth';
 import { User } from '@/domains/user/types/user';
-import { LoginApiResponseDto, ResendEmailRequestDto } from '@/domains/auth/types/dto/authDto';
+import { LoginRequestDto, UserSessionResponseDto, ResendEmailRequestDto } from '@/domains/auth/types/dto/authDto';
 import { UserResponseDto } from '@/domains/user/types/dto/userDto';
 import { apiClient } from '@/shared/api/axiosClient';
 import { toUser } from '@/domains/user/types/dto/userMapper';
 import { toSession } from '@/domains/auth/types/dto/authMapper';
 import { ApiResponse } from '@/shared/api/types';
 import { API_ROUTES } from '@/app/router/apiRoutes';
-import { isProtectedRoute } from '@/app/router/auth-config';
-import { BusinessError } from '@/shared/error/BusinessError';
 
 
 export const authApi = {
-  // 로그인 API 
-  async loginWithEmail(requestDto: LoginForm): Promise<SessionInfo> {
-    const response: ApiResponse<LoginApiResponseDto> = await apiClient.post(API_ROUTES.AUTH.LOGIN, {
-      email: requestDto.email,
-      password: requestDto.password,
-    });
+  // 로그인 API
+  async loginWithEmail(loginForm: LoginForm): Promise<SessionInfo> {
+    const requestDto: LoginRequestDto = {
+      email: loginForm.email,
+      password: loginForm.password
+    };
+
+    const response: ApiResponse<UserSessionResponseDto> = await apiClient.post(API_ROUTES.AUTH.LOGIN, requestDto);
 
     return {
       user: toUser(response.data!.user),
@@ -32,24 +32,13 @@ export const authApi = {
 
   // 현재 사용자 정보 조회
   async getCurrentUser(): Promise<User | null> {
-    try {
-      const response: ApiResponse<{ user: UserResponseDto }> = await apiClient.get(API_ROUTES.AUTH.ME);
-      return toUser(response.data!.user);
-    } catch (error) {
-      // BusinessError만 처리 (인증 관련 에러)
-      if (error instanceof BusinessError) {
-        if (typeof window !== 'undefined' && !isProtectedRoute(window.location.pathname)) {
-          console.log("공개 라우트에서 인증 에러, null 반환:", window.location.pathname);
-          return null;
-        }
-      }
-      throw error;
-    }
+    const response: ApiResponse<{ user: UserResponseDto }> = await apiClient.get(API_ROUTES.AUTH.ME);
+    return toUser(response.data!.user);
   },
 
   // 세션 새로고침
   async refreshSession(): Promise<SessionInfo> {
-    const response: ApiResponse<LoginApiResponseDto> = await apiClient.post(API_ROUTES.AUTH.REFRESH);
+    const response: ApiResponse<UserSessionResponseDto> = await apiClient.post(API_ROUTES.AUTH.REFRESH);
 
     return {
       user: toUser(response.data!.user),
@@ -70,5 +59,18 @@ export const authApi = {
     };
     await apiClient.post(API_ROUTES.AUTH.RESEND_EMAIL, requestDto);
   },
-};
 
+  // 비밀번호 찾기 (재설정 이메일 발송)
+  async findPassword(form: FindPasswordForm): Promise<void> {
+    await apiClient.post(API_ROUTES.AUTH.FIND_PASSWORD, {
+      email: form.email.toLowerCase().trim()
+    });
+  },
+
+  // 비밀번호 재설정 (실제 비밀번호 변경)
+  async resetPassword(form: ResetPasswordForm): Promise<void> {
+    await apiClient.post(API_ROUTES.AUTH.RESET_PASSWORD, {
+      password: form.password.trim()
+    });
+  },
+};

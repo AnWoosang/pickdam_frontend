@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { StatusCodes } from 'http-status-codes'
 import { validateNickname } from '@/shared/validation/common'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -10,9 +10,10 @@ import {
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
     const { searchParams } = new URL(request.url)
     const nickname = searchParams.get('nickname')
-    
+
     if (!nickname) {
       const mappedError = mapApiError({ message: 'nickname이 필요합니다', status: StatusCodes.BAD_REQUEST })
       const errorResponse = createErrorResponse(mappedError)
@@ -28,8 +29,8 @@ export async function GET(request: NextRequest) {
     }
 
     const trimmedNickname = nickname.trim()
-    
-    const { data, error } = await supabaseServer
+
+    const { data, error } = await supabase
       .from('member')
       .select('id')
       .eq('nickname', trimmedNickname)

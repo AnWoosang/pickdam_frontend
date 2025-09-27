@@ -21,7 +21,6 @@ export function LogoSearchSection({ showSearchBar = true }: LogoSearchSectionPro
   const { user, isAuthenticated } = useAuthUtils();
 
   const [activeSection, setActiveSection] = useState<'recent' | 'favorite' | 'user' | null>(null);
-  
 
   const toggleSection = (section: 'recent' | 'favorite' | 'user') => {
     if (activeSection === section) {
@@ -30,8 +29,6 @@ export function LogoSearchSection({ showSearchBar = true }: LogoSearchSectionPro
       setActiveSection(section);
     }
   };
-
-
 
   return (
     <div className="flex items-center w-full">
@@ -66,13 +63,13 @@ export function LogoSearchSection({ showSearchBar = true }: LogoSearchSectionPro
             />
 
             <WishlistDropdown
-              user={user}
+              user={user ?? null}
               isActive={activeSection === 'favorite'}
               onToggle={() => toggleSection('favorite')}
             />
 
             <UserMenuDropdown
-              user={user}
+              user={user ?? null}
               isActive={activeSection === 'user'}
               onToggle={() => toggleSection('user')}
             />
@@ -84,4 +81,3 @@ export function LogoSearchSection({ showSearchBar = true }: LogoSearchSectionPro
     </div>
   );
 }
-

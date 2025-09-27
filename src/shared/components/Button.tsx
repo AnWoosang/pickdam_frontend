@@ -46,7 +46,7 @@ export function Button({
   const variantClasses = {
     primary: 'bg-primary text-white hover:bg-primary/90 focus:ring-primary',
     secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500 border border-gray-300',
-    destructive: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500',
+    destructive: 'bg-warning text-white hover:bg-red-500 focus:ring-red-500',
     ghost: 'text-gray-600 hover:text-gray-800 hover:bg-gray-100 focus:ring-gray-500',
     warning: 'bg-warning text-white hover:bg-warningLight focus:ring-warning'
   };

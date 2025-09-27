@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { BaseModal } from '@/shared/components/BaseModal';
+import { Button } from '@/shared/components/Button';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { WithdrawMemberForm, WITHDRAW_REASON_LABELS } from '@/domains/user/types/user';
 
 interface WithdrawModalProps {
@@ -21,6 +23,7 @@ export function WithdrawModal({
   const [form, setForm] = useState<WithdrawMemberForm>({
     reason: undefined
   });
+  const [isCustomReason, setIsCustomReason] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -32,7 +35,7 @@ export function WithdrawModal({
     try {
       await onWithdraw(form);
       onClose();
-    } catch (error) {
+    } catch {
       // 에러는 상위에서 처리
     } finally {
       setShowConfirm(false);
@@ -42,6 +45,7 @@ export function WithdrawModal({
   const handleClose = () => {
     if (!isLoading) {
       setForm({ reason: undefined });
+      setIsCustomReason(false);
       setShowConfirm(false);
       onClose();
     }
@@ -54,7 +58,6 @@ export function WithdrawModal({
         isOpen={isOpen && !showConfirm}
         onClose={handleClose}
         title="회원탈퇴"
-        icon={<AlertTriangle className="w-6 h-6 text-red-500" />}
         size="medium"
         closable={!isLoading}
         closeOnBackdrop={!isLoading}
@@ -65,7 +68,7 @@ export function WithdrawModal({
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-red-700">
+                <div className="text-sm text-gray-700">
                   <p className="font-medium mb-2">회원탈퇴 시 다음 사항에 유의해주세요:</p>
                   <ul className="space-y-1 list-disc list-inside">
                     <li>작성하신 게시글과 댓글이 삭제됩니다</li>
@@ -79,83 +82,93 @@ export function WithdrawModal({
 
             {/* 탈퇴 사유 선택 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                탈퇴 사유를 선택해주세요 (선택사항)
+              <label className="block text-sm font-medium text-black mb-3">
+                탈퇴 사유를 선택해주세요
               </label>
               <div className="space-y-3">
                 {Object.entries(WITHDRAW_REASON_LABELS).map(([key, label]) => (
-                  <label key={key} className="flex items-center">
+                  <label key={key} className="flex items-center cursor-pointer">
                     <input
                       type="radio"
                       name="reason"
                       value={label}
-                      checked={form.reason === label}
-                      onChange={(e) => setForm({ reason: e.target.value })}
+                      checked={label === '기타' ? isCustomReason : form.reason === label}
+                      onChange={(e) => {
+                        if (label === '기타') {
+                          setIsCustomReason(true);
+                          setForm({ reason: '' });
+                        } else {
+                          setIsCustomReason(false);
+                          setForm({ reason: e.target.value });
+                        }
+                      }}
                       className="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500"
                     />
                     <span className="ml-3 text-sm text-gray-700">{label}</span>
                   </label>
                 ))}
               </div>
+
+              {/* 기타 사유 입력 필드 */}
+              {isCustomReason && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-black mb-2">
+                    구체적인 사유를 입력해주세요
+                  </label>
+                  <textarea
+                    value={form.reason || ''}
+                    onChange={(e) => setForm({ reason: e.target.value })}
+                    placeholder="탈퇴 사유를 자세히 입력해주세요..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring focus:ring-warning focus:border-warning text-sm font-semibold"
+                    rows={3}
+                    maxLength={500}
+                  />
+                  <div className="text-right text-xs text-gray-500 mt-1">
+                    {form.reason?.length || 0}/500
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           {/* 버튼 영역 */}
           <div className="flex gap-3 mt-8">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={handleClose}
               disabled={isLoading}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="flex-1"
             >
               취소
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              variant="warning"
               disabled={isLoading}
-              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              isLoading={isLoading}
+              className="flex-1"
             >
-              {isLoading ? '처리 중...' : '탈퇴하기'}
-            </button>
+              탈퇴하기
+            </Button>
           </div>
         </form>
       </BaseModal>
 
       {/* 확인 다이얼로그 */}
-      <BaseModal
+      <ConfirmDialog
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
-        title="회원탈퇴 확인"
-        icon={<AlertTriangle className="w-6 h-6 text-red-500" />}
-        size="small"
-        closable={!isLoading}
-        closeOnBackdrop={!isLoading}
-      >
-        <div className="p-6">
-          <p className="text-gray-700 mb-6">
-            정말로 탈퇴하시겠습니까?<br />
-            이 작업은 되돌릴 수 없습니다.
-          </p>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => setShowConfirm(false)}
-              disabled={isLoading}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-            >
-              아니오
-            </button>
-            <button
-              type="button"
-              onClick={handleConfirmWithdraw}
-              disabled={isLoading}
-              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-            >
-              {isLoading ? '처리 중...' : '예'}
-            </button>
-          </div>
-        </div>
-      </BaseModal>
+        onConfirm={handleConfirmWithdraw}
+        title="회원탈퇴"
+        message="정말로 탈퇴하시겠습니까?"
+        confirmText="예"
+        cancelText="아니오"
+        confirmVariant="destructive"
+        icon={<AlertTriangle className="w-5 h-5 text-red-500" />}
+        isLoading={isLoading}
+        width="w-96"
+      />
     </>
   );
 }

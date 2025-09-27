@@ -13,6 +13,12 @@ export interface WithdrawMemberRequestDto {
   reason?: string;
 }
 
+export type ToggleWishlistRequestDto = Record<string, never>;
+
+export interface RemoveMultipleWishlistRequestDto {
+  productIds: string[];
+}
+
 // =============================================
 // RESPONSE DTOs
 // =============================================

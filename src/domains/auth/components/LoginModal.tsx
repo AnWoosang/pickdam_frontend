@@ -2,18 +2,19 @@
 
 import React, { useCallback, useReducer } from "react";
 import { X } from "lucide-react";
+import toast from "react-hot-toast";
 import { Logo } from "@/shared/components/Logo";
 import { useLoginModal } from "../hooks/useLoginModal";
+import { LoginForm as LoginFormType } from "@/domains/auth/types/auth";
 import { LoginForm } from "./login/LoginForm";
 import { RememberMeSection } from "./login/RememberMeSection";
-import { SocialLoginButtons } from "./login/SocialLoginButtons";
 import { SignupPrompt } from "./login/SignupPrompt";
 import { LoginDialogs } from "./login/LoginDialogs";
 
 // 모달 스타일 상수
 const MODAL_STYLES = {
-  maxWidth: "400px",
-  minHeight: "580px"
+  maxWidth: "380px",
+  minHeight: "440px"
 } as const;
 
 // Dialog 상태 타입 정의
@@ -24,6 +25,7 @@ interface DialogState {
   successMessage: string;
   unverifiedEmail: string;
   errorMessage: string;
+  hasCredentialError: boolean; // 로그인 실패 시 입력란 빨간색 표시용
 }
 
 // Dialog 액션 타입 정의
@@ -31,9 +33,11 @@ type DialogAction =
   | { type: 'SHOW_ERROR'; message: string }
   | { type: 'SHOW_RESEND'; email: string }
   | { type: 'SHOW_SUCCESS'; message: string }
+  | { type: 'SHOW_CREDENTIAL_ERROR' }
   | { type: 'CLOSE_ERROR' }
   | { type: 'CLOSE_RESEND' }
   | { type: 'CLOSE_SUCCESS' }
+  | { type: 'CLEAR_CREDENTIAL_ERROR' }
   | { type: 'RESET_ALL' };
 
 // 초기 상태
@@ -43,7 +47,8 @@ const initialDialogState: DialogState = {
   showSuccessDialog: false,
   successMessage: '',
   unverifiedEmail: '',
-  errorMessage: ''
+  errorMessage: '',
+  hasCredentialError: false
 };
 
 // 리듀서 함수
@@ -55,7 +60,8 @@ function dialogReducer(state: DialogState, action: DialogAction): DialogState {
         showErrorDialog: true,
         errorMessage: action.message,
         showResendDialog: false,
-        showSuccessDialog: false
+        showSuccessDialog: false,
+        hasCredentialError: false
       };
     case 'SHOW_RESEND':
       return {
@@ -63,7 +69,8 @@ function dialogReducer(state: DialogState, action: DialogAction): DialogState {
         showResendDialog: true,
         unverifiedEmail: action.email,
         showErrorDialog: false,
-        showSuccessDialog: false
+        showSuccessDialog: false,
+        hasCredentialError: false
       };
     case 'SHOW_SUCCESS':
       return {
@@ -71,7 +78,16 @@ function dialogReducer(state: DialogState, action: DialogAction): DialogState {
         showSuccessDialog: true,
         successMessage: action.message,
         showErrorDialog: false,
-        showResendDialog: false
+        showResendDialog: false,
+        hasCredentialError: false
+      };
+    case 'SHOW_CREDENTIAL_ERROR':
+      return {
+        ...state,
+        hasCredentialError: true,
+        showErrorDialog: false,
+        showResendDialog: false,
+        showSuccessDialog: false
       };
     case 'CLOSE_ERROR':
       return {
@@ -91,6 +107,11 @@ function dialogReducer(state: DialogState, action: DialogAction): DialogState {
         showSuccessDialog: false,
         successMessage: ''
       };
+    case 'CLEAR_CREDENTIAL_ERROR':
+      return {
+        ...state,
+        hasCredentialError: false
+      };
     case 'RESET_ALL':
       return initialDialogState;
     default:
@@ -104,35 +125,36 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
+  // UI Dialog state (useReducer로 통합 관리)
+  const [dialogState, dispatch] = useReducer(dialogReducer, initialDialogState);
+
   const {
     // Loading states
     isLoading,
     isResending,
-    
+
     // Actions
     handleLogin,
     handleResendEmail,
-  } = useLoginModal();
-
-  // UI Dialog state (useReducer로 통합 관리)
-  const [dialogState, dispatch] = useReducer(dialogReducer, initialDialogState);
-
-  // 로그인 핸들러
-  const handleLoginSubmit = useCallback(async (formData: { email: string; password: string }) => {
-    const result = await handleLogin(formData);
-    
-    if (result.success) {
-      onClose(); // 로그인 성공 시 모달 닫기
-    } else if (result.error) {
-      if (result.error.code === 'EMAIL_NOT_VERIFIED' && result.error.email) {
-        // 이메일 미인증 에러
-        dispatch({ type: 'SHOW_RESEND', email: result.error.email });
-      } else {
-        // 일반적인 로그인 실패
-        dispatch({ type: 'SHOW_ERROR', message: result.error.message });
-      }
+  } = useLoginModal({
+    onSuccess: () => onClose(),
+    onEmailNotVerified: (email) => {
+      toast.error('이메일 인증이 필요합니다.');
+      dispatch({ type: 'SHOW_RESEND', email });
+    },
+    onInvalidCredentials: () => {
+      toast.error('이메일 또는 비밀번호를 확인해주세요.');
+      dispatch({ type: 'SHOW_CREDENTIAL_ERROR' });
+    },
+    onError: (message) => {
+      dispatch({ type: 'SHOW_ERROR', message });
     }
-  }, [handleLogin, onClose]);
+  });
+
+  // 로그인 핸들러 (이제 모든 로직이 useLoginModal 콜백에서 처리됨)
+  const handleLoginSubmit = useCallback(async (formData: LoginFormType) => {
+    await handleLogin(formData);
+  }, [handleLogin]);
 
   // 재전송 확인 핸들러
   const handleResendConfirm = useCallback(async () => {
@@ -150,6 +172,13 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const handleResendCancel = useCallback(() => {
     dispatch({ type: 'CLOSE_RESEND' });
   }, []);
+
+  // 입력 시 credential 에러 상태 초기화
+  const handleFormChange = useCallback((_formData: LoginFormType) => {
+    if (dialogState.hasCredentialError) {
+      dispatch({ type: 'CLEAR_CREDENTIAL_ERROR' });
+    }
+  }, [dialogState.hasCredentialError]);
 
   if (!isOpen) return null;
 
@@ -186,6 +215,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         <LoginForm
           isLoading={isLoading}
           onSubmit={handleLoginSubmit}
+          hasCredentialError={dialogState.hasCredentialError}
+          onChange={handleFormChange}
         />
 
         {/* Remember Me Section */}
@@ -193,8 +224,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           onClose={onClose}
         />
 
-        {/* Social Login */}
-        <SocialLoginButtons isLoading={isLoading} />
 
         {/* Signup Prompt */}
         <SignupPrompt onClose={onClose} />

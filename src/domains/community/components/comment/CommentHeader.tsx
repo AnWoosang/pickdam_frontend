@@ -14,6 +14,7 @@ interface CommentHeaderProps {
   onDelete: () => void;
   isUpdating: boolean;
   isDeleting: boolean;
+  onEditingChange?: (isEditing: boolean) => void;
 }
 
 export const CommentHeader = React.memo(({
@@ -22,29 +23,28 @@ export const CommentHeader = React.memo(({
   onEdit,
   onDelete,
   isUpdating,
-  isDeleting
+  isDeleting,
+  onEditingChange
 }: CommentHeaderProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content);
 
   const handleEdit = useCallback(() => {
     if (isEditing) {
-      if (!editedContent.trim()) {
-        alert('내용을 입력해주세요.');
-        return;
-      }
-      
       onEdit(editedContent.trim());
       setIsEditing(false);
+      onEditingChange?.(false);
     } else {
       setIsEditing(true);
+      onEditingChange?.(true);
     }
-  }, [isEditing, editedContent, onEdit]);
+  }, [isEditing, editedContent, onEdit, onEditingChange]);
 
   const handleCancelEdit = useCallback(() => {
     setIsEditing(false);
     setEditedContent(comment.content);
-  }, [comment.content]);
+    onEditingChange?.(false);
+  }, [comment.content, onEditingChange]);
 
   return (
     <>
@@ -67,11 +67,11 @@ export const CommentHeader = React.memo(({
         
         {isOwner && (
           <div className="flex gap-1">
-            <Button 
-              variant="ghost" 
-              size="small" 
-              onClick={handleEdit} 
-              disabled={isUpdating}
+            <Button
+              variant="ghost"
+              size="small"
+              onClick={handleEdit}
+              disabled={isUpdating || (isEditing && (!editedContent.trim() || editedContent.trim() === comment.content.trim()))}
             >
               {isEditing ? '저장' : '수정'}
             </Button>

@@ -2,12 +2,12 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
 import { PostHeader } from '@/domains/community/components/post/PostHeader';
 import { PostContent } from '@/domains/community/components/post/PostContent';
 import { CommentSection } from '@/domains/community/components/comment/CommentSection';
 import { usePostDetailPage } from '@/domains/community/hooks/usePostDetailPage';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
+import { useUIStore } from '@/domains/auth/store/authStore';
 import { ErrorMessage } from '@/shared/components/ErrorMessage';
 import { Breadcrumb, BreadcrumbItem } from '@/shared/components/Breadcrumb';
 import { ROUTES } from '@/app/router/routes';
@@ -18,12 +18,13 @@ interface PostDetailPageProps {
 
 export function PostDetailPage({ postId }: PostDetailPageProps) {
   const router = useRouter();
+  const { showToast } = useUIStore();
   
   // 부모에서 관리해야 할 상태와 로직
   const {
     post,
     loading,
-    hasError,
+    queryError,
     user,
     deletePost,
   } = usePostDetailPage({ postId });
@@ -32,11 +33,11 @@ export function PostDetailPage({ postId }: PostDetailPageProps) {
   const handlePostDelete = () => {
     deletePost({
       onSuccess: () => {
-        toast.success('게시글이 삭제되었습니다.');
+        showToast('게시글이 삭제되었습니다.', 'success');
         router.push(ROUTES.COMMUNITY.LIST);
       },
-      onError: (error) => {
-        toast.error(error.message);
+      onError: () => {
+        showToast('게시글 삭제에 실패했습니다.', 'error');
       }
     });
   };
@@ -51,11 +52,11 @@ export function PostDetailPage({ postId }: PostDetailPageProps) {
   }
 
   // 에러 상태
-  if (hasError) {
+  if (queryError) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <ErrorMessage 
-          message="게시글을 불러오는데 실패했습니다. 네트워크 문제이거나 일시적인 오류일 수 있습니다."
+          message="게시글을 불러오는데 실패했습니다. 잠시 후 다시 실행해주세요."
           onRetry={() => window.location.reload()}
         />
       </div>
@@ -108,11 +109,11 @@ export function PostDetailPage({ postId }: PostDetailPageProps) {
         
         <PostContent 
           post={post}
-          user={user}
         />
         
-        <CommentSection 
+        <CommentSection
           postId={postId}
+          postCommentCount={post.commentCount}
         />
       </div>
 

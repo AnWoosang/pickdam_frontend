@@ -11,9 +11,10 @@ interface UIState {
   openLoginModal: () => void;
   closeLoginModal: () => void;
   requireAuth: () => boolean;
+  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
-export const uiStore = create<UIState>((set, get) => ({
+export const uiStore = create<UIState>((set) => ({
   // 초기 상태
   isLoginModalOpen: false,
 
@@ -27,6 +28,23 @@ export const uiStore = create<UIState>((set, get) => ({
     toast.error('로그인이 필요합니다.');
     set({ isLoginModalOpen: true });
     return false;
+  },
+
+  // 토스트 표시
+  showToast: (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    const options = { duration: 2000 };
+
+    switch (type) {
+      case 'success':
+        toast.success(message, options);
+        break;
+      case 'error':
+        toast.error(message, options);
+        break;
+      default:
+        toast(message, options);
+        break;
+    }
   },
 }));
 

@@ -28,75 +28,57 @@ const VALIDATION_LIMITS = {
  * HTML 콘텐츠에서 실제 텍스트 길이를 안전하게 계산
  */
 const getActualTextLength = (content: string): number => {
-  try {
-    // SSR 환경에서는 간단한 텍스트 추출
-    if (typeof window === 'undefined') {
-      return content.replace(/<[^>]*>/g, '').trim().length;
-    }
-
-    // Data URL과 이미지 URL을 플레이스홀더로 대체
-    const contentForValidation = content
-      .replace(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/g, '[이미지]')
-      .replace(/https?:\/\/[^\s"'>]+\.(jpg|jpeg|png|gif|webp)/gi, '[이미지]');
-    
-    // DOMParser를 사용한 안전한 HTML 파싱 (XSS 방지)
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(contentForValidation, 'text/html');
-    
-    // 스크립트 태그 제거 (보안)
-    doc.querySelectorAll('script').forEach(el => el.remove());
-    
-    return doc.body.textContent?.trim().length || 0;
-  } catch (error) {
-    console.error('텍스트 길이 계산 실패:', error);
-    // 에러 시 태그만 제거한 기본 길이 반환
+  // SSR 환경에서는 간단한 텍스트 추출
+  if (typeof window === 'undefined') {
     return content.replace(/<[^>]*>/g, '').trim().length;
   }
+
+  // Data URL과 이미지 URL을 플레이스홀더로 대체
+  const contentForValidation = content
+    .replace(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/g, '[이미지]')
+    .replace(/https?:\/\/[^\s"'>]+\.(jpg|jpeg|png|gif|webp)/gi, '[이미지]');
+  
+  // DOMParser를 사용한 안전한 HTML 파싱 (XSS 방지)
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(contentForValidation, 'text/html');
+  
+  // 스크립트 태그 제거 (보안)
+  doc.querySelectorAll('script').forEach(el => el.remove());
+  
+  return doc.body.textContent?.trim().length || 0;
 };
 
 export const validatePost = (input: PostValidationInput): PostValidationResult => {
   const errors: { title?: string; content?: string; category?: string } = {};
 
-  try {
-    // 제목 검증
-    if (!input.title || !input.title.trim()) {
-      errors.title = '제목을 입력해주세요.';
-    } else if (input.title.trim().length < VALIDATION_LIMITS.TITLE_MIN_LENGTH) {
-      errors.title = `제목은 ${VALIDATION_LIMITS.TITLE_MIN_LENGTH}자 이상 입력해주세요.`;
-    } else if (input.title.trim().length > VALIDATION_LIMITS.TITLE_MAX_LENGTH) {
-      errors.title = `제목은 ${VALIDATION_LIMITS.TITLE_MAX_LENGTH}자 이하로 입력해주세요.`;
-    }
-
-    // 내용 검증
-    if (!input.content || !input.content.trim()) {
-      errors.content = '내용을 입력해주세요.';
-    } else {
-      const actualTextLength = getActualTextLength(input.content);
-      
-      if (actualTextLength < VALIDATION_LIMITS.CONTENT_MIN_LENGTH) {
-        errors.content = `내용은 ${VALIDATION_LIMITS.CONTENT_MIN_LENGTH}자 이상 입력해주세요.`;
-      } else if (actualTextLength > VALIDATION_LIMITS.CONTENT_MAX_LENGTH) {
-        errors.content = `내용은 ${VALIDATION_LIMITS.CONTENT_MAX_LENGTH}자 이하로 입력해주세요.`;
-      }
-    }
-
-    // 카테고리 검증
-    if (!input.categoryId || !isValidCategoryId(input.categoryId)) {
-      errors.category = '유효한 카테고리를 선택해주세요.';
-    }
-
-    return {
-      isValid: Object.keys(errors).length === 0,
-      errors
-    };
-  } catch (error) {
-    console.error('게시글 유효성 검증 실패:', error);
-    // 유효성 검증 실패 시 안전한 기본값 반환
-    return {
-      isValid: false,
-      errors: {
-        title: '유효성 검증 중 오류가 발생했습니다.',
-      }
-    };
+  if (!input.title || !input.title.trim()) {
+    errors.title = '제목을 입력해주세요.';
+  } else if (input.title.trim().length < VALIDATION_LIMITS.TITLE_MIN_LENGTH) {
+    errors.title = `제목은 ${VALIDATION_LIMITS.TITLE_MIN_LENGTH}자 이상 입력해주세요.`;
+  } else if (input.title.trim().length > VALIDATION_LIMITS.TITLE_MAX_LENGTH) {
+    errors.title = `제목은 ${VALIDATION_LIMITS.TITLE_MAX_LENGTH}자 이하로 입력해주세요.`;
   }
+
+  // 내용 검증
+  if (!input.content || !input.content.trim()) {
+    errors.content = '내용을 입력해주세요.';
+  } else {
+    const actualTextLength = getActualTextLength(input.content);
+    
+    if (actualTextLength < VALIDATION_LIMITS.CONTENT_MIN_LENGTH) {
+      errors.content = `내용은 ${VALIDATION_LIMITS.CONTENT_MIN_LENGTH}자 이상 입력해주세요.`;
+    } else if (actualTextLength > VALIDATION_LIMITS.CONTENT_MAX_LENGTH) {
+      errors.content = `내용은 ${VALIDATION_LIMITS.CONTENT_MAX_LENGTH}자 이하로 입력해주세요.`;
+    }
+  }
+
+  // 카테고리 검증
+  if (!input.categoryId || !isValidCategoryId(input.categoryId)) {
+    errors.category = '유효한 카테고리를 선택해주세요.';
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
 };

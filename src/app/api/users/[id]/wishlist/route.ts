@@ -1,27 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseServer } from '@/infrastructure/api/supabaseServer'
+import { createSupabaseClientWithCookie } from "@/infrastructure/api/supabaseClient";
 import {
   createPaginatedResponse,
-  createSuccessResponse,
   createErrorResponse,
   mapApiError,
 } from '@/infrastructure/api/supabaseResponseUtils'
+import { ProductResponseDto } from '@/domains/product/types/dto/productDto'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
     const { id } = await params
     const { searchParams } = new URL(request.url)
-    
+
     // 페이지네이션 파라미터
     const page = parseInt(searchParams.get('page') || '1', 10)
     const limit = parseInt(searchParams.get('limit') || '20', 10)
     const offset = (page - 1) * limit
-    
+
     // 한 번의 쿼리로 데이터와 총 개수 동시 조회
-    const { data: wishlistItems, error, count: totalCount } = await supabaseServer
+    const { data: wishlistItems, error, count: totalCount } = await supabase
       .from('wishlist')
       .select(`
         id,
@@ -42,11 +43,24 @@ export async function GET(
       return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
-    const products = wishlistItems?.map(item => ({
-      ...item.product,
-      wishlistId: item.id,
-      wishlistCreatedAt: item.created_at
-    })) || []
+    // ProductResponseDto 형태로 변환 (wishlist 정보 포함)
+    const products: (ProductResponseDto & { wishlistId: string; wishlistCreatedAt: string })[] = wishlistItems
+      ?.map((item: any) => ({
+          id: item.product.id,
+          name: item.product.name,
+          price: item.product.price,
+          thumbnailImageUrl: item.product.thumbnail_image_url,
+          productCategory: item.product.product_category,
+          inhaleType: item.product.inhale_type,
+          capacity: item.product.capacity,
+          brand: item.product.brand,
+          totalViews: item.product.total_views,
+          totalFavorites: item.product.total_favorites,
+          weeklyViews: 0, // 위시리스트에서는 기본값
+          isAvailable: item.product.is_available,
+          wishlistId: item.id,
+          wishlistCreatedAt: item.created_at
+        })) || []
     
     const totalPages = Math.ceil((totalCount || 0) / limit);
     return NextResponse.json(createPaginatedResponse(products, {
@@ -70,12 +84,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createSupabaseClientWithCookie()
     const { id } = await params
     const body = await request.json()
     const { productIds } = body
-    
+
     // IN 절을 사용한 벌크 삭제
-    const { error } = await supabaseServer
+    const { error } = await supabase
       .from('wishlist')
       .delete()
       .eq('member_id', id)
