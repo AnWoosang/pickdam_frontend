@@ -30,7 +30,7 @@ export async function GET(
         product:product_id (
           id, name, price, thumbnail_image_url, product_category,
           inhale_type, capacity, brand, total_views,
-          total_favorites, is_available
+          total_favorites
         )
       `, { count: 'exact' })
       .eq('member_id', id)
@@ -57,7 +57,6 @@ export async function GET(
           totalViews: item.product.total_views,
           totalFavorites: item.product.total_favorites,
           weeklyViews: 0, // 위시리스트에서는 기본값
-          isAvailable: item.product.is_available,
           wishlistId: item.id,
           wishlistCreatedAt: item.created_at
         })) || []

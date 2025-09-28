@@ -58,7 +58,6 @@ export function toProduct(dto: ProductResponseDto): Product {
     totalFavorites: dto.totalFavorites,
     weeklyViews: dto.weeklyViews,
     brand: dto.brand,
-    isAvailable: dto.isAvailable
   };
 }
 

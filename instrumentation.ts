@@ -16,8 +16,7 @@ export async function register() {
       initSentry();
     }
   } catch (error) {
-    // Sentry 초기화 실패 시 로그 (프로덕션에서만)
-    console.error('Failed to initialize Sentry:', error);
+    // Sentry 초기화 실패 시 조용히 무시
   }
 }
 
@@ -29,6 +28,6 @@ export const onRequestError = process.env.NODE_ENV === 'development'
         const { captureRequestError } = await import('@sentry/nextjs');
         return captureRequestError(error, request, context);
       } catch (e) {
-        console.error('Failed to capture request error:', e);
+        // 에러 캡처 실패 시 조용히 무시
       }
     };

@@ -18,7 +18,6 @@ export interface Product {
   totalFavorites: number;
   weeklyViews: number; // 1주일전 조회수 필드 추가
   brand?: string;
-  isAvailable?: boolean;
 }
 
 // 상품 상세 정보 인터페이스

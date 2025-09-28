@@ -31,7 +31,6 @@ export interface ProductResponseDto {
   totalFavorites: number;
   weeklyViews: number;
   brand?: string;
-  isAvailable?: boolean;
   description?: string;
 }
 

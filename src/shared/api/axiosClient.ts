@@ -4,6 +4,7 @@ import { useUIStore } from '@/domains/auth/store/authStore'
 import { isProtectedRoute } from '@/app/router/auth-config'
 import { queryClient } from '@/app/providers/QueryProvider'
 import { authKeys } from '@/domains/auth/constants/authQueryKeys'
+import { API_ROUTES } from '@/app/router/apiRoutes'
 
 // Axios 인스턴스 생성 - 상대 경로 사용으로 CORS 문제 해결
 const baseURL = '/api';
@@ -36,7 +37,7 @@ const handleTokenRefresh = async (originalError: AxiosError): Promise<any> => {
   if (rememberMe) {
     try {
       // 백엔드 API를 통해 토큰 갱신
-      const refreshResponse = await axiosClient.post('/auth/refresh');
+      const refreshResponse = await axiosClient.post(API_ROUTES.AUTH.REFRESH);
 
       if (refreshResponse.status === 200) {
         // React Query 캐시 업데이트

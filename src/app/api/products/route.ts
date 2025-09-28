@@ -39,7 +39,6 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('product')
       .select('*', { count: 'exact' })
-      .eq('is_available', true)
     
     // 카테고리 필터 (한국어 -> DB 저장값 매핑)
     const categoryMap: Record<string, string | string[]> = {
@@ -114,7 +113,6 @@ export async function GET(request: NextRequest) {
       totalViews: item.total_views,
       totalFavorites: item.total_favorites,
       weeklyViews: item.weekly_views,
-      isAvailable: item.is_available
     } as ProductResponseDto))
     
     // 페이지네이션 응답 생성

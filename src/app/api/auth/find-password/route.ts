@@ -6,6 +6,7 @@ import {
   mapApiError,
 } from '@/infrastructure/api/supabaseResponseUtils'
 import { FindPasswordRequestDto } from '@/domains/auth/types/dto/authDto'
+import { ROUTES } from '@/app/router/routes'
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     // Supabase Auth를 통한 비밀번호 재설정 이메일 발송
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}${ROUTES.AUTH.RESET_PASSWORD}`
     })
 
     if (resetError) {

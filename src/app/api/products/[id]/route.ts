@@ -42,7 +42,6 @@ export async function GET(
       totalFavorites: product.total_favorites || 0,
       weeklyViews: product.weekly_views || 0,
       brand: product.brand,
-      isAvailable: product.is_available,
       description: product.description
     }
     

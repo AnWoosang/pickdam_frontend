@@ -36,7 +36,6 @@ export async function GET(request: NextRequest) {
         totalFavorites: record.total_favorites,
         weeklyViews: record.weekly_views,
         brand: record.brand,
-        isAvailable: record.is_available,
         description: record.description
       } as ProductResponseDto;
     })
