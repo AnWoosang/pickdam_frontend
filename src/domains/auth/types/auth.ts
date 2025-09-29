@@ -15,21 +15,6 @@ export enum Role {
   SELLER = 'SELLER',
 }
 
-// ========== CONSTANTS ==========
-
-export const LOGIN_PROVIDER_LABELS: Record<LoginProvider, string> = {
-  [LoginProvider.EMAIL]: 'EMAIL',
-  [LoginProvider.KAKAO]: 'KAKAO',
-  [LoginProvider.APPLE]: 'APPLE',
-  [LoginProvider.GOOGLE]: 'GOOGLE',
-};
-
-export const USER_ROLE_LABELS: Record<Role, string> = {
-  [Role.USER]: '일반 사용자',
-  [Role.ADMIN]: '관리자',
-  [Role.SELLER]: '판매자',
-};
-
 // ========== SESSION TYPES ==========
 
 export interface Session {
