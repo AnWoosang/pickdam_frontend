@@ -2,9 +2,9 @@ import { withSentryConfig } from '@sentry/nextjs';
 import withBundleAnalyzer from '@next/bundle-analyzer';
 import type { NextConfig } from "next";
 
-// 환경 감지 (NODE_ENV 대신 다른 방식 사용)
-const isDev = process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' && !process.env.CI
-const isProd = process.env.NEXT_PUBLIC_VERCEL_ENV === 'production' || Boolean(process.env.CI)
+// 환경 감지 (표준 NODE_ENV 사용)
+const isDev = process.env.NODE_ENV === 'development'
+const isProd = process.env.NODE_ENV === 'production'
 
 const nextConfig: NextConfig = {
   // 개발 환경에서는 React Strict Mode 비활성화 (중복 요청 방지)
@@ -75,6 +75,7 @@ const sentryOptions = {
   hideSourceMaps: true,
   disableLogger: true,
   automaticVercelCronMonitors: isProd,
+  telemetry: false, // 불필요한 텔레메트리 데이터 전송 비활성화
   // 개발 환경에서는 소스맵 생성 완전 비활성화
   sourcemaps: {
     disable: isDev,
