@@ -33,12 +33,8 @@ export function PostDetailPage({ postId }: PostDetailPageProps) {
   const handlePostDelete = () => {
     deletePost({
       onSuccess: () => {
-        showToast('게시글이 삭제되었습니다.', 'success');
         router.push(ROUTES.COMMUNITY.LIST);
       },
-      onError: () => {
-        showToast('게시글 삭제에 실패했습니다.', 'error');
-      }
     });
   };
 

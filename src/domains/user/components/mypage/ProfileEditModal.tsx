@@ -6,6 +6,7 @@ import { BaseModal } from '@/shared/components/BaseModal';
 import { Button } from '@/shared/components/Button';
 import { Avatar } from '@/shared/components/Avatar';
 import { useProfileModal } from '../../hooks/useUserProfile';
+import { useLogger } from '@/infrastructure/logging/logger';
 
 interface ProfileEditModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export function ProfileEditModal({
   currentName,
   isLoading = false
 }: ProfileEditModalProps) {
+  const logger = useLogger('ProfileEditModal');
   const {
     // 닉네임 관련
     nickname,
@@ -48,12 +50,12 @@ export function ProfileEditModal({
     onSuccess: onClose
   });
 
-  // 모달이 열릴 때 초기화
+  // 모달이 열릴 때 초기화 (한 번만 실행)
   useEffect(() => {
     if (isOpen) {
       resetModal();
     }
-  }, [isOpen, resetModal]);
+  }, [isOpen]);
 
   // 컴포넌트 언마운트 시 정리
   useEffect(() => {
@@ -61,8 +63,9 @@ export function ProfileEditModal({
   }, [cleanup]);
 
   const handleNicknameInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    handleNicknameChange(e.target.value);
-  }, [handleNicknameChange]);
+    const newValue = e.target.value;
+    handleNicknameChange(newValue);
+  }, [handleNicknameChange, logger]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -79,10 +82,12 @@ export function ProfileEditModal({
 
   const handleProfileImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (file) {
       handleImageSelect(file);
-    }
-  }, [handleImageSelect]);
+    } 
+    
+  }, [handleImageSelect, logger]);
 
   const inputClassName = useMemo(() => {
     const baseClass = 'w-full px-3 py-2 pr-10 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500 text-sm';

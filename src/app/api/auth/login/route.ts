@@ -27,15 +27,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
     
-    // 🔥 Auth 테이블에서 삭제된 사용자 체크
-    if (authData.user.deleted_at != null) {
+    // 🔥 Auth 메타데이터에서 삭제된 사용자 체크
+    if (authData.user.app_metadata?.deleted_at != null) {
+      // 세션 무효화
+      await supabase.auth.signOut();
+
       const mappedError = mapApiError({
-        status: 400,
-        message: 'User account has been deleted'
+        status: 401,
+        message: '탈퇴한 회원입니다. 로그아웃됩니다.'
       })
       const errorResponse = createErrorResponse(mappedError)
 
-      return NextResponse.json(errorResponse, { status: mappedError.statusCode })
+      return NextResponse.json(errorResponse, { status: 401 })
     }
 
     // auth 메타데이터에서 사용자 정보 추출

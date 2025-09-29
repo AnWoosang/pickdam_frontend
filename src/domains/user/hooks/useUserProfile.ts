@@ -39,13 +39,13 @@ export function useProfileEdit({ currentNickname, onSave }: UseProfileEditProps)
   // 초기값 설정
   useEffect(() => {
     handleNicknameChange(currentNickname);
-  }, [currentNickname, handleNicknameChange]);
+  }, [currentNickname]);
 
   // 프로필 수정 관련 로직
   const isNicknameChanged = nickname.trim() !== currentNickname;
   const resetNickname = useCallback(() => {
     handleNicknameChange(currentNickname);
-  }, [currentNickname, handleNicknameChange]);
+  }, [currentNickname]);
   
   const handleSave = useCallback(() => {
     // 현재 닉네임과 동일한 경우
@@ -200,8 +200,10 @@ export function useProfileModal({
 
   // 이미지 선택 핸들러
   const handleImageSelect = useCallback((file: File) => {
+
     // 이미지 파일 검증
     const validationResult = validateImages({ files: [file], contentType: 'profile' });
+
     if (!validationResult.isValid) {
       showToast(validationResult.errors[0], 'error');
       return;
@@ -228,7 +230,7 @@ export function useProfileModal({
       URL.revokeObjectURL(previewImageUrl);
       setPreviewImageUrl('');
     }
-  }, [nicknameEdit, currentProfileImageUrl, previewImageUrl]);
+  }, [currentProfileImageUrl, previewImageUrl]);
 
   // 메모리 정리
   const cleanup = useCallback(() => {

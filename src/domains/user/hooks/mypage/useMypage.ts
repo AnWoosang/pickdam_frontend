@@ -51,24 +51,35 @@ export function useMypage() {
   }, []);
 
   // 회원탈퇴 확인
-  const handleAccountDeletionConfirm = useCallback(async (form: WithdrawMemberForm) => {
+  const handleAccountDeletionConfirm = useCallback((form: WithdrawMemberForm) => {
     if (!user) return;
 
     setIsLoggingOut(true);
-    try {
-      await deleteAccountMutation.mutateAsync({
-        memberId: user.id,
-        requestForm: form
-      });
-      await logoutMutation.mutateAsync();
-      router.push('/');
-    } catch (error) {
-      toast.error('회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해주세요.');
-      throw error; // 에러를 다시 throw해서 모달에서 처리하도록
-    } finally {
-      setIsLoggingOut(false);
-    }
-  }, [user, logoutMutation, router, deleteAccountMutation]);
+    deleteAccountMutation.mutate({
+      memberId: user.id,
+      requestForm: form
+    }, {
+      onSuccess: () => {
+        toast.success('회원 탈퇴가 완료되었습니다.');
+        logoutMutation.mutate(undefined, {
+          onSuccess: () => {
+            router.push('/');
+          },
+          onError: () => {
+            // 탈퇴는 성공했지만 로그아웃 실패 시에도 홈으로 이동
+            router.push('/');
+          },
+          onSettled: () => {
+            setIsLoggingOut(false);
+          }
+        });
+      },
+      onError: () => {
+        toast.error('회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        setIsLoggingOut(false);
+      }
+    });
+  }, [user, logoutMutation, router, deleteAccountMutation, toast]);
 
   // 회원탈퇴 모달 닫기
   const closeAccountDeletionModal = useCallback(() => {

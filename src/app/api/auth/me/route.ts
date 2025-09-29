@@ -13,10 +13,24 @@ export async function GET() {
     if (authError || !user) {
       const mappedError = mapApiError(authError || { message: 'Authentication required' })
       const errorResponse = createErrorResponse(mappedError)
-      
+
       return NextResponse.json(errorResponse, { status: mappedError.statusCode })
     }
-    
+
+    // 🔥 Auth 메타데이터에서 삭제된 사용자 체크
+    if (user.app_metadata?.deleted_at != null) {
+      // 세션 무효화
+      await supabase.auth.signOut();
+
+      const mappedError = mapApiError({
+        status: 401,
+        message: '탈퇴한 회원입니다. 로그아웃됩니다.'
+      })
+      const errorResponse = createErrorResponse(mappedError)
+
+      return NextResponse.json(errorResponse, { status: 401 })
+    }
+
     // auth 메타데이터에서 사용자 정보 추출
     const userMetadata = user.user_metadata || {}
 
