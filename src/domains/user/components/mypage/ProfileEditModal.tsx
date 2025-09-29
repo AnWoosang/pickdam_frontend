@@ -5,8 +5,7 @@ import { Check, AlertCircle, User, X, Camera } from 'lucide-react';
 import { BaseModal } from '@/shared/components/BaseModal';
 import { Button } from '@/shared/components/Button';
 import { Avatar } from '@/shared/components/Avatar';
-import { useProfileModal } from '../../hooks/useUserProfile';
-import { useLogger } from '@/infrastructure/logging/logger';
+import { useProfileEditor } from '../../hooks/useProfileEditor';
 
 interface ProfileEditModalProps {
   isOpen: boolean;
@@ -25,7 +24,6 @@ export function ProfileEditModal({
   currentName,
   isLoading = false
 }: ProfileEditModalProps) {
-  const logger = useLogger('ProfileEditModal');
   const {
     // 닉네임 관련
     nickname,
@@ -42,20 +40,20 @@ export function ProfileEditModal({
     // 핸들러
     handleImageSelect,
     handleSave,
-    resetModal,
+    resetForm,
     cleanup
-  } = useProfileModal({
+  } = useProfileEditor({
     currentNickname,
     currentProfileImageUrl,
     onSuccess: onClose
   });
 
-  // 모달이 열릴 때 초기화 (한 번만 실행)
+  // 모달이 닫힐 때 초기화
   useEffect(() => {
-    if (isOpen) {
-      resetModal();
+    if (!isOpen) {
+      resetForm();
     }
-  }, [isOpen]);
+  }, [isOpen, resetForm]);
 
   // 컴포넌트 언마운트 시 정리
   useEffect(() => {
@@ -65,7 +63,7 @@ export function ProfileEditModal({
   const handleNicknameInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     handleNicknameChange(newValue);
-  }, [handleNicknameChange, logger]);
+  }, [handleNicknameChange]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -85,9 +83,8 @@ export function ProfileEditModal({
 
     if (file) {
       handleImageSelect(file);
-    } 
-    
-  }, [handleImageSelect, logger]);
+    }
+  }, [handleImageSelect]);
 
   const inputClassName = useMemo(() => {
     const baseClass = 'w-full px-3 py-2 pr-10 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500 text-sm';

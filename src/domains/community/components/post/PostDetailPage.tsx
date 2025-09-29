@@ -7,7 +7,6 @@ import { PostContent } from '@/domains/community/components/post/PostContent';
 import { CommentSection } from '@/domains/community/components/comment/CommentSection';
 import { usePostDetailPage } from '@/domains/community/hooks/usePostDetailPage';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
-import { useUIStore } from '@/domains/auth/store/authStore';
 import { ErrorMessage } from '@/shared/components/ErrorMessage';
 import { Breadcrumb, BreadcrumbItem } from '@/shared/components/Breadcrumb';
 import { ROUTES } from '@/app/router/routes';
@@ -18,8 +17,6 @@ interface PostDetailPageProps {
 
 export function PostDetailPage({ postId }: PostDetailPageProps) {
   const router = useRouter();
-  const { showToast } = useUIStore();
-  
   // 부모에서 관리해야 할 상태와 로직
   const {
     post,

@@ -45,6 +45,7 @@ export function Avatar({
           fill
           className="object-cover rounded-full"
           sizes={sizeClasses[size].replace('w-', '').replace('h-', '').split(' ')[0]}
+          unoptimized={src.startsWith('blob:')}
         />
       </div>
     );

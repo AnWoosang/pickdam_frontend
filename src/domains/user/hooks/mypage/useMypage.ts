@@ -51,35 +51,43 @@ export function useMypage() {
   }, []);
 
   // 회원탈퇴 확인
-  const handleAccountDeletionConfirm = useCallback((form: WithdrawMemberForm) => {
-    if (!user) return;
-
-    setIsLoggingOut(true);
-    deleteAccountMutation.mutate({
-      memberId: user.id,
-      requestForm: form
-    }, {
-      onSuccess: () => {
-        toast.success('회원 탈퇴가 완료되었습니다.');
-        logoutMutation.mutate(undefined, {
-          onSuccess: () => {
-            router.push('/');
-          },
-          onError: () => {
-            // 탈퇴는 성공했지만 로그아웃 실패 시에도 홈으로 이동
-            router.push('/');
-          },
-          onSettled: () => {
-            setIsLoggingOut(false);
-          }
-        });
-      },
-      onError: () => {
-        toast.error('회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해주세요.');
-        setIsLoggingOut(false);
+  const handleAccountDeletionConfirm = useCallback((form: WithdrawMemberForm): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (!user) {
+        reject(new Error('User not found'));
+        return;
       }
+
+      setIsLoggingOut(true);
+      deleteAccountMutation.mutate({
+        memberId: user.id,
+        requestForm: form
+      }, {
+        onSuccess: () => {
+          toast.success('회원 탈퇴가 완료되었습니다.');
+          logoutMutation.mutate(undefined, {
+            onSuccess: () => {
+              router.push('/');
+              resolve();
+            },
+            onError: () => {
+              // 탈퇴는 성공했지만 로그아웃 실패 시에도 홈으로 이동
+              router.push('/');
+              resolve();
+            },
+            onSettled: () => {
+              setIsLoggingOut(false);
+            }
+          });
+        },
+        onError: (error) => {
+          toast.error('회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해주세요.');
+          setIsLoggingOut(false);
+          reject(error);
+        }
+      });
     });
-  }, [user, logoutMutation, router, deleteAccountMutation, toast]);
+  }, [user, logoutMutation, router, deleteAccountMutation]);
 
   // 회원탈퇴 모달 닫기
   const closeAccountDeletionModal = useCallback(() => {

@@ -3,22 +3,18 @@ import { NextRequest } from 'next/server';
 // Sentry 터널링을 위한 프록시 엔드포인트
 export async function POST(request: NextRequest) {
   try {
-    console.log('Monitoring endpoint called');
 
     // 환경변수에서 Sentry DSN 가져오기
     const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
     if (!sentryDsn) {
-      console.log('No Sentry DSN found');
       return new Response('Sentry DSN not configured', { status: 404 });
     }
 
     // 요청 바디 읽기
     const body = await request.text();
-    console.log('Request body length:', body.length);
 
     // 바디가 비어있으면 에러 반환
     if (!body || body.length === 0) {
-      console.log('Empty request body');
       return new Response('Empty request body', { status: 400 });
     }
 
@@ -42,8 +38,6 @@ export async function POST(request: NextRequest) {
       finalUrl.searchParams.set(key, value);
     });
 
-    console.log('Forwarding to:', finalUrl.toString());
-
     // Sentry로 프록시 (타임아웃 추가)
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10초 타임아웃
@@ -60,7 +54,6 @@ export async function POST(request: NextRequest) {
       });
 
       clearTimeout(timeoutId);
-      console.log('Sentry response status:', response.status);
 
       // 응답 바디를 읽고 새 응답 생성
       const responseText = await response.text();

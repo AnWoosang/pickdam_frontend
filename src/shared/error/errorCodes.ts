@@ -31,6 +31,7 @@ export enum ApiErrorCode {
   INSUFFICIENT_PERMISSION = 'INSUFFICIENT_PERMISSION',
   OPERATION_NOT_ALLOWED = 'OPERATION_NOT_ALLOWED',
   QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
+  NICKNAME_CHANGE_LIMIT_EXCEEDED = 'NICKNAME_CHANGE_LIMIT_EXCEEDED',
   
   // 시스템 에러
   INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
@@ -77,6 +78,7 @@ export const API_ERROR_MESSAGES: Record<ApiErrorCode, string> = {
   [ApiErrorCode.INSUFFICIENT_PERMISSION]: '권한이 부족합니다.',
   [ApiErrorCode.OPERATION_NOT_ALLOWED]: '허용되지 않은 작업입니다.',
   [ApiErrorCode.QUOTA_EXCEEDED]: '할당량을 초과했습니다.',
+  [ApiErrorCode.NICKNAME_CHANGE_LIMIT_EXCEEDED]: '닉네임은 한 달에 한 번만 변경 가능합니다.',
   
   // 시스템 에러
   [ApiErrorCode.INTERNAL_SERVER_ERROR]: '서버 내부 오류가 발생했습니다.',

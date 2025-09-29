@@ -175,6 +175,9 @@ function mapPostgresError(error: PostgresError): MappedError {
   } else if (message.includes('not found') || message.includes('already deleted')) {
     statusCode = StatusCodes.NOT_FOUND;
     errorCode = ApiErrorCode.NOT_FOUND;
+  } else if (error.code === 'P0001' && message.includes('Nickname can only be changed once per month')) {
+    statusCode = StatusCodes.BAD_REQUEST;
+    errorCode = ApiErrorCode.NICKNAME_CHANGE_LIMIT_EXCEEDED;
   } else {
     // 기존 PostgreSQL 에러 코드 매핑
     switch (error.code) {
