@@ -8,6 +8,7 @@ import { ROUTES } from '@/app/router/routes';
 import { getHeaderCategories, CATEGORY_CONFIG } from '@/domains/product/types/category';
 import { cn } from '@/shared/utils/Format';
 import { Container } from '@/shared/layout/Container';
+import { loadPopunderScript } from '@/shared/utils/popunderAd';
 
 interface CategoryBarProps {
   onSelected?: (category: string) => void;
@@ -28,11 +29,14 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
   ] as const;
 
   const handleMainNavClick = (item: typeof mainNavItems[number]) => {
+    loadPopunderScript();
     router.push(item.href);
     onSelected?.(item.label);
   };
 
   const handleCategoryClick = (groupTitle: string, category: string) => {
+    loadPopunderScript();
+
     // "모든 상품 보기" 처리
     if (groupTitle === '모든 상품 보기') {
       router.push(ROUTES.PRODUCT.LIST);
@@ -76,12 +80,13 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
       // 폴백: 모든 상품 페이지로
       router.push(ROUTES.PRODUCT.LIST);
     }
-    
+
     setActiveDropdown(null);
     onSelected?.(category);
   };
 
   const toggleCategoryDropdown = () => {
+    loadPopunderScript();
     setActiveDropdown(activeDropdown === 'category' ? null : 'category');
   };
 

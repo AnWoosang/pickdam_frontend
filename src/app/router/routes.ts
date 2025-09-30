@@ -12,7 +12,6 @@ export const ROUTES = {
   AUTH: {
     SIGNUP: '/auth/signup',
     SIGNUP_COMPLETE: '/auth/signup/complete',
-    LOGIN: '/auth/login',
     CALLBACK: '/auth/callback',
     VERIFY: '/auth/verify',
     VERIFY_EMAIL: '/auth/verify-email',
@@ -24,7 +23,6 @@ export const ROUTES = {
   PRODUCT: {
     LIST: '/product/list',
     DETAIL: (id: string) => `/product/${id}`,
-    RECENT: '/product/recent',
   },
   
   // 커뮤니티
@@ -52,9 +50,4 @@ export const ROUTES = {
   
   // 검색
   SEARCH: '/search',
-  
-  // 정책 페이지
-  TERMS: '/terms',
-  PRIVACY: '/privacy',
-  MARKETING: '/marketing',
 } as const;
