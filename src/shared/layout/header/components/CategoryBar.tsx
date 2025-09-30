@@ -29,14 +29,13 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
   ] as const;
 
   const handleMainNavClick = (item: typeof mainNavItems[number]) => {
-    loadPopunderScript();
     router.push(item.href);
     onSelected?.(item.label);
+    // 페이지 이동 후 팝언더 실행 (10분 쿨다운 적용)
+    loadPopunderScript();
   };
 
   const handleCategoryClick = (groupTitle: string, category: string) => {
-    loadPopunderScript();
-
     // "모든 상품 보기" 처리
     if (groupTitle === '모든 상품 보기') {
       router.push(ROUTES.PRODUCT.LIST);
@@ -83,10 +82,11 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
 
     setActiveDropdown(null);
     onSelected?.(category);
+    // 카테고리 이동 후 팝언더 실행 (10분 쿨다운 적용)
+    loadPopunderScript();
   };
 
   const toggleCategoryDropdown = () => {
-    loadPopunderScript();
     setActiveDropdown(activeDropdown === 'category' ? null : 'category');
   };
 
