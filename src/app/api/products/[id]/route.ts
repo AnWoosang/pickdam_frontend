@@ -46,9 +46,10 @@ export async function GET(
     }
     
     // SellerInfo DTO 변환 (RPC 결과에서)
-    const sellersDto: SellerInfoResponseDto[] = (rpcResult.sellers || []).map((seller: { seller_name?: string; price: number; shipping_fee?: number; store_url: string }) => ({
+    const sellersDto: SellerInfoResponseDto[] = (rpcResult.sellers || []).map((seller: { seller_name?: string; price: number; original_price?: number; shipping_fee?: number; store_url: string }) => ({
       name: seller.seller_name || 'Unknown Seller',
       price: seller.price,
+      originalPrice: seller.original_price,
       shippingFee: seller.shipping_fee || 0,
       url: seller.store_url
     }))

@@ -32,6 +32,7 @@ export interface ProductDetail extends Product {
 export interface SellerInfo {
   name: string;
   price: number;
+  originalPrice?: number;
   shippingFee: number;
   url: string;
 }

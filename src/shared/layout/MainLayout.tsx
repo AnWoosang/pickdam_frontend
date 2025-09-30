@@ -6,6 +6,7 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { Container } from './Container';
 import { Divider } from '@/shared/components/Divider';
+import { BannerSection } from '@/shared/components/BannerSection';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,7 @@ interface MainLayoutProps {
   showFooter?: boolean;
   showCategoryBar?: boolean;
   showSearchBar?: boolean;
+  showAds?: boolean;
   containerVariant?: 'default' | 'wide' | 'narrow' | 'full';
   disableContainer?: boolean;
 }
@@ -23,6 +25,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   showFooter = true,
   showCategoryBar = true,
   showSearchBar = true,
+  showAds = true,
   containerVariant = 'default',
   disableContainer = false,
 }) => {
@@ -32,6 +35,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       {showHeader && (
         <>
           <Header containerVariant={containerVariant} showCategoryBar={showCategoryBar} showSearchBar={showSearchBar} />
+          <BannerSection show={showAds} />
         </>
       )}
       <main className="flex-1 w-full relative">

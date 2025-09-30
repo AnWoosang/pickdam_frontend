@@ -44,6 +44,7 @@ export interface ProductDetailResponseDto {
 export interface SellerInfoResponseDto {
   name: string;
   price: number;
+  originalPrice?: number;
   shippingFee: number;
   url: string;
 }
