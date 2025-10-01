@@ -23,24 +23,28 @@ function mapDbToProductCategory(dbValue: string): ProductCategory {
       return ProductCategory.COIL;
     case 'ACCESSORY':
       return ProductCategory.ACCESSORY;
+    case 'ETC':
+      return ProductCategory.ETC;
     default:
       // DB에서 온 값이 이미 enum 값과 일치하는지 확인 (한국어)
       if (Object.values(ProductCategory).includes(dbValue as ProductCategory)) {
         return dbValue as ProductCategory;
       }
-      return ProductCategory.LIQUID;
+      return ProductCategory.ETC;
   }
 }
 
 function mapDbToInhaleType(dbValue: string): InhaleType {
-  // DB 저장값 ('MTL', 'DTL')을 InhaleType enum으로 변환
+  // DB 저장값 ('MTL', 'DTL', 'NONE')을 InhaleType enum으로 변환
   switch (dbValue) {
     case 'MTL':
       return InhaleType.MTL;
     case 'DTL':
-      return InhaleType.DL;
+      return InhaleType.DTL;
+    case 'NONE':
+      return InhaleType.NONE;
     default:
-      return InhaleType.MTL; // 기본값
+      return InhaleType.NONE; // 기본값
   }
 }
 
@@ -82,7 +86,9 @@ export function toSellerInfo(dto: SellerInfoResponseDto): SellerInfo {
   return {
     name: dto.name,
     price: dto.price,
+    originalPrice: dto.originalPrice,
     shippingFee: dto.shippingFee,
+    shippingFeeThreshold: dto.shippingFeeThreshold,
     url: dto.url
   };
 }

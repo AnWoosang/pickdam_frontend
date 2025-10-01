@@ -38,7 +38,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         )}
       </div>
       <div className="p-4 h-32 flex flex-col">
-        <h3 className="font-medium text-textHeading line-clamp-2 h-10 flex items-start">
+        <h3 className="font-medium text-textHeading line-clamp-2 h-12 flex items-start">
           {product.name}
         </h3>
         <div className="text-xs text-textDefault mb-1 flex-shrink-0">

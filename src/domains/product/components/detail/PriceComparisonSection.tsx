@@ -17,11 +17,7 @@ export function PriceComparisonSection({
   className = ''
 }: PriceComparisonSectionProps) {
   // 판매자 비교 기능
-  const { sortedSellers, bestSeller, bestPrice, includeShipping, setIncludeShipping } = useSellerComparison(sellers);
-  
-  const getSellerTotalPrice = (seller: SellerInfo) => {
-    return includeShipping ? seller.price + seller.shippingFee : seller.price;
-  };
+  const { sortedSellers, bestSeller, bestPrice, includeShipping, setIncludeShipping, getSellerTotalPrice, getActualShippingFee } = useSellerComparison(sellers);
 
   const getSavingsPercentage = (currentPrice: number, bestPrice: number) => {
     if (currentPrice === bestPrice) return 0;
@@ -91,12 +87,17 @@ export function PriceComparisonSection({
               <Package className="w-4 h-4" />
               <span>상품: {formatPrice(bestSeller?.price || 0)}원</span>
             </div>
-            {bestSeller && bestSeller.shippingFee > 0 && (
+            {bestSeller && getActualShippingFee(bestSeller) > 0 ? (
               <div className="flex items-center space-x-1">
                 <Truck className="w-4 h-4" />
-                <span>배송비: {formatPrice(bestSeller.shippingFee)}원</span>
+                <span>배송비: {formatPrice(getActualShippingFee(bestSeller))}원</span>
               </div>
-            )}
+            ) : bestSeller ? (
+              <div className="flex items-center space-x-1">
+                <Truck className="w-4 h-4" />
+                <span className="text-green-600 font-medium">무료배송</span>
+              </div>
+            ) : null}
           </div>
           
           <Button
@@ -157,8 +158,8 @@ export function PriceComparisonSection({
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <div className="flex items-center space-x-4">
                     <span>상품: {formatPrice(seller.price)}원</span>
-                    {seller.shippingFee > 0 ? (
-                      <span>배송비: {formatPrice(seller.shippingFee)}원</span>
+                    {getActualShippingFee(seller) > 0 ? (
+                      <span>배송비: {formatPrice(getActualShippingFee(seller))}원</span>
                     ) : (
                       <span className="text-green-600 font-medium">무료배송</span>
                     )}

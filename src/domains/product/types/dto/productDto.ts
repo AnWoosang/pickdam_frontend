@@ -46,6 +46,7 @@ export interface SellerInfoResponseDto {
   price: number;
   originalPrice?: number;
   shippingFee: number;
+  shippingFeeThreshold?: number;
   url: string;
 }
 

@@ -82,7 +82,6 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
 
     setActiveDropdown(null);
     onSelected?.(category);
-    // 카테고리 이동 후 팝언더 실행 (10분 쿨다운 적용)
     loadPopunderScript();
   };
 

@@ -5,6 +5,7 @@ export enum ProductCategory {
   POD = '팟',
   COIL = '코일',
   ACCESSORY = '악세서리',
+  ETC = '기타',
 }
 
 // 메인 카테고리 enum
@@ -16,8 +17,9 @@ export enum MainCategory {
 
 // 흡입 방식 enum
 export enum InhaleType {
-  MTL = '입호흡', // 입호흡
-  DL = '폐호흡',   // 폐호흡
+  MTL = '입호흡',
+  DTL = '폐호흡',
+  NONE = '없음',
 }
 
 // 서브카테고리 매핑 타입
@@ -53,10 +55,16 @@ export const INHALE_TYPE_CONFIG: InhaleTypeConfig[] = [
     description: 'Mouth To Lung - 담배와 같은 입호흡 방식'
   },
   {
-    id: InhaleType.DL,
+    id: InhaleType.DTL,
     name: 'DTL',
     displayName: '폐호흡(DTL)',
     description: 'Direct To Lung - 직접 폐로 들이마시는 방식'
+  },
+  {
+    id: InhaleType.NONE,
+    name: 'NONE',
+    displayName: '해당없음',
+    description: '흡입 방식이 적용되지 않는 제품'
   }
 ];
 
@@ -88,7 +96,7 @@ export const CATEGORY_CONFIG: CategoryGroup[] = [
     id: MainCategory.OTHER,
     name: 'other',
     displayName: '코일/팟/기타',
-    productCategories: [ProductCategory.POD, ProductCategory.COIL, ProductCategory.ACCESSORY],
+    productCategories: [ProductCategory.POD, ProductCategory.COIL, ProductCategory.ACCESSORY, ProductCategory.ETC],
     subCategories: []
   }
 ];

@@ -34,6 +34,7 @@ export interface SellerInfo {
   price: number;
   originalPrice?: number;
   shippingFee: number;
+  shippingFeeThreshold?: number;
   url: string;
 }
 
