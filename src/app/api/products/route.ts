@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       '팟': 'POD',
       '코일': 'COIL',
       '악세서리': 'ACCESSORY',
-      '코일/팟/기타': ['POD', 'COIL', 'ACCESSORY']
+      '코일/팟/기타': ['POD', 'COIL', 'ACCESSORY', 'ETC']
     }
     
     // 다중 카테고리 또는 단일 카테고리 처리
@@ -74,8 +74,9 @@ export async function GET(request: NextRequest) {
     // 호흡방식 필터 (프론트엔드 -> 데이터베이스 매핑)
     if (inhaleType) {
       const inhaleTypeMap: Record<string, string> = {
-        'MTL': 'MTL',  // 입호흡 -> MTL
-        'DTL': 'DTL'   // 폐호흡 -> DTL
+        'MTL': 'MTL',
+        'DTL': 'DTL',
+        'NONE': 'NONE'
       }
       const dbInhaleType = inhaleTypeMap[inhaleType] || inhaleType
       query = query.eq('inhale_type', dbInhaleType)
