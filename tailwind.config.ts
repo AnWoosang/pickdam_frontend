@@ -14,7 +14,7 @@ const config: Config = {
         foreground: "hsl(var(--foreground))",
       },
       fontFamily: {
-        pretendard: ["Pretendard", "system-ui", "sans-serif"],
+        pretendard: ["var(--font-pretendard)", "system-ui", "sans-serif"],
       },
       fontSize: {
         xs: ["12px", { lineHeight: "16px" }],

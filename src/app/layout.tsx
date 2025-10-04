@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import localFont from 'next/font/local';
 import { ClientLayout } from "@/shared/layout/ClientLayout";
 import "./globals.css";
+
+const pretendard = localFont({
+  src: '../fonts/PretendardVariable.woff2',
+  display: 'swap',
+  weight: '45 920',
+  variable: '--font-pretendard',
+});
 
 export const metadata: Metadata = {
   title: "Pickdam - 전자담배 가격 비교",
@@ -24,7 +32,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className="font-pretendard antialiased"
+        className={`${pretendard.variable} font-pretendard antialiased`}
         suppressHydrationWarning
       >
         <ClientLayout>
