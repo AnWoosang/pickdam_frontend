@@ -20,21 +20,28 @@ export function Header({ showCategoryBar = true, showSearchBar = true ,container
   };
 
   return (
-    <header className="bg-white">
+    <header className="bg-white border-b border-gray-200 md:border-b-0">
       <div className="w-full">
         {/* Logo & Search Section */}
-        <div className="py-6 mb-2">
-          <Container variant={containerVariant}>
+        <div className="py-2 sm:py-3 lg:py-5 mb-2">
+          <div className="md:hidden w-full">
             <LogoSearchSection showSearchBar={showSearchBar} />
-          </Container>
+          </div>
+          <div className="hidden md:block">
+            <Container variant={containerVariant}>
+              <LogoSearchSection showSearchBar={showSearchBar} />
+            </Container>
+          </div>
         </div>
 
-        {/* Category Bar */}
+        {/* Category Bar - 모바일에서 숨김 */}
         {showCategoryBar && (
-          <CategoryBar
-            onSelected={handleTabSelect}
-            containerVariant={containerVariant}
-          />
+          <div className="hidden md:block">
+            <CategoryBar
+              onSelected={handleTabSelect}
+              containerVariant={containerVariant}
+            />
+          </div>
         )}
       </div>
     </header>

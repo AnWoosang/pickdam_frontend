@@ -50,11 +50,11 @@ export function ProductSlider({
       {/* 제목 */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-textHeading">
+          <h2 className="text-lg md:text-2xl font-bold text-textHeading">
             {title}
           </h2>
           {shouldShowNavigation && (
-            <p className="text-sm text-hintText mt-2">
+            <p className="text-xs md:text-sm text-hintText mt-2">
               총 {products.length}개 상품
             </p>
           )}

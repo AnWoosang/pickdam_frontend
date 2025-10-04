@@ -28,7 +28,7 @@ export async function GET(
     }
 
     const product = rpcResult.product
-    
+
     // ProductDto 변환
     const productDto: ProductResponseDto = {
       id: product.id,

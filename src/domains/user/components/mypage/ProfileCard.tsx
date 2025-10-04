@@ -11,17 +11,17 @@ interface ProfileCardProps {
 
 export const ProfileCard = memo<ProfileCardProps>(function ProfileCard({ user, onProfileEdit }) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 relative">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 mb-6 md:mb-8 relative">
       {/* 우측 상단 수정 버튼 */}
       <Button
         onClick={onProfileEdit}
         variant="ghost"
         size="small"
-        icon={<Edit2 className="w-4 h-4" />}
-        className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded transition-colors"
+        icon={<Edit2 className="w-3.5 h-3.5 md:w-4 md:h-4" />}
+        className="absolute top-3 right-3 md:top-4 md:right-4 p-1.5 md:p-2 hover:bg-gray-100 rounded transition-colors"
       />
 
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-3 md:space-x-4">
         <Avatar
           src={user.profileImageUrl}
           alt={`${user.name} 프로필 사진`}
@@ -29,13 +29,13 @@ export const ProfileCard = memo<ProfileCardProps>(function ProfileCard({ user, o
         />
 
         <div>
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 className="text-base md:text-xl font-bold text-gray-900">
             {user.name}
           </h2>
-          <p className="text-sm text-gray-600 font-medium">
+          <p className="text-xs md:text-sm text-gray-600 font-medium">
             @{user.nickname}
           </p>
-          <p className="text-sm text-gray-600">
+          <p className="text-xs md:text-sm text-gray-600">
             {user.email}
           </p>
         </div>

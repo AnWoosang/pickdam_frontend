@@ -16,8 +16,7 @@ export const BannerSection: React.FC<BannerSectionProps> = ({
 }) => {
   const ad1Ref = useRef<HTMLDivElement>(null);
   const ad2Ref = useRef<HTMLDivElement>(null);
-  const ad3Ref = useRef<HTMLDivElement>(null);
-  const ad4Ref = useRef<HTMLDivElement>(null);
+  const mobileAdRef = useRef<HTMLDivElement>(null);
   const loadedRef = useRef(false);
 
   useEffect(() => {
@@ -28,7 +27,7 @@ export const BannerSection: React.FC<BannerSectionProps> = ({
     if (ad1Ref.current) {
       const config1 = document.createElement('script');
       config1.type = 'text/javascript';
-      config1.text = `
+      config1.innerHTML = `
         atOptions = {
           'key': 'd309d8fcd9cea9584bb49b33bdd07f69',
           'format': 'iframe',
@@ -50,7 +49,7 @@ export const BannerSection: React.FC<BannerSectionProps> = ({
       if (ad2Ref.current) {
         const config2 = document.createElement('script');
         config2.type = 'text/javascript';
-        config2.text = `
+        config2.innerHTML = `
           atOptions = {
             'key': 'd309d8fcd9cea9584bb49b33bdd07f69',
             'format': 'iframe',
@@ -68,67 +67,83 @@ export const BannerSection: React.FC<BannerSectionProps> = ({
       }
     }, 1000);
 
-    // 세 번째 광고 로드 (160x300)
-    setTimeout(() => {
-      if (ad3Ref.current) {
-        const config3 = document.createElement('script');
-        config3.type = 'text/javascript';
-        config3.text = `
-          atOptions = {
-            'key': '90756d515f1fef2d23141e7d371f9c5c',
-            'format': 'iframe',
-            'height': 300,
-            'width': 160,
-            'params': {}
-          };
-        `;
-        ad3Ref.current.appendChild(config3);
+    // 모바일 광고 로드 (320x50) - 하나만
+    if (mobileAdRef.current) {
 
-        const invoke3 = document.createElement('script');
-        invoke3.type = 'text/javascript';
-        invoke3.src = '//www.highperformanceformat.com/90756d515f1fef2d23141e7d371f9c5c/invoke.js';
-        ad3Ref.current.appendChild(invoke3);
-      }
-    }, 2000);
+      const mobileConfig = document.createElement('script');
+      mobileConfig.type = 'text/javascript';
+      mobileConfig.innerHTML = `
+        atOptions = {
+          'key': '0d77d52098b59b5403152e26ae08c2dc',
+          'format': 'iframe',
+          'height': 50,
+          'width': 320,
+          'params': {}
+        };
+      `;
+      mobileAdRef.current.appendChild(mobileConfig);
 
-    // // 네 번째 광고 로드 (새 광고)
-    // setTimeout(() => {
-    //   if (ad4Ref.current) {
-    //     const script4 = document.createElement('script');
-    //     script4.async = true;
-    //     script4.setAttribute('data-cfasync', 'false');
-    //     script4.src = '//pl27752357.revenuecpmgate.com/3db0c4bab1658b588e2b81cf8fc2bb26/invoke.js';
-    //     ad4Ref.current.appendChild(script4);
-    //   }
-    // }, 3000);
+      const mobileInvoke = document.createElement('script');
+      mobileInvoke.type = 'text/javascript';
+      mobileInvoke.src = '//www.highperformanceformat.com/0d77d52098b59b5403152e26ae08c2dc/invoke.js';
+      mobileInvoke.async = true;
+      mobileAdRef.current.appendChild(mobileInvoke);
+    }
   }, [show]);
 
   if (!show) return null;
 
   return (
-    <Container variant={containerVariant} className={className}>
-      <div className="flex items-center justify-between w-full">
+    <>
+      {/* 데스크톱: 가로로 나란히 */}
+      <Container variant={containerVariant} className={`hidden md:block ${className}`}>
+        <div className="flex items-center justify-between w-full">
+          <div
+            ref={ad1Ref}
+            style={{
+              width: '728px',
+              height: '90px',
+              transform: 'scale(0.75)',
+              transformOrigin: 'left center',
+              marginRight: '-140px'
+            }}
+          ></div>
+          <div
+            ref={ad2Ref}
+            style={{
+              width: '728px',
+              height: '90px',
+              transform: 'scale(0.75)',
+              transformOrigin: 'right center',
+              marginLeft: '-150px'
+            }}
+          ></div>
+        </div>
+      </Container>
+
+      {/* 모바일: 광고 한 개만 */}
+      <div className={`md:hidden ${className}`}>
         <div
-          ref={ad1Ref}
+          ref={mobileAdRef}
+          className="mobile-ad-container flex items-center justify-center w-full border-0"
           style={{
-            width: '728px',
-            height: '90px',
-            transform: 'scale(0.75)',
-            transformOrigin: 'left center',
-            marginRight: '-140px'
-          }}
-        ></div>
-        <div
-          ref={ad2Ref}
-          style={{
-            width: '728px',
-            height: '90px',
-            transform: 'scale(0.75)',
-            transformOrigin: 'right center',
-            marginLeft: '-150px'
+            minHeight: '50px',
+            height: '50px'
           }}
         ></div>
       </div>
-    </Container>
+
+      <style jsx global>{`
+        .mobile-ad-container {
+          background: transparent !important;
+          border: none !important;
+        }
+        .mobile-ad-container iframe {
+          width: 320px !important;
+          height: 50px !important;
+          border: 0 !important;
+        }
+      `}</style>
+    </>
   );
 };

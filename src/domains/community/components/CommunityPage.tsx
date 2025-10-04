@@ -57,7 +57,7 @@ export function CommunityPage() {
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">커뮤니티 게시판</h1>
+          <h1 className="text-xl md:text-3xl font-bold text-gray-900">커뮤니티 게시판</h1>
           {!isLoading && (
             <p className="text-sm text-gray-600 mt-1">
               총 {totalCount.toLocaleString()}개의 게시글
@@ -87,12 +87,12 @@ export function CommunityPage() {
       </div>
 
       {/* 필터 및 정렬 */}
-      <div className="flex items-center gap-20 mb-2 mt-10">
-        <CategoryFilter 
+      <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-20 mb-2 mt-6 md:mt-10">
+        <CategoryFilter
           selectedCategory={selectedCategory}
           onCategoryChange={handleCategoryChange}
         />
-        <SortSelect 
+        <SortSelect
           sortBy={sortBy}
           onSortChange={handleSortChange}
         />

@@ -14,6 +14,7 @@ export interface SearchBarProps {
   className?: string;
   initialValue?: string;
   showRecentSearches?: boolean;
+  mobileFullScreen?: boolean;
 }
 
 const filterOptions: { value: SearchFilterType; label: string }[] = [
@@ -31,6 +32,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   className = '',
   initialValue = '',
   showRecentSearches = false,
+  mobileFullScreen = false,
 }) => {
   const [inputValue, setInputValue] = useState(initialValue || searchQuery);
   const [currentFilter, setCurrentFilter] = useState<SearchFilterType>(searchFilter);
@@ -106,6 +108,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     }
   };
 
+  const removeRecentSearch = (query: string) => {
+    const updated = recentSearches.filter(item => item !== query);
+    setRecentSearches(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('recentSearches', JSON.stringify(updated));
+    }
+  };
+
   return (
     <div className={`w-full relative ${className}`}>
       {/* 검색바 */}
@@ -176,9 +186,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             {/* 검색 버튼 */}
             <button
               type="submit"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 
-                       p-1.5 bg-primary text-white rounded-md hover:bg-primary/90 
-                       transition-colors"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2
+                       p-1.5 bg-primary text-white rounded-md hover:bg-primary/90
+                       transition-colors cursor-pointer"
             >
               <Search className="w-4 h-4" />
             </button>
@@ -186,9 +196,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         </div>
       </form>
 
-      {/* 최근 검색어 드롭다운 */}
-      {showRecentSearches && isFocused && recentSearches.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-grayLight 
+      {/* 최근 검색어 - 데스크톱: 드롭다운 */}
+      {showRecentSearches && !mobileFullScreen && isFocused && recentSearches.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-grayLight
                       rounded-lg shadow-lg z-[9999] max-h-60 overflow-y-auto">
           <div className="p-3">
             <div className="flex items-center justify-between mb-2">
@@ -205,13 +215,49 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 <button
                   key={index}
                   onClick={() => handleRecentSearchClick(query)}
-                  className="w-full text-left px-2 py-1.5 text-sm text-textDefault 
+                  className="w-full text-left px-2 py-1.5 text-sm text-textDefault
                            hover:bg-grayLighter rounded transition-colors"
                 >
                   {query}
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 최근 검색어 - 모바일: 전체화면 */}
+      {showRecentSearches && mobileFullScreen && isFocused && recentSearches.length > 0 && (
+        <div className="absolute top-full left-0 right-0 bg-white p-4 z-[9999]">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-900">최근 검색어</h3>
+            <button
+              onClick={clearRecentSearches}
+              className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              전체삭제
+            </button>
+          </div>
+          <div className="space-y-2">
+            {recentSearches.slice(0, 10).map((query, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <button
+                  onClick={() => handleRecentSearchClick(query)}
+                  className="flex-1 text-left text-sm text-gray-700"
+                >
+                  {query}
+                </button>
+                <button
+                  onClick={() => removeRecentSearch(query)}
+                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       )}

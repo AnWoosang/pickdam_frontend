@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { MainLayout } from '@/shared/layout/MainLayout';
+import { ResponsiveLayout } from '@/shared/layout/ResponsiveLayout';
 import { ComingSoon } from '@/shared/components/ComingSoon';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 
@@ -13,13 +13,13 @@ function LiquidFinderContent() {
   );
 
   return (
-    <MainLayout showHeader={true} showFooter={true} showCategoryBar={true} showSearchBar={false}>
+    <ResponsiveLayout showHeader={true} showFooter={true} showCategoryBar={true} showSearchBar={false}>
       <ComingSoon 
         title="나에게 맞는 액상찾기"
         description="취향과 선호도를 분석하여 개인 맞춤형 액상을 추천해드릴 예정입니다."
         icon={liquidIcon}
       />
-    </MainLayout>
+    </ResponsiveLayout>
   );
 }
 

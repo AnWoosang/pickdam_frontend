@@ -9,6 +9,8 @@ import { ROUTES } from '@/app/router/routes';
 const SLIDER_DEFAULTS = {
   CARD_COUNT: 4,
   VISIBLE_CARD_COUNT: 4.5,
+  MOBILE_CARD_COUNT: 2,
+  MOBILE_VISIBLE_CARD_COUNT: 2,
   AUTO_PLAY_INTERVAL: 4000,
 } as const;
 
@@ -32,13 +34,28 @@ export const useProductSlider = ({
 }: UseProductSliderProps) => {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const maxIndex = Math.max(0, products.length - cardCount);
+  // 모바일 감지
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const finalCardCount = isMobile ? SLIDER_DEFAULTS.MOBILE_CARD_COUNT : cardCount;
+  const finalVisibleCardCount = isMobile ? SLIDER_DEFAULTS.MOBILE_VISIBLE_CARD_COUNT : visibleCardCount;
+  const maxIndex = Math.max(0, products.length - finalCardCount);
 
   // 자동 재생 효과
   useEffect(() => {
-    if (autoPlay && products.length > cardCount) {
+    if (autoPlay && products.length > finalCardCount) {
       intervalRef.current = setInterval(() => {
         setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
       }, autoPlayInterval);
@@ -50,7 +67,7 @@ export const useProductSlider = ({
         intervalRef.current = null;
       }
     };
-  }, [autoPlay, autoPlayInterval, cardCount, maxIndex, products.length]);
+  }, [autoPlay, autoPlayInterval, finalCardCount, maxIndex, products.length]);
 
   // 이전 슬라이드로 이동
   const goToPrevious = useCallback(() => {
@@ -69,7 +86,7 @@ export const useProductSlider = ({
 
   // 슬라이더 표시 여부
   const shouldShowSlider = products.length > 0;
-  const shouldShowNavigation = products.length > cardCount;
+  const shouldShowNavigation = products.length > finalCardCount;
 
   return {
     // 상태
@@ -77,11 +94,11 @@ export const useProductSlider = ({
     maxIndex,
     shouldShowSlider,
     shouldShowNavigation,
-    
+
     // 설정값
-    cardCount,
-    visibleCardCount,
-    
+    cardCount: finalCardCount,
+    visibleCardCount: finalVisibleCardCount,
+
     // 액션
     goToPrevious,
     goToNext,

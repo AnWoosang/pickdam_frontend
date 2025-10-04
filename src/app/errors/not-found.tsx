@@ -1,16 +1,16 @@
 import React from 'react';
-import { MainLayout } from '@/shared/layout/MainLayout';
+import { ResponsiveLayout } from '@/shared/layout/ResponsiveLayout';
 import { ErrorPage } from '@/shared/components/ErrorPage';
 
 export default function NotFound() {
   return (
-    <MainLayout showHeader={true} showFooter={true} showCategoryBar={false} showSearchBar={false}>
-      <ErrorPage 
+    <ResponsiveLayout showHeader={true} showFooter={true} showCategoryBar={false} showSearchBar={false}>
+      <ErrorPage
         statusCode={404}
         showBackButton={true}
         showHomeButton={true}
         showRefreshButton={false}
       />
-    </MainLayout>
+    </ResponsiveLayout>
   );
 }

@@ -11,12 +11,6 @@ import { RememberMeSection } from "./login/RememberMeSection";
 import { SignupPrompt } from "./login/SignupPrompt";
 import { LoginDialogs } from "./login/LoginDialogs";
 
-// 모달 스타일 상수
-const MODAL_STYLES = {
-  maxWidth: "380px",
-  minHeight: "440px"
-} as const;
-
 // Dialog 상태 타입 정의
 interface DialogState {
   showErrorDialog: boolean;
@@ -183,8 +177,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-0 md:p-4"
       onClick={(e) => {
         // 모달 외부 클릭 시 닫기
         if (e.target === e.currentTarget) {
@@ -193,40 +187,48 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       }}
     >
       <div
-        className="bg-white rounded-2xl shadow-xl w-full px-8 py-12 relative"
-        style={MODAL_STYLES}
+        className="bg-white rounded-none md:rounded-2xl shadow-xl w-full h-full md:h-auto md:max-w-[380px] px-4 md:px-8 pt-2 md:py-12 relative overflow-y-auto"
         onClick={(e) => e.stopPropagation()} // 모달 내부 클릭 시 이벤트 전파 중단
       >
         {/* Header: Logo + Close */}
         <button
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
+          className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer z-10"
           onClick={onClose}
           aria-label="닫기"
         >
           <X className="w-6 h-6" />
         </button>
-        
-        <div className="flex justify-center mb-10">
+
+        {/* 모바일: 로고 중앙 정렬 (헤더와 동일) */}
+        <div className="md:hidden relative h-12 py-2 mb-6 flex items-center justify-center" onClick={onClose}>
+          <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center">
+            <Logo size="mobile" />
+          </div>
+        </div>
+
+        {/* 데스크탑: 로고 중앙 정렬 */}
+        <div className="hidden md:flex justify-center mb-10" onClick={onClose}>
           <Logo size="medium" />
         </div>
 
+        {/* Form Container */}
+        <div className="pb-8 md:pb-0">
+          {/* Email & Password Form */}
+          <LoginForm
+            isLoading={isLoading}
+            onSubmit={handleLoginSubmit}
+            hasCredentialError={dialogState.hasCredentialError}
+            onChange={handleFormChange}
+          />
 
-        {/* Email & Password Form */}
-        <LoginForm
-          isLoading={isLoading}
-          onSubmit={handleLoginSubmit}
-          hasCredentialError={dialogState.hasCredentialError}
-          onChange={handleFormChange}
-        />
+          {/* Remember Me Section */}
+          <RememberMeSection
+            onClose={onClose}
+          />
 
-        {/* Remember Me Section */}
-        <RememberMeSection
-          onClose={onClose}
-        />
-
-
-        {/* Signup Prompt */}
-        <SignupPrompt onClose={onClose} />
+          {/* Signup Prompt */}
+          <SignupPrompt onClose={onClose} />
+        </div>
       </div>
 
       {/* Login Dialogs */}

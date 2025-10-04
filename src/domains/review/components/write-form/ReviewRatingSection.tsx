@@ -47,53 +47,51 @@ export function ReviewRatingSection({
     <>
       {/* 전체 평점 */}
       <div>
-        <div className="flex items-center gap-2 mb-3">
-          <label className={`text-sm font-medium ${
+        <div className="flex items-center gap-2 mb-2 md:mb-3">
+          <label className={`text-xs md:text-sm font-medium ${
             validationErrors.rating ? 'text-red-600' : 'text-gray-700'
           }`}>
             전체 평점 <span className="text-red-500">*</span>
           </label>
-          <span className="text-sm text-gray-500">
+          <span className="text-xs md:text-sm text-gray-500">
             ({formData.rating}/{MAX_RATING})
           </span>
         </div>
-        
+
         <div className="flex gap-1" role="radiogroup" aria-label="전체 평점 선택">
           {RATING_SCALE.map((star) => (
-            <Star
+            <button
               key={star}
+              type="button"
               onClick={() => handleStarClick(star)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleStarClick(star);
-                }
-              }}
-              tabIndex={0}
               role="radio"
               aria-checked={star === formData.rating}
               aria-label={`${star}점`}
-              className={`w-6 h-6 cursor-pointer transition-colors ${
-                star <= formData.rating
-                  ? 'text-yellow-400 fill-current'
-                  : validationErrors.rating
-                    ? 'text-red-300 hover:text-yellow-400'
-                    : 'text-gray-300 hover:text-yellow-400'
-              }`}
-            />
+              className="p-1.5 md:p-1 -m-1.5 md:-m-1 touch-manipulation"
+            >
+              <Star
+                className={`w-5 h-5 md:w-6 md:h-6 transition-colors ${
+                  star <= formData.rating
+                    ? 'text-yellow-400 fill-current'
+                    : validationErrors.rating
+                      ? 'text-red-300 hover:text-yellow-400'
+                      : 'text-gray-300 hover:text-yellow-400'
+                }`}
+              />
+            </button>
           ))}
         </div>
-        
+
         <ErrorMessage error={validationErrors.rating} />
       </div>
 
       {/* 상세 평가 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-4">
+        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-3 md:mb-4">
           상세 평가 <span className="text-red-500">*</span>
         </label>
-        
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-1.5 md:gap-x-2 gap-y-3 md:gap-y-4">
           {DETAILED_RATINGS.map(({ field, label, icon, color }) => (
             <StarRating
               key={field}

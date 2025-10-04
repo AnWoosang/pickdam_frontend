@@ -19,7 +19,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
     : null;
 
   return (
-    <div 
+    <div
       className="bg-white rounded-lg border border-grayLight cursor-pointer hover:shadow-lg transition-shadow duration-200"
       onClick={onClick}
     >
@@ -37,14 +37,14 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
           </div>
         )}
       </div>
-      <div className="p-4 h-32 flex flex-col">
-        <h3 className="font-medium text-textHeading line-clamp-2 h-12 flex items-start">
+      <div className="p-3 md:p-4 flex flex-col gap-1">
+        <h3 className="font-medium text-sm md:text-base text-textHeading line-clamp-2 h-10 md:h-12">
           {product.name}
         </h3>
-        <div className="text-xs text-textDefault mb-1 flex-shrink-0">
+        <div className="text-xs text-textDefault">
           {getProductCategoryDisplayName(product.productCategory)} • {getInhaleTypeDisplayName(product.inhaleType)} • {product.capacity}ml
         </div>
-        <div className="text-lg font-bold text-primary flex-shrink-0">
+        <div className="text-base md:text-lg font-bold text-primary">
           최저가 {formatKRW(product.price)}
         </div>
       </div>

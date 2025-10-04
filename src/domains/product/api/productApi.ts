@@ -64,8 +64,8 @@ export const productApi = {
   // 상품 조회수 증가 (간소화)
   async incrementProductViews(productId: string): Promise<number> {
     const requestDto: IncrementViewRequestDto = {};
-    const response = await apiClient.post<IncrementViewResponseDto>(API_ROUTES.PRODUCTS.VIEW(productId), requestDto);
-    return response.newViewCount;
+    const response = await apiClient.post<ApiResponse<IncrementViewResponseDto>>(API_ROUTES.PRODUCTS.VIEW(productId), requestDto);
+    return response.data?.viewCount || 0;
   },
 
   // 월별 가격 히스토리 조회

@@ -115,11 +115,11 @@ export function PriceHistoryChart({
   const hasData = activePriceHistory && activePriceHistory.length > 0;
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${className}`}>
+    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-6 ${className}`}>
       {/* 헤더 */}
-      <div className="mb-6">
+      <div className="mb-4 md:mb-6">
         <div className="mb-1">
-          <h3 className="text-xl font-bold text-gray-900">가격 변동 이력</h3>
+          <h3 className="text-base md:text-xl font-bold text-gray-900">가격 변동 이력</h3>
         </div>
 
         <div className="mb-2">
@@ -145,7 +145,7 @@ export function PriceHistoryChart({
           <div className="flex bg-gray-100 rounded-lg p-1 space-x-1">
             <button
               onClick={() => handleViewModeChange('daily')}
-              className={`text-sm px-3 py-1 rounded-md transition-colors cursor-pointer ${
+              className={`text-xs md:text-sm px-2 md:px-3 py-1 rounded-md transition-colors cursor-pointer ${
                 viewMode === 'daily'
                   ? 'bg-white text-primary shadow-sm'
                   : 'text-gray-600 hover:text-gray-800'
@@ -155,7 +155,7 @@ export function PriceHistoryChart({
             </button>
             <button
               onClick={() => handleViewModeChange('monthly')}
-              className={`text-sm px-3 py-1 rounded-md transition-colors cursor-pointer ${
+              className={`text-xs md:text-sm px-2 md:px-3 py-1 rounded-md transition-colors cursor-pointer ${
                 viewMode === 'monthly'
                   ? 'bg-white text-primary shadow-sm'
                   : 'text-gray-600 hover:text-gray-800'
@@ -170,7 +170,7 @@ export function PriceHistoryChart({
       {hasData ? (
         <>
           {/* 차트 */}
-          <div className="h-80 w-full">
+          <div className="h-64 md:h-80 w-full">
             <PriceHistoryChartView
               filteredHistory={filteredHistory}
               viewMode={viewMode}
@@ -185,8 +185,8 @@ export function PriceHistoryChart({
         </>
       ) : (
         /* 데이터가 없는 경우 */
-        <div className="flex items-center justify-center py-8">
-          <p className="text-gray-500">가격 변동 이력이 없습니다.</p>
+        <div className="flex items-center justify-center py-6 md:py-8">
+          <p className="text-sm md:text-base text-gray-500">가격 변동 이력이 없습니다.</p>
         </div>
       )}
     </div>

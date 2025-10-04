@@ -2,7 +2,6 @@
 
 import React, { useMemo } from 'react';
 import { POST_CATEGORIES, PostCategoryId } from '@/domains/community/types/community';
-import { Button } from '@/shared/components/Button';
 
 interface CategoryFilterProps {
   selectedCategory: PostCategoryId | 'all';
@@ -19,31 +18,33 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = React.memo(function
   );
 
   return (
-    <div className="mb-8">
-      <div className="block text-lg font-bold text-black mb-2">
+    <div className="mb-2 md:mb-8">
+      <div className="block text-sm md:text-lg font-semibold md:font-bold text-black mb-2.5 md:mb-2">
         카테고리 필터
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button
-          variant={selectedCategory === 'all' ? 'primary' : 'secondary'}
-          size="small"
+        <button
           onClick={() => onCategoryChange('all')}
-          className="rounded-full"
-          noFocus={true}
+          className={`px-3 py-1.5 rounded-lg md:rounded-full text-sm font-medium transition-colors cursor-pointer ${
+            selectedCategory === 'all'
+              ? 'bg-primary text-white'
+              : 'bg-grayLighter text-textDefault hover:bg-grayLight'
+          }`}
         >
           전체
-        </Button>
+        </button>
         {categoryEntries.map(([categoryId, categoryName]) => (
-          <Button
+          <button
             key={categoryId}
-            variant={selectedCategory === categoryId ? 'primary' : 'secondary'}
-            size="small"
             onClick={() => onCategoryChange(categoryId)}
-            className="rounded-full"
-            noFocus={true}
+            className={`px-3 py-1.5 rounded-lg md:rounded-full text-sm font-medium transition-colors cursor-pointer ${
+              selectedCategory === categoryId
+                ? 'bg-primary text-white'
+                : 'bg-grayLighter text-textDefault hover:bg-grayLight'
+            }`}
           >
             {categoryName}
-          </Button>
+          </button>
         ))}
       </div>
     </div>

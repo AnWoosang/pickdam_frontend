@@ -26,15 +26,15 @@ interface MenuItemProps {
 
 export const MenuItem = React.memo(({ item, badgeCount, isLoading, onAction }: MenuItemProps) => {
   const IconComponent = iconComponents[item.icon as keyof typeof iconComponents];
-  
+
   const content = (
     <>
       <div className="flex items-center space-x-3">
-        <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg">
-          <IconComponent className="w-5 h-5 text-gray-600" />
+        <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 bg-gray-100 rounded-lg">
+          <IconComponent className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
         </div>
         <div className="flex flex-col">
-          <span className="font-medium text-gray-900">{item.label}</span>
+          <span className="text-sm md:text-base font-medium text-gray-900">{item.label}</span>
           {item.isNew && (
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 w-fit">
               NEW
@@ -42,15 +42,15 @@ export const MenuItem = React.memo(({ item, badgeCount, isLoading, onAction }: M
           )}
         </div>
       </div>
-      
+
       <div className="flex items-center space-x-2">
         {/* 카운트를 오른쪽 끝에 표시 */}
         {!isLoading && badgeCount && badgeCount > 0 && (
-          <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full text-xs font-medium bg-primary text-white">
+          <span className="inline-flex items-center justify-center min-w-[20px] md:min-w-[24px] h-5 md:h-6 px-1.5 md:px-2 rounded-full text-xs font-medium bg-primary text-white">
             {badgeCount}
           </span>
         )}
-        <ChevronRight className="w-5 h-5 text-gray-400" />
+        <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />
       </div>
     </>
   );
@@ -59,7 +59,7 @@ export const MenuItem = React.memo(({ item, badgeCount, isLoading, onAction }: M
     return (
       <button
         onClick={onAction}
-        className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg transition-colors hover:shadow-md w-full text-left cursor-pointer"
+        className="flex items-center justify-between p-3 md:p-4 bg-white border border-gray-200 rounded-lg md:rounded-lg transition-colors hover:shadow-md w-full text-left cursor-pointer"
       >
         {content}
       </button>
@@ -69,7 +69,7 @@ export const MenuItem = React.memo(({ item, badgeCount, isLoading, onAction }: M
   return (
     <Link
       href={item.href}
-      className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg transition-colors hover:shadow-md cursor-pointer"
+      className="flex items-center justify-between p-3 md:p-4 bg-white border border-gray-200 rounded-lg md:rounded-lg transition-colors hover:shadow-md cursor-pointer"
     >
       {content}
     </Link>

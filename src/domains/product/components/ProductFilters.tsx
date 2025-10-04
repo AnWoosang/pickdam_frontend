@@ -19,18 +19,19 @@ export function ProductFilters({
   onClearAllFilters
 }: ProductFiltersProps) {
   return (
-    <div className="bg-white border border-grayLight rounded-lg p-4 mb-4">
+    <div className="bg-white border border-grayLight rounded-lg p-3 sm:p-4 mb-4">
       <div className="flex justify-between items-center mb-3">
-        <h3 className="text-lg font-medium text-textHeading">상품 필터</h3>
+        <h3 className="text-base sm:text-lg font-medium text-textHeading">상품 필터</h3>
         <button
           onClick={onClearAllFilters}
-          className="text-sm text-hintText hover:text-textDefault transition-colors cursor-pointer"
+          className="text-xs sm:text-sm text-hintText hover:text-textDefault transition-colors cursor-pointer"
         >
           모든 필터 해제
         </button>
       </div>
-      
-      <div className="overflow-x-auto">
+
+      {/* 데스크톱: 테이블 레이아웃 */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-grayLight">
@@ -43,7 +44,6 @@ export function ProductFilters({
           </thead>
           <tbody>
             <tr>
-              {/* 카테고리 체크박스들 */}
               <td className="py-3 px-3 align-top">
                 <div className="space-y-2">
                   {CATEGORY_CONFIG.map(config => (
@@ -52,7 +52,7 @@ export function ProductFilters({
                         type="checkbox"
                         checked={selectedCategories.includes(config.id)}
                         onChange={() => onCategoryChange(config.id)}
-                        className="w-4 h-4 text-primary bg-white border-grayLight rounded 
+                        className="w-4 h-4 text-primary bg-white border-grayLight rounded
                                  focus:ring-2 focus:ring-primary focus:ring-offset-0
                                  checked:bg-primary checked:border-primary cursor-pointer"
                       />
@@ -61,8 +61,6 @@ export function ProductFilters({
                   ))}
                 </div>
               </td>
-
-              {/* 호흡방식 체크박스들 */}
               <td className="py-3 px-3 align-top">
                 <div className="space-y-2">
                   {INHALE_TYPE_CONFIG.map(config => (
@@ -80,14 +78,11 @@ export function ProductFilters({
                   ))}
                 </div>
               </td>
-
-              {/* 선택된 필터 표시 */}
               <td className="py-3 px-3 align-top">
                 <div className="space-y-1">
                   {selectedCategories.length === 0 && selectedInhaleTypes.length === 0 && (
                     <span className="text-sm text-hintText">선택된 필터가 없습니다</span>
                   )}
-                  
                   {selectedCategories.map(categoryId => {
                     const config = CATEGORY_CONFIG.find(c => c.id === categoryId);
                     return (
@@ -105,7 +100,6 @@ export function ProductFilters({
                       </span>
                     );
                   })}
-                  
                   {selectedInhaleTypes.map(inhaleTypeId => {
                     const config = INHALE_TYPE_CONFIG.find(c => c.name === inhaleTypeId);
                     return (
@@ -128,6 +122,88 @@ export function ProductFilters({
             </tr>
           </tbody>
         </table>
+      </div>
+
+      {/* 모바일: 세로 레이아웃 */}
+      <div className="md:hidden space-y-3">
+        {/* 카테고리 */}
+        <div>
+          <h4 className="text-sm font-semibold text-black mb-2.5">카테고리</h4>
+          <div className="flex flex-wrap gap-2">
+            {CATEGORY_CONFIG.map(config => (
+              <button
+                key={config.id}
+                onClick={() => onCategoryChange(config.id)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                  selectedCategories.includes(config.id)
+                    ? 'bg-primary text-white'
+                    : 'bg-grayLighter text-textDefault hover:bg-grayLight'
+                }`}
+              >
+                {config.displayName}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 호흡방식 */}
+        <div>
+          <h4 className="text-sm font-semibold text-black mb-2.5">호흡방식</h4>
+          <div className="flex flex-wrap gap-2">
+            {INHALE_TYPE_CONFIG.map(config => (
+              <button
+                key={config.name}
+                onClick={() => onInhaleTypeChange(config.name)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                  selectedInhaleTypes.includes(config.name)
+                    ? 'bg-primary text-white'
+                    : 'bg-grayLighter text-textDefault hover:bg-grayLight'
+                }`}
+              >
+                {config.displayName}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 선택된 필터 */}
+        {(selectedCategories.length > 0 || selectedInhaleTypes.length > 0) && (
+          <div className="pt-2 border-t border-gray-200">
+            <div className="flex items-center justify-between mb-2.5">
+              <h4 className="text-sm font-semibold text-black">
+                선택된 필터 ({selectedCategories.length + selectedInhaleTypes.length})
+              </h4>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {selectedCategories.map(categoryId => {
+                const config = CATEGORY_CONFIG.find(c => c.id === categoryId);
+                return (
+                  <button
+                    key={categoryId}
+                    onClick={() => onCategoryChange(categoryId)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
+                  >
+                    {config?.displayName || categoryId}
+                    <span className="text-white">×</span>
+                  </button>
+                );
+              })}
+              {selectedInhaleTypes.map(inhaleTypeId => {
+                const config = INHALE_TYPE_CONFIG.find(c => c.name === inhaleTypeId);
+                return (
+                  <button
+                    key={inhaleTypeId}
+                    onClick={() => onInhaleTypeChange(inhaleTypeId)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
+                  >
+                    {config?.displayName || inhaleTypeId}
+                    <span className="text-white">×</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

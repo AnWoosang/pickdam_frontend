@@ -82,15 +82,15 @@ export const ReviewImageUpload = React.memo(function ReviewImageUpload({ onImage
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1.5 md:mb-2">
         사진 첨부 (선택)
       </label>
-      
+
       {/* 이미지 미리보기 - blob URL 사용으로 즉시 표시 */}
       {imagePreviewUrls.length > 0 && (
-        <div className="flex flex-wrap gap-3 mb-4">
+        <div className="flex flex-wrap gap-2 md:gap-3 mb-3 md:mb-4">
           {imagePreviewUrls.map((previewUrl, index) => (
-            <div key={index} className="relative w-20 h-20">
+            <div key={index} className="relative w-16 h-16 md:w-20 md:h-20">
               <div
                 className="relative w-full h-full rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-gray-200"
                 onClick={() => handleImageClick(index)}
@@ -106,8 +106,8 @@ export const ReviewImageUpload = React.memo(function ReviewImageUpload({ onImage
                 variant="ghost"
                 size="small"
                 onClick={() => handleRemoveImage(index)}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full p-0 hover:bg-red-600 z-10"
-                icon={<X className="w-3 h-3" />}
+                className="absolute -top-1.5 -right-1.5 md:-top-2 md:-right-2 w-5 h-5 md:w-6 md:h-6 bg-red-500 text-white rounded-full p-0 hover:bg-red-600 z-10"
+                icon={<X className="w-2.5 h-2.5 md:w-3 md:h-3" />}
               />
             </div>
           ))}
@@ -129,25 +129,25 @@ export const ReviewImageUpload = React.memo(function ReviewImageUpload({ onImage
           />
           <label
             htmlFor="image-upload"
-            className={`inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg transition-colors ${
-              uploadManager.isUploading 
-                ? 'cursor-not-allowed bg-gray-100 text-gray-400' 
+            className={`inline-flex items-center space-x-1.5 md:space-x-2 px-3 py-1.5 md:px-4 md:py-2 border border-gray-300 rounded-lg transition-colors ${
+              uploadManager.isUploading
+                ? 'cursor-not-allowed bg-gray-100 text-gray-400'
                 : 'cursor-pointer hover:bg-gray-50 text-gray-700'
             }`}
           >
             {uploadManager.isUploading ? (
               <>
                 <LoadingSpinner size="small" showMessage={false} className="py-0" />
-                <span className="text-sm">업로드 중...</span>
+                <span className="text-xs md:text-sm">업로드 중...</span>
               </>
             ) : (
               <>
-                <Upload className="w-4 h-4 text-gray-600" />
-                <span className="text-sm">사진 선택</span>
+                <Upload className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-600" />
+                <span className="text-xs md:text-sm">사진 선택</span>
               </>
             )}
           </label>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-[10px] md:text-xs text-gray-500 mt-1">
             최대 {maxImages}장까지 업로드 가능 (JPG, PNG, JPEG, GIF)
           </p>
         </div>

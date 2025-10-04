@@ -7,10 +7,10 @@ interface ContainerProps {
 }
 
 const CONTAINER_VARIANTS = {
-  default: 'max-w-7xl mx-auto px-14',
-  wide: 'max-w-[1400px] mx-auto px-8',
-  narrow: 'max-w-4xl mx-auto px-6',
-  full: 'w-full px-4'
+  default: 'max-w-7xl mx-auto px-3 sm:px-4 lg:px-14',
+  wide: 'max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-8',
+  narrow: 'max-w-4xl mx-auto px-3 sm:px-4 lg:px-6',
+  full: 'w-full px-3 sm:px-4'
 } as const;
 
 export const Container: React.FC<ContainerProps> = ({ 

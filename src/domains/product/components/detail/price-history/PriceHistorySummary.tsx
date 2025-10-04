@@ -36,33 +36,33 @@ export function PriceHistorySummary({
   const { maxPrice, minPrice, currentPrice, isCurrentPriceMax } = priceStats;
 
   return (
-    <div className="mt-6 pt-4 border-t border-gray-100">
-      <div className="grid grid-cols-3 gap-4 mb-4">
+    <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-gray-100">
+      <div className="grid grid-cols-3 gap-2 md:gap-4 mb-3 md:mb-4">
         <div className="text-center">
-          <div className="text-sm text-gray-600">최고가</div>
-          <div className="text-lg font-bold text-black-500">
+          <div className="text-xs md:text-sm text-gray-600">최고가</div>
+          <div className="text-sm md:text-lg font-bold text-black-500">
             {formatPrice(maxPrice)}원
           </div>
         </div>
         <div className="text-center">
-          <div className="text-sm text-gray-600">최저가</div>
-          <div className="text-lg font-bold text-black">
+          <div className="text-xs md:text-sm text-gray-600">최저가</div>
+          <div className="text-sm md:text-lg font-bold text-black">
             {formatPrice(minPrice)}원
           </div>
         </div>
         <div className="text-center">
-          <div className="text-sm text-gray-600">현재가</div>
-          <div className="text-lg font-bold text-black">
+          <div className="text-xs md:text-sm text-gray-600">현재가</div>
+          <div className="text-sm md:text-lg font-bold text-black">
             {formatPrice(currentPrice)}원
           </div>
         </div>
       </div>
 
       {/* 가격 차이 설명 */}
-      <div className={`rounded-lg p-4 text-center ${
+      <div className={`rounded-lg p-2 md:p-4 text-center ${
         isCurrentPriceMax ? 'bg-red-50' : 'bg-green-50'
       }`}>
-        <div className={`text-lg font-bold ${
+        <div className={`text-xs md:text-lg font-bold ${
           isCurrentPriceMax ? 'text-red-700' : 'text-green-700'
         }`}>
           {isCurrentPriceMax

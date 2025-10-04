@@ -33,7 +33,6 @@ export async function GET() {
 
     // auth 메타데이터에서 사용자 정보 추출
     const userMetadata = user.user_metadata || {}
-    console.log(userMetadata)
     const userResponseDto: UserResponseDto = {
       id: user.id,
       email: user.email!,

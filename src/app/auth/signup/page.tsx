@@ -1,10 +1,10 @@
-import { CenteredLayout } from '@/shared/layout/CenteredLayout';
+import { ResponsiveCenteredLayout } from '@/shared/layout/ResponsiveCenteredLayout';
 import { SignupPage } from '@/domains/auth/components/signup/SignupPage';
 
 export default function SignupPageRoute() {
   return (
-    <CenteredLayout showLogo={true} maxWidth="medium">
+    <ResponsiveCenteredLayout showLogo={true} maxWidth="medium">
       <SignupPage />
-    </CenteredLayout>
+    </ResponsiveCenteredLayout>
   );
 }

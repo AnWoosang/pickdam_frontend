@@ -94,6 +94,23 @@ export function useMypage() {
     setIsAccountDeletionModalOpen(false);
   }, []);
 
+  // 로그아웃 핸들러
+  const handleLogout = useCallback(() => {
+    setIsLoggingOut(true);
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.success('로그아웃되었습니다.');
+        router.push('/');
+      },
+      onError: () => {
+        toast.error('로그아웃에 실패했습니다.');
+      },
+      onSettled: () => {
+        setIsLoggingOut(false);
+      }
+    });
+  }, [logoutMutation, router]);
+
   return {
     // 상태
     user,
@@ -110,5 +127,6 @@ export function useMypage() {
     handleAccountDeletion,
     handleAccountDeletionConfirm,
     closeAccountDeletionModal,
+    handleLogout,
   };
 }

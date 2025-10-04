@@ -7,7 +7,7 @@ import { Footer } from './Footer';
 import { Container } from './Container';
 import { Divider } from '@/shared/components/Divider';
 import { BannerSection } from '@/shared/components/BannerSection';
-import { SideAd } from '@/shared/components/SideAd';
+import { BottomNavigation } from './BottomNavigation';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -34,14 +34,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 }) => {
 
   return (
-    <div className="min-h-screen flex flex-col bg-white overflow-y-auto">
+    <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
       {showHeader && (
         <>
           <Header containerVariant={containerVariant} showCategoryBar={showCategoryBar} showSearchBar={showSearchBar} />
-          <BannerSection show={showAds} containerVariant={containerVariant} className="mt-2" />
+          <BannerSection show={showAds} containerVariant={containerVariant} className="mt-4 mb-2" />
         </>
       )}
-      <main className="flex-1 w-full relative">
+      <main className="flex-1 w-full relative overflow-x-hidden pb-16 md:pb-0">
         {disableContainer ? children : <Container variant={containerVariant}>{children}</Container>}
       </main>
 
@@ -57,6 +57,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           <Footer containerVariant={containerVariant} />
         </>
       )}
+
+      {/* 하단 네비게이션 바 (모바일만) */}
+      <BottomNavigation />
     </div>
   );
 };

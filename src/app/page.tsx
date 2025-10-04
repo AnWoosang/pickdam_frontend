@@ -1,14 +1,14 @@
 "use client";
 
 import { Suspense } from 'react';
-import { MainLayout } from '@/shared/layout/MainLayout';
+import { ResponsiveLayout } from '@/shared/layout/ResponsiveLayout';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { MainPage } from '@/domains/home/components/MainPage';
 function HomeContent() {
   return (
-    <MainLayout showHeader={true} showFooter={true} disableContainer={true}>
+    <ResponsiveLayout showHeader={true} showFooter={true} disableContainer={true}>
       <MainPage />
-    </MainLayout>
+    </ResponsiveLayout>
   );
 }
 

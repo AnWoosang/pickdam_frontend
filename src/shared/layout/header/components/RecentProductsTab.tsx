@@ -8,15 +8,17 @@ import { Product } from '@/domains/product/types/product';
 import { Button } from '@/shared/components/Button';
 import { useRecentProducts } from '@/domains/user/hooks/useRecentProducts';
 
-interface RecentProductsDropdownProps {
+interface RecentProductsTabProps {
   isActive: boolean;
   onToggle: () => void;
+  isMobileModal?: boolean;
 }
 
-export function RecentProductsDropdown({ 
-  isActive, 
-  onToggle
-}: RecentProductsDropdownProps) {
+export function RecentProductsTab({
+  isActive,
+  onToggle,
+  isMobileModal = false
+}: RecentProductsTabProps) {
   const router = useRouter();
   const { 
     products: recentViewedProducts, 
@@ -54,13 +56,80 @@ export function RecentProductsDropdown({
     clearRecentProducts();
   };
 
+  // 모바일 모달일 경우 카드만 렌더링
+  if (isMobileModal) {
+    const totalPages = getTotalPages(recentViewedProducts);
+    const currentProducts = getCurrentProducts(recentViewedProducts, recentPage);
+
+    return (
+      <div>
+        {recentViewedProducts.length > 0 ? (
+          <>
+            {/* 상품 카드 그리드 - 3열 */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {currentProducts.map((product, index) => {
+                return (
+                  <div key={`recent-${product?.id || index}-${index}`} className="relative">
+                    <ProductCard
+                      product={product}
+                      onClick={() => {
+                        router.push(`/product/${product.id}`);
+                      }}
+                    />
+                    {/* 개별 삭제 버튼 */}
+                    <button
+                      onClick={(e) => handleRemoveRecentProduct(product.id, e)}
+                      className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-white transition-colors cursor-pointer z-10"
+                      aria-label="최근 상품에서 제거"
+                    >
+                      <X className="w-3 h-3 text-gray-500 hover:text-red-500" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 페이지네이션 - 상품이 6개보다 많을 때만 표시 */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-6">
+                <Button
+                  onClick={() => setRecentPage(prev => Math.max(1, prev - 1))}
+                  disabled={recentPage === 1}
+                  variant="ghost"
+                  size="small"
+                  icon={<ChevronLeft className="w-4 h-4" />}
+                  noFocus
+                />
+                <span className="text-sm text-gray-600">
+                  {recentPage} / {totalPages}
+                </span>
+                <Button
+                  onClick={() => setRecentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={recentPage >= totalPages}
+                  variant="ghost"
+                  size="small"
+                  icon={<ChevronRight className="w-4 h-4" />}
+                  noFocus
+                />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="py-12 text-center">
+            <p className="text-sm text-gray-500">최근 본 상품이 없습니다</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
       <button
         onClick={handleToggle}
         className={`flex items-center space-x-1 pb-1 transition-colors cursor-pointer
-          ${isActive 
-            ? 'text-textHeading border-b-2 border-primary' 
+          ${isActive
+            ? 'text-textHeading border-b-2 border-primary'
             : 'text-gray hover:text-textHeading'
           }`}
       >
@@ -68,9 +137,9 @@ export function RecentProductsDropdown({
         <span className="text-sm font-semibold">최근 본 상품</span>
         <ChevronDown className="w-4 h-4" />
       </button>
-      
+
       {isActive && (
-        <div className="absolute top-full right-0 mt-2 w-[720px] bg-white border border-grayLight 
+        <div className="absolute top-full right-0 mt-2 w-[720px] bg-white border border-grayLight
                       rounded-lg shadow-lg z-50">
           <div className="p-4">
             <div className="flex items-center justify-between mb-3">

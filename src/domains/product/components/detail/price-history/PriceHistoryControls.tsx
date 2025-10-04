@@ -110,19 +110,19 @@ export function PriceHistoryControls({
     <>
       <div className="flex items-center justify-center">
         {viewMode === 'monthly' ? (
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1.5">
             <Button
               onClick={handlePrevMonth}
               disabled={!navigationLimits.canGoPrevMonth}
               variant="ghost"
               size="small"
               noFocus
-              icon={<ChevronLeft className="w-5 h-5" />}
-              className={`p-2 rounded-full ${
+              icon={<ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />}
+              className={`p-1 md:p-2 rounded-full ${
                 !navigationLimits.canGoPrevMonth && 'opacity-50 cursor-not-allowed'
               }`}
             />
-            <div className="text-lg font-semibold text-gray-900 min-w-[120px] text-center">
+            <div className="text-sm md:text-lg font-semibold text-gray-900 min-w-[90px] md:min-w-[120px] text-center">
               {currentMonthInfo.display}
             </div>
             <Button
@@ -131,23 +131,23 @@ export function PriceHistoryControls({
               variant="ghost"
               size="small"
               noFocus
-              icon={<ChevronRight className="w-5 h-5" />}
-              className={`p-2 rounded-full ${
+              icon={<ChevronRight className="w-4 h-4 md:w-5 md:h-5" />}
+              className={`p-1 md:p-2 rounded-full ${
                 !navigationLimits.canGoNextMonth && 'opacity-50 cursor-not-allowed'
               }`}
             />
           </div>
         ) : (
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1.5">
             <Button
               onClick={handlePrevWeek}
               variant="ghost"
               size="small"
               noFocus
-              icon={<ChevronLeft className="w-5 h-5" />}
-              className="p-2 rounded-full"
+              icon={<ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />}
+              className="p-1 md:p-2 rounded-full"
             />
-            <div className="text-lg font-semibold text-gray-900 min-w-[120px] text-center">
+            <div className="text-sm md:text-lg font-semibold text-gray-900 min-w-[90px] md:min-w-[120px] text-center">
               {currentWeekInfo.display}
             </div>
             <Button
@@ -156,8 +156,8 @@ export function PriceHistoryControls({
               variant="ghost"
               size="small"
               noFocus
-              icon={<ChevronRight className="w-5 h-5" />}
-              className={`p-2 rounded-full ${
+              icon={<ChevronRight className="w-4 h-4 md:w-5 md:h-5" />}
+              className={`p-1 md:p-2 rounded-full ${
                 !navigationLimits.canGoNextWeek && 'opacity-50 cursor-not-allowed'
               }`}
             />

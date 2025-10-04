@@ -18,7 +18,9 @@ interface CategoryBarProps {
 export function CategoryBar({ onSelected, containerVariant = 'default' }: CategoryBarProps) {
   const router = useRouter();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   const headerCategories = getHeaderCategories();
 
   // 메인 네비게이션 메뉴
@@ -95,16 +97,19 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setActiveDropdown(null);
       }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setMobileMenuOpen(false);
+      }
     };
 
-    if (activeDropdown) {
+    if (activeDropdown || mobileMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [activeDropdown]);
+  }, [activeDropdown, mobileMenuOpen]);
 
   return (
     <nav className="border-t border-grayLight border-b border-b-black bg-white">
@@ -121,13 +126,13 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
             <button
               onClick={toggleCategoryDropdown}
               className={cn(
-                "flex items-center space-x-2 pl-7 pr-12 h-12 font-medium transition-colors cursor-pointer",
-                activeDropdown === 'category' 
-                  ? "bg-black text-white font-bold" 
-                  : "font-bold text-base text-black hover:text-textHeading hover:bg-gray-50"
+                "flex items-center space-x-1 lg:space-x-2 pl-3 pr-6 lg:pl-7 lg:pr-12 h-10 lg:h-12 font-medium transition-colors cursor-pointer text-sm lg:text-base",
+                activeDropdown === 'category'
+                  ? "bg-black text-white font-bold"
+                  : "font-bold text-black hover:text-textHeading hover:bg-gray-50"
               )}
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4 h-4 lg:w-5 lg:h-5" />
               <span>카테고리</span>
             </button>
             
@@ -139,7 +144,7 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
 
             {/* 드롭다운 메뉴 */}
             {activeDropdown === 'category' && (
-              <div className="absolute top-full mt-px left-0 w-64 bg-white border border-grayLight border-t border-t-grayLight
+              <div className="absolute top-full mt-px left-0 w-56 lg:w-64 bg-white border border-grayLight border-t border-t-grayLight
                             shadow-lg z-50">
                 <div className="py-2">
                   {headerCategories.map((group) => (
@@ -171,8 +176,8 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
             )}
           </div>
 
-          {/* 메인 네비게이션 - 카테고리 뒤에 배치 */}
-          <div className="flex items-center space-x-12 ml-8 text-base text-black">
+          {/* 메인 네비게이션 - 카테고리 뒤에 배치 (데스크톱만 표시) */}
+          <div className="hidden lg:flex items-center space-x-12 ml-8 text-base text-black">
             {mainNavItems.map((item) => (
               <button
                 key={item.label}
@@ -182,6 +187,36 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
                 {item.label}
               </button>
             ))}
+          </div>
+
+          {/* 모바일 햄버거 메뉴 */}
+          <div ref={mobileMenuRef} className="lg:hidden ml-auto relative">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="flex items-center justify-center w-10 h-10 text-black hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            {/* 모바일 드롭다운 메뉴 */}
+            {mobileMenuOpen && (
+              <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-grayLight shadow-lg z-50">
+                <div className="py-2">
+                  {mainNavItems.map((item) => (
+                    <button
+                      key={item.label}
+                      onClick={() => {
+                        handleMainNavClick(item);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="block w-full px-4 py-3 text-left text-sm font-medium text-black hover:bg-grayLighter hover:text-textHeading transition-colors cursor-pointer"
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Container>

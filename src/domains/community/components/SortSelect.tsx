@@ -3,7 +3,6 @@
 import { PostSort } from '@/domains/community/types/community';
 
 import React, { useMemo } from 'react';
-import { Button } from '@/shared/components/Button';
 
 interface SortSelectProps {
   sortBy: PostSort;
@@ -18,20 +17,21 @@ export const SortSelect = React.memo(function SortSelect({ sortBy, onSortChange 
   ], []);
 
   return (
-    <div className="mb-8">
-      <label className="block text-lg font-bold text-black mb-2">정렬 필터</label>
+    <div className="mb-2 md:mb-8">
+      <label className="block text-sm md:text-lg font-semibold md:font-bold text-black mb-2.5 md:mb-2">정렬 필터</label>
       <div className="flex flex-wrap gap-2">
         {sortOptions.map((option) => (
-          <Button
+          <button
             key={option.value}
-            variant={sortBy === option.value ? 'primary' : 'secondary'}
-            size="small"
             onClick={() => onSortChange(option.value)}
-            className="rounded-full"
-            noFocus={true}
+            className={`px-3 py-1.5 rounded-lg md:rounded-full text-sm font-medium transition-colors cursor-pointer ${
+              sortBy === option.value
+                ? 'bg-primary text-white'
+                : 'bg-grayLighter text-textDefault hover:bg-grayLight'
+            }`}
           >
             {option.label}
-          </Button>
+          </button>
         ))}
       </div>
     </div>

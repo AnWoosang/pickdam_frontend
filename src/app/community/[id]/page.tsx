@@ -1,4 +1,4 @@
-import { MainLayout } from '@/shared/layout/MainLayout';
+import { ResponsiveLayout } from '@/shared/layout/ResponsiveLayout';
 import { PostDetailPage } from '@/domains/community/components/post/PostDetailPage';
 
 interface PostDetailPageProps {
@@ -9,8 +9,8 @@ export default async function PostDetail({ params }: PostDetailPageProps) {
   const { id } = await params;
 
   return (
-    <MainLayout showHeader={true} showFooter={true}>
+    <ResponsiveLayout showHeader={true} showFooter={true}>
       <PostDetailPage postId={id} />
-    </MainLayout>
+    </ResponsiveLayout>
   );
 }

@@ -45,17 +45,19 @@ export const ReviewWriteSection = React.memo<ReviewWriteSectionProps>(function R
 
   if (!isWriting) {
     return (
-      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${className}`}>
+      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-6 ${className}`}>
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">리뷰 작성</h3>
-          <p className="text-gray-600 mb-4">
-            이 상품을 사용해보셨나요? 다른 사용자들에게 도움이 되는 리뷰를 작성해주세요!
+          <h3 className="text-sm md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">리뷰 작성</h3>
+          <p className="text-xs md:text-base text-gray-600 mb-3 md:mb-4">
+            <span className="block md:inline">이 상품을 사용해보셨나요?</span>
+            <span className="block md:inline md:ml-1">다른 사용자들에게 도움이 되는 리뷰를 작성해주세요!</span>
           </p>
           <Button
             variant="primary"
             size="medium"
             onClick={handleStartWriting}
             disabled={!canWrite}
+            className="text-xs md:text-sm px-3 md:px-4 py-1.5 md:py-2"
           >
             리뷰 작성하기
           </Button>
@@ -69,7 +71,7 @@ export const ReviewWriteSection = React.memo<ReviewWriteSectionProps>(function R
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <ReviewFormHeader onCancel={handleCancel} />
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-3 md:p-6 space-y-3 md:space-y-6">
           <ReviewRatingSection
             formData={formData}
             validationErrors={validationErrors}

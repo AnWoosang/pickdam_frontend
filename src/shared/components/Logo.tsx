@@ -6,19 +6,20 @@ import Image from 'next/image';
 import { ROUTES } from '@/app/router/routes';
 
 export interface LogoProps {
-  size?: 'small' | 'medium' | 'big';
+  size?: 'mobile' | 'small' | 'medium' | 'big';
   className?: string;
 }
 
 const SIZE_DIMENSIONS = {
+  mobile: { width: 120, height: 43 },
   small: { width: 100, height: 36 },
-  medium: { width: 135, height: 48 }, 
+  medium: { width: 135, height: 48 },
   big: { width: 200, height: 58 }
 } as const;
 
-export const Logo: React.FC<LogoProps> = ({ 
-  size = 'medium', 
-  className = '' 
+export const Logo: React.FC<LogoProps> = ({
+  size = 'medium',
+  className = ''
 }) => {
   const router = useRouter();
   const dimensions = SIZE_DIMENSIONS[size];
@@ -37,7 +38,7 @@ export const Logo: React.FC<LogoProps> = ({
         alt="Pickdam 로고"
         width={dimensions.width}
         height={dimensions.height}
-        className="object-contain"
+        className={`object-contain ${className.includes('!w-full') ? 'w-full' : ''} h-auto`}
       />
     </button>
   );

@@ -17,12 +17,12 @@ export function ProductImageSection({
 }: ProductImageSectionProps) {
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${className}`}>
+    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-2 md:p-6 ${className}`}>
       {/* 이미지 갤러리 */}
       <ProductImageGallery product={product} />
 
       {/* 상품 정보 */}
-      <div className="mt-8 space-y-6">
+      <div className="mt-3 md:mt-8 space-y-3 md:space-y-6">
         <ProductBasicInfo product={product} />
         <ProductStats product={product} />
       </div>

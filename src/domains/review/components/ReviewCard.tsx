@@ -89,16 +89,22 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
     <div className="bg-white rounded-lg p-4 min-h-[150px]">
       {/* 사용자 정보 및 평점 */}
       <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-start md:items-center space-x-3">
           <Avatar
             src={review.profileImageUrl}
             alt={review.nickname}
             size="medium"
           />
-          <div>
-            <h4 className="font-medium text-gray-900">{review.nickname}</h4>
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center">
+          <div className="flex flex-col md:block">
+            <div className="flex items-center gap-1.5">
+              <h4 className="font-medium text-gray-900 text-sm md:text-base">{review.nickname}</h4>
+              <div className="flex items-center gap-0.5 md:hidden">
+                <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                <span className="text-xs text-gray-700 font-medium">{review.rating.toFixed(1)}</span>
+              </div>
+            </div>
+            <div className="flex flex-col md:flex-row md:items-center md:space-x-2 mt-1 md:mt-0">
+              <div className="hidden md:flex items-center">
                 {RATING_STARS.map((star) => (
                   <Star
                     key={star}
@@ -110,16 +116,16 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
                   />
                 ))}
               </div>
-              <span className="text-sm text-gray-500">
+              <span className="text-xs md:text-sm text-gray-500">
                 {formatAbsoluteDate(review.createdAt)}
               </span>
             </div>
           </div>
         </div>
-        
+
         {/* 수정/삭제 버튼 */}
         {(showEditButton || showDeleteButton) && (
-          <div className="flex space-x-2">
+          <div className="flex space-x-1 md:space-x-2">
             {showEditButton && (
               <Button
                 variant="ghost"
@@ -127,7 +133,7 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
                 onClick={handleEditClick}
                 className="text-gray-600 hover:text-gray-800"
               >
-                <Edit3 className="w-4 h-4" />
+                <Edit3 className="w-3.5 h-3.5 md:w-4 md:h-4" />
               </Button>
             )}
             {showDeleteButton && (
@@ -137,7 +143,7 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
                 onClick={handleDeleteClick}
                 className="text-gray-600 hover:text-red-600"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
               </Button>
             )}
           </div>
@@ -146,10 +152,10 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
 
 
       {/* 리뷰 내용 */}
-      <div className="mb-4">
+      <div className="mb-3 md:mb-4">
         <p
           ref={contentRef}
-          className={`text-gray-700 leading-relaxed whitespace-pre-wrap ${
+          className={`text-gray-700 text-sm md:text-base leading-relaxed whitespace-pre-wrap ${
             !isExpanded ? 'line-clamp-4' : ''
           }`}
         >
@@ -160,16 +166,16 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
             variant="ghost"
             size="small"
             onClick={toggleExpand}
-            className="mt-2 text-primary hover:text-primary-dark"
+            className="mt-2 text-primary hover:text-primary-dark text-xs md:text-sm"
           >
             {isExpanded ? (
               <>
-                <ChevronUp className="w-4 h-4 mr-1" />
+                <ChevronUp className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                 접기
               </>
             ) : (
               <>
-                <ChevronDown className="w-4 h-4 mr-1" />
+                <ChevronDown className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                 더보기
               </>
             )}
@@ -179,23 +185,23 @@ export const ReviewCard = React.memo<ReviewCardProps>(function ReviewCard({
 
       {/* 이미지 */}
       {imageUrls.length > 0 && (
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-1.5 md:gap-2 flex-wrap">
           {review.images!.filter(image => image.imageUrl && image.imageUrl.trim() !== '').slice(0, 4).map((image, index) => (
             <div
               key={index}
-              className="relative w-20 h-20 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-gray-200"
+              className="relative w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-gray-200"
               onClick={() => handleImageClick(index)}
             >
               <Image
                 src={image.imageUrl}
                 alt={`리뷰 이미지 ${index + 1}`}
                 fill
-                sizes="80px"
+                sizes="(max-width: 768px) 64px, 80px"
                 className="object-cover"
               />
               {review.images!.length > 4 && index === 3 && (
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                  <span className="text-white font-medium">
+                  <span className="text-white text-xs md:text-sm font-medium">
                     +{review.images!.length - 4}
                   </span>
                 </div>

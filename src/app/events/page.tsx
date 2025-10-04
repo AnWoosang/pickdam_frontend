@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { MainLayout } from '@/shared/layout/MainLayout';
+import { ResponsiveLayout } from '@/shared/layout/ResponsiveLayout';
 import { ComingSoon } from '@/shared/components/ComingSoon';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 
@@ -13,13 +13,13 @@ function EventsContent() {
   );
 
   return (
-    <MainLayout showHeader={true} showFooter={true} showCategoryBar={true} showSearchBar={false}>
+    <ResponsiveLayout showHeader={true} showFooter={true} showCategoryBar={true} showSearchBar={false}>
       <ComingSoon 
         title="이벤트"
         description="다양한 할인 혜택과 특별 이벤트를 준비하고 있습니다."
         icon={eventIcon}
       />
-    </MainLayout>
+    </ResponsiveLayout>
   );
 }
 

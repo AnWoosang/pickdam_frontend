@@ -57,9 +57,7 @@ export interface PriceHistoryItemResponseDto {
 
 export interface IncrementViewResponseDto {
   success: boolean;
-  incremented: boolean;
-  newViewCount: number;
-  reason?: string;
+  viewCount: number;
 }
 
 export interface ToggleWishlistResponseDto {

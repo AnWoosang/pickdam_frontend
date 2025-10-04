@@ -1,13 +1,13 @@
 import { Suspense } from 'react';
-import { MainLayout } from '@/shared/layout/MainLayout';
+import { ResponsiveLayout } from '@/shared/layout/ResponsiveLayout';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { CommunityPage as CommunityPageComponent } from '@/domains/community/components/CommunityPage';
 
 function CommunityContent() {
   return (
-    <MainLayout showHeader={true} showFooter={false} showCategoryBar={true} showSearchBar={false}>
+    <ResponsiveLayout showHeader={true} showFooter={false} showCategoryBar={true} showSearchBar={false}>
       <CommunityPageComponent />
-    </MainLayout>
+    </ResponsiveLayout>
   );
 }
 

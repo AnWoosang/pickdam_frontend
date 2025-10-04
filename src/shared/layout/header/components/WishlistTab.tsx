@@ -17,17 +17,19 @@ import {
 import { Button } from '@/shared/components/Button';
 import { useWishlist } from '@/domains/user/hooks/wishlist/useWishlist';
 
-interface WishlistDropdownProps {
+interface WishlistTabProps {
   user: User | null;
   isActive: boolean;
   onToggle: () => void;
+  isMobileModal?: boolean;
 }
 
-export function WishlistDropdown({ 
+export function WishlistTab({
   user,
   isActive,
-  onToggle
-}: WishlistDropdownProps) {
+  onToggle,
+  isMobileModal = false
+}: WishlistTabProps) {
   const router = useRouter();
   
   // 찜 상품 관리
@@ -94,14 +96,72 @@ export function WishlistDropdown({
     clearSelectedItems();
   };
 
+  // 모바일 모달일 경우 카드만 렌더링
+  if (isMobileModal) {
+    const totalPages = getTotalPages(allWishlistProducts);
+    const currentProducts = getCurrentProducts(allWishlistProducts, favoritePage);
+
+    return (
+      <div>
+        {allWishlistProducts.length > 0 ? (
+          <>
+            {/* 상품 카드 그리드 - 3열 */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {currentProducts.map((product, index) => {
+                return (
+                  <div key={`wishlist-${product?.id || index}-${index}`} className="relative">
+                    <ProductCard
+                      product={product}
+                      onClick={() => {
+                        router.push(`/product/${product.id}`);
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 페이지네이션 - 상품이 6개보다 많을 때만 표시 */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-6">
+                <Button
+                  onClick={() => setFavoritePage(prev => Math.max(1, prev - 1))}
+                  disabled={favoritePage === 1}
+                  variant="ghost"
+                  size="small"
+                  icon={<ChevronLeft className="w-4 h-4" />}
+                  noFocus
+                />
+                <span className="text-sm text-gray-600">
+                  {favoritePage} / {totalPages}
+                </span>
+                <Button
+                  onClick={() => setFavoritePage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={favoritePage >= totalPages}
+                  variant="ghost"
+                  size="small"
+                  icon={<ChevronRight className="w-4 h-4" />}
+                  noFocus
+                />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="py-12 text-center">
+            <p className="text-sm text-gray-500">찜한 상품이 없습니다</p>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
       <button
         onClick={handleToggle}
         className={`flex items-center space-x-1 pb-1 transition-colors cursor-pointer
-          ${isActive 
-            ? 'text-textHeading border-b-2 border-primary' 
+          ${isActive
+            ? 'text-textHeading border-b-2 border-primary'
             : 'text-gray hover:text-textHeading'
           }`}
       >
@@ -109,9 +169,9 @@ export function WishlistDropdown({
         <span className="text-sm font-semibold">찜한 상품</span>
         <ChevronDown className="w-4 h-4" />
       </button>
-      
+
       {isActive && (
-        <div className="absolute top-full right-0 mt-2 w-[720px] bg-white border border-grayLight 
+        <div className="absolute top-full right-0 mt-2 w-[720px] bg-white border border-grayLight
                       rounded-lg shadow-lg z-50">
           <div className="p-4">
             <div className="flex items-center justify-between mb-3">

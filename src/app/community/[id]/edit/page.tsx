@@ -1,12 +1,12 @@
 'use client';
 
-import { MainLayout } from '@/shared/layout/MainLayout';
+import { ResponsiveLayout } from '@/shared/layout/ResponsiveLayout';
 import { PostEditPage } from '@/domains/community/components/post/edit/PostEditPage';
 
 export default function EditPostPage() {
   return (
-    <MainLayout showHeader={true} showFooter={true}>
+    <ResponsiveLayout showHeader={true} showFooter={true}>
       <PostEditPage />
-    </MainLayout>
+    </ResponsiveLayout>
   );
 }

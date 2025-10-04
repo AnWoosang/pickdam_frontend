@@ -38,7 +38,7 @@ export function MainPage() {
 
   return (
     <Container>
-      <div className="space-y-8 py-10">
+      <div className="space-y-6 md:space-y-8 py-6 md:py-10">
         {/* 홍보 배너 섹션 */}
         <PromoBanner />
 
