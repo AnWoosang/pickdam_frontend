@@ -8,7 +8,6 @@ import { ROUTES } from '@/app/router/routes';
 import { getHeaderCategories, CATEGORY_CONFIG } from '@/domains/product/types/category';
 import { cn } from '@/shared/utils/Format';
 import { Container } from '@/shared/layout/Container';
-import { loadPopunderScript } from '@/shared/utils/popunderAd';
 
 interface CategoryBarProps {
   onSelected?: (category: string) => void;
@@ -33,8 +32,6 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
   const handleMainNavClick = (item: typeof mainNavItems[number]) => {
     router.push(item.href);
     onSelected?.(item.label);
-    // 페이지 이동 후 팝언더 실행 (10분 쿨다운 적용)
-    loadPopunderScript();
   };
 
   const handleCategoryClick = (groupTitle: string, category: string) => {
@@ -84,7 +81,6 @@ export function CategoryBar({ onSelected, containerVariant = 'default' }: Catego
 
     setActiveDropdown(null);
     onSelected?.(category);
-    loadPopunderScript();
   };
 
   const toggleCategoryDropdown = () => {

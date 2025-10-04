@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { QueryProvider } from "@/app/providers/QueryProvider";
 import { LoginModal } from '@/domains/auth/components/LoginModal';
 import { useUIStore } from '@/domains/auth/store/authStore';
 import ErrorBoundary from '@/shared/error/ErrorBoundary';
+import { loadPopunderScript } from '@/shared/utils/popunderAd';
 
 // 프로덕션 환경에서만 Sentry 초기화
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
@@ -19,6 +21,11 @@ interface ClientLayoutProps {
 
 export function ClientLayout({ children }: ClientLayoutProps) {
   const { isLoginModalOpen, closeLoginModal } = useUIStore();
+
+  // 팝언더 광고 스크립트 로드 (한 번만 실행)
+  useEffect(() => {
+    loadPopunderScript();
+  }, []);
 
   return (
     <ErrorBoundary>

@@ -31,7 +31,7 @@ async function uploadSingleFile(file: File, index: number, imageType: string): P
   const { data, error } = await supabase.storage
     .from(bucketName)
     .upload(fileName, file, {
-      cacheControl: '3600',
+      cacheControl: '2592000', // 30일 (UUID 기반 파일명이므로 안전)
       upsert: false
     });
 

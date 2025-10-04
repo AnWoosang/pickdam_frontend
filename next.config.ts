@@ -88,9 +88,7 @@ const bundleAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
-// 개발 환경에서는 기본 설정만, 프로덕션에서는 Sentry 포함
-const configWithSentry = isDev
-  ? nextConfig
-  : withSentryConfig(nextConfig, sentryOptions);
-
-export default bundleAnalyzer(configWithSentry);
+// 개발 환경에서는 Sentry 설정 완전 비활성화
+export default isDev
+  ? bundleAnalyzer(nextConfig)
+  : bundleAnalyzer(withSentryConfig(nextConfig, sentryOptions));
