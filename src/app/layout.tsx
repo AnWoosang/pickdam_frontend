@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import localFont from 'next/font/local';
 import { ClientLayout } from "@/shared/layout/ClientLayout";
 import "./globals.css";
@@ -7,7 +6,7 @@ import "./globals.css";
 const pretendard = localFont({
   src: '../fonts/PretendardVariable.woff2',
   display: 'swap',
-  weight: '45 920',
+  weight: '400 700',
   variable: '--font-pretendard',
 });
 
@@ -23,14 +22,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" suppressHydrationWarning>
-      <head>
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2492022053829767"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
-      </head>
       <body
         className={`${pretendard.variable} font-pretendard antialiased`}
         suppressHydrationWarning

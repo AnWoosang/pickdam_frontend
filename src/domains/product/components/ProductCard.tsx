@@ -30,6 +30,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
             alt={product.name}
             fill
             className="object-cover rounded-t-lg"
+            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center rounded-t-lg">
