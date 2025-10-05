@@ -23,9 +23,9 @@ export function ClientLayout({ children }: ClientLayoutProps) {
   const { isLoginModalOpen, closeLoginModal } = useUIStore();
 
   // 팝언더 광고 스크립트 로드 (한 번만 실행)
-  useEffect(() => {
-    loadPopunderScript();
-  }, []);
+  // useEffect(() => {
+    // loadPopunderScript();
+  // }, []);
 
   return (
     <ErrorBoundary>

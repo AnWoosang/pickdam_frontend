@@ -65,7 +65,7 @@ export const BannerSection: React.FC<BannerSectionProps> = ({
         invoke2.src = '//www.highperformanceformat.com/d309d8fcd9cea9584bb49b33bdd07f69/invoke.js';
         ad2Ref.current.appendChild(invoke2);
       }
-    }, 1000);
+    }, 300);
 
     // 모바일 광고 로드 (320x50) - 하나만
     if (mobileAdRef.current) {
