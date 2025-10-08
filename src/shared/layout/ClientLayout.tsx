@@ -6,7 +6,7 @@ import { QueryProvider } from "@/app/providers/QueryProvider";
 import { LoginModal } from '@/domains/auth/components/LoginModal';
 import { useUIStore } from '@/domains/auth/store/authStore';
 import ErrorBoundary from '@/shared/error/ErrorBoundary';
-import { loadPopunderScript } from '@/shared/utils/popunderAd';
+// import { loadPopunderScript } from '@/shared/utils/popunderAd';
 
 // 프로덕션 환경에서만 Sentry 초기화
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
