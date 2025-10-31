@@ -95,8 +95,9 @@ export const CATEGORY_CONFIG: CategoryGroup[] = [
   {
     id: MainCategory.OTHER,
     name: 'other',
-    displayName: '코일/팟/기타',
-    productCategories: [ProductCategory.POD, ProductCategory.COIL, ProductCategory.ACCESSORY, ProductCategory.ETC],
+    displayName: '코일/팟',
+    productCategories: [ProductCategory.POD, ProductCategory.COIL],
+    // , ProductCategory.ACCESSORY, ProductCategory.ETC],
     subCategories: []
   }
 ];

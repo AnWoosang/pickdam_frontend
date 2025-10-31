@@ -10,10 +10,13 @@
 - 모든 라우팅은 Next.js의 파일 기반 라우팅(app router) 을 사용한다.
 - 동적 라우트, 중첩 라우트, 레이아웃 등은 공식 Next.js 방식에 맞춘다.
 - 라우트 상수/경로는 src/app/router/routes.ts 에서 관리한다.
-- 간단한 상태는 React의 useState/useContext, 복잡한 상태는 Zustand, Recoil, Jotai, Redux 등을 사용한다.
+- 간단한 상태는 React의 useState/useContext, 복잡한 상태는 Zustand 를을 사용한다.
 - 서버 상태는 React Query(TanStack Query)로 관리한다.
 - 각 index.ts로 export를 관리한다.
 
+- ui 관련로직은 컴포넌트에서 직접 관리한다.
+- 비즈니스 로직은 커스텀 훅을 작성해서 관리한다.
+- 컴포넌트 -> 비즈니스 훅 -> react query -> api 호출 레이어를 따른다
 
 # 스타일 규칙
 - 글로벌 색상/폰트/테마는 tailwind.config.js에서 관리한다.
@@ -22,12 +25,10 @@
 - next.js 공식문서를 참고해서 대답해줘.
 
 # API-Endpoint-Rule
-
 - 모든 API은 Restful 원칙을 따릅니다.
 
 
 # 코딩 스타일
-
 - 함수형/선언형 스타일을 우선한다.
 - 변수명, 함수명은 명확하고 일관성 있게 작성한다(예: isLoading, hasError).
 - 컴포넌트는 최대한 작고 명확하게 분리한다.
