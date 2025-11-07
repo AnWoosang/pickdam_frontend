@@ -66,12 +66,38 @@ export function PriceHistoryChart({
 
   // 사용할 가격 히스토리 데이터 결정
   const activePriceHistory = useMemo(() => {
+    // 기본 priceHistory는 항상 포함 (최근 데이터 포함)
+    // 다른 월 조회 시 추가 데이터와 합침
     if (isCurrentMonth) {
-      // 현재 월인 경우 기본 priceHistory 사용
+      // 현재 월인 경우 기본 priceHistory만 사용
       return priceHistory;
     } else {
-      // 다른 월인 경우 추가 조회한 데이터 사용
-      return additionalPriceHistory || [];
+      // 다른 월인 경우: 기본 데이터 + 추가 조회 데이터 합치기
+      const combined = [...priceHistory];
+
+      if (additionalPriceHistory && additionalPriceHistory.length > 0) {
+        // 중복 제거를 위해 날짜를 키로 하는 Map 사용
+        const dateMap = new Map<string, typeof priceHistory[0]>();
+
+        // 기본 데이터 추가
+        priceHistory.forEach(item => {
+          const dateKey = item.date.toISOString().split('T')[0];
+          dateMap.set(dateKey, item);
+        });
+
+        // 추가 데이터 추가
+        additionalPriceHistory.forEach(item => {
+          const dateKey = item.date.toISOString().split('T')[0];
+          dateMap.set(dateKey, item);
+        });
+
+        // Map을 배열로 변환하고 날짜순 정렬
+        return Array.from(dateMap.values()).sort(
+          (a, b) => a.date.getTime() - b.date.getTime()
+        );
+      }
+
+      return combined;
     }
   }, [isCurrentMonth, priceHistory, additionalPriceHistory]);
 

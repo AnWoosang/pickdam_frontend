@@ -6,6 +6,7 @@ import { QueryProvider } from "@/app/providers/QueryProvider";
 import { LoginModal } from '@/domains/auth/components/LoginModal';
 import { useUIStore } from '@/domains/auth/store/authStore';
 import ErrorBoundary from '@/shared/error/ErrorBoundary';
+import { GoogleAnalytics } from '@/shared/utils/googleAnalytics';
 // import { loadPopunderScript } from '@/shared/utils/popunderAd';
 
 // 프로덕션 환경에서만 Sentry 초기화
@@ -30,6 +31,9 @@ export function ClientLayout({ children }: ClientLayoutProps) {
   return (
     <ErrorBoundary>
       <QueryProvider>
+        {/* Google Analytics */}
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ''} />
+
         {children}
         <Toaster
           position="top-right"

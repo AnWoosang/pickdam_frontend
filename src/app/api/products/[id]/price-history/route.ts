@@ -21,13 +21,24 @@ export async function GET(
     const startDate = new Date(yearNum, monthNum - 1, 1);
     const endDate = new Date(yearNum, monthNum, 0); // 다음달의 0일 = 현재달의 마지막날
 
+    // 로컬 timezone 기준으로 날짜 문자열 생성 (UTC 변환 방지)
+    const formatLocalDate = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    const startDateStr = formatLocalDate(startDate);
+    const endDateStr = formatLocalDate(endDate);
+
     // supabase를 사용하여 직접 쿼리
     const { data, error } = await supabase
       .from('product_price_history')
       .select('recorded_date, lowest_price')
       .eq('product_id', productId)
-      .gte('recorded_date', startDate.toISOString().split('T')[0])
-      .lte('recorded_date', endDate.toISOString().split('T')[0])
+      .gte('recorded_date', startDateStr)
+      .lte('recorded_date', endDateStr)
       .order('recorded_date', { ascending: true });
 
     if (error) {

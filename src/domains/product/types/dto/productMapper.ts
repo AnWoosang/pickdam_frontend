@@ -117,8 +117,13 @@ export function toAverageReviewInfo(dto: AverageReviewInfoResponseDto): AverageR
 
 // PriceHistoryItemResponseDto를 LowestPriceHistory 도메인 타입으로 변환
 export function toLowestPriceHistory(dto: PriceHistoryItemResponseDto): LowestPriceHistory {
+  // UTC timezone 문제 해결: 로컬 timezone 기준으로 Date 생성
+  // '2025-11-07' → 2025-11-07 00:00:00 (로컬 시간)
+  const [year, month, day] = dto.date.split('-').map(Number);
+  const localDate = new Date(year, month - 1, day);
+
   return {
-    date: new Date(dto.date),
+    date: localDate,
     price: dto.price
   };
 }
